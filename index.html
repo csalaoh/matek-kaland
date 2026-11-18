@@ -458,9 +458,12 @@ function checkSimplify(task,raw){
   }
   if(extra.length)return {status:'wrong',err:'Fölösleges tag',explain:'Olyan tag van a válaszban, ami az összevonás után kiesik (0 lesz) vagy nincs is a feladatban.'};
   const wrongKeys=[...T.keys()].filter(k=>!S.get(k).eq(T.get(k)));
-  if(wrongKeys.some(k=>S.get(k).eq(T.get(k).neg())))return {status:'wrong',err:'Előjelhiba',explain:'Valamelyik tag előjele elcsúszott – figyelj a kivonásra!'};
+  const nm=k=>k?`${'aeioufflmnrsxy'.includes(k[0])?'az':'a'} <i>${k}</i>-s tagoknál`:'a szám tagoknál';
+  const list=ks=>ks.map(nm).join(' és ');
+  const signKeys=wrongKeys.filter(k=>S.get(k).eq(T.get(k).neg()));
+  if(signKeys.length)return {status:'wrong',err:'Előjelhiba',explain:`Az előjel csúszott el ${list(signKeys)}. Nézd meg újra, melyik tag előtt áll mínusz!`};
   if(wrongKeys.every(k=>k===''))return {status:'wrong',err:'Számolási hiba (szám tag)',explain:'A betű nélküli tagok összevonásánál csúszott el.'};
-  return {status:'wrong',err:'Számolási hiba (együttható)',explain:'Az egyik betűs tag együtthatója nem stimmel.'};
+  return {status:'wrong',err:'Számolási hiba (együttható)',explain:`Az együttható nem stimmel ${list(wrongKeys)}. Add össze újra az előjeles együtthatókat!`};
 }
 function checkValue(task,raw){
   const q=parseNum(raw);
@@ -1534,7 +1537,7 @@ load();regenAP();applyDayBonus();regenHP();S.ptask=gen(S.level);render();focusAn
     if(deferred){deferred.prompt();deferred.userChoice.then(function(){deferred=null});return}
     var ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
     var steps=ios?
-      '<ol style="text-align:left;line-height:1.7"><li>Nyisd meg ezt az oldalt a <b>Safariban</b>.</li><li>Koppints lent a <b>Megosztás</b> gombra (négyzet felfelé mutató nyíllal).</li><li>Görgess le, és válaszd: <b>Főképernyőhöz adás</b>.</li><li>Koppints a <b>Hozzáadás</b> gombra.</li></ol>':
+      '<ol style="text-align:left;line-height:1.7"><li>Nyisd meg ezt az oldalt a <b>Safariban</b>.</li><li>Koppints a <b>Megosztás</b> gombra (négyzet felfelé mutató nyíllal). Ha nem látod, előbb a <b>•••</b> gombra, és ott a <b>Megosztás</b>-ra.</li><li>Görgess le, és válaszd: <b>Főképernyőhöz adás</b>.</li><li>A <b>webappként való megnyitás</b> kapcsoló maradjon bekapcsolva, majd koppints a <b>Hozzáadás</b> gombra.</li></ol>':
       '<ol style="text-align:left;line-height:1.7"><li>Nyisd meg ezt az oldalt a <b>Chrome</b>-ban.</li><li>Koppints a jobb felső <b>⋮</b> menüre.</li><li>Válaszd: <b>Alkalmazás telepítése</b> vagy <b>Hozzáadás a kezdőképernyőhöz</b>.</li></ol>';
     var o=document.getElementById('ov');if(!o){o=document.createElement('div');o.id='ov';o.className='overlay';document.body.appendChild(o)}
     o.innerHTML='<div class="ovcard"><div class="ovtxt" style="font-size:1.5rem">Tedd a kezdőképernyőre!</div>'+steps+
