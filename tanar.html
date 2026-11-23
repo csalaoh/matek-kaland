@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matek-kaland – tanári felület</title>
+<link rel="icon" type="image/png" href="Ikonok/icon-192.png">
+<meta name="robots" content="noindex">
+<style>
+:root{--bg:#1c2a22;--card:#fbf5e8;--card2:#f3e8cf;--ink:#2b2216;--muted:#7a6a50;--line:#e0d2b0;--acc:#b8862a;--acc2:#7a4b1c;--ok:#2f8a4f;--bad:#c0392b;--warn:#d88a1c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{display:flex;align-items:center;gap:14px;padding:12px 20px;color:#fff;flex-wrap:wrap}
+header h1{font:700 1.25rem Georgia,serif;margin:0}header h1 small{display:block;font:400 .78rem system-ui;opacity:.7}
+header .sp{flex:1}
+header select,header button{font:inherit}
+.hsel{background:#2c3d33;color:#fff;border:1px solid #4a6355;border-radius:8px;padding:7px 10px}
+.hbtn{background:none;color:#fff;border:1px solid #4a6355;border-radius:8px;padding:7px 12px;cursor:pointer}
+nav{display:flex;gap:6px;padding:0 20px;flex-wrap:wrap}
+nav button{font:600 .95rem system-ui;padding:9px 16px;border-radius:10px 10px 0 0;border:0;background:#2c3d33;color:#d8e3dc;cursor:pointer}
+nav button.on{background:var(--card);color:var(--ink)}
+main{background:var(--card);margin:0 20px 30px;border-radius:0 12px 12px 12px;padding:20px;min-height:60vh}
+h2{font:700 1.2rem Georgia,serif;margin:0 0 12px}h3{font:700 1rem Georgia,serif;margin:22px 0 8px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:18px}
+.kpi{background:var(--card2);border-radius:10px;padding:12px 14px}.kpi b{display:block;font-size:1.6rem}.kpi span{color:var(--muted);font-size:.85rem}
+table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.8rem;color:var(--muted);font-weight:700;white-space:nowrap;cursor:pointer;user-select:none}
+tr.click{cursor:pointer}tr.click:hover td{background:#f5ead2}
+tr.idle td{color:#a1957e}
+.tw{overflow-x:auto}
+.stars{color:var(--acc);letter-spacing:1px;white-space:nowrap}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.78rem;font-weight:700;background:var(--card2)}
+.pill.g{background:#d9efdf;color:#1f6b3a}.pill.r{background:#f6d8d3;color:#8e2a1e}.pill.y{background:#f8e7c4;color:#7a4b10}
+.grade{display:inline-block;min-width:22px;text-align:center;border-radius:6px;background:var(--acc2);color:#fff;font-weight:800;margin-right:3px;padding:0 5px}
+.bar{height:10px;background:#eadfc5;border-radius:6px;overflow:hidden;min-width:60px}.bar>i{display:block;height:100%;background:var(--acc)}
+.bar.ok>i{background:var(--ok)}
+.errrow{display:grid;grid-template-columns:minmax(160px,260px) 1fr 120px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.heat td{text-align:center;font-weight:700;font-size:.85rem}.heat td:first-child{text-align:left;font-weight:400}
+.heat th{white-space:normal;font-size:.72rem;max-width:110px;cursor:default}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;cursor:pointer;font:600 .85rem system-ui}.chip.on{background:var(--acc2);color:#fff;border-color:var(--acc2)}
+.btn{font:700 .9rem system-ui;background:var(--acc2);color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
+.btn.ghost{background:none;color:var(--acc2);border:1px solid var(--acc2)}.btn.sm{padding:4px 9px;font-size:.8rem}.btn.danger{background:var(--bad)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+input,textarea,select{font:inherit;border:1px solid var(--line);border-radius:8px;padding:7px 9px;background:#fff;color:var(--ink)}
+textarea{width:100%;min-height:150px}
+.box{background:var(--card2);border-radius:10px;padding:14px;margin:0 0 14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:860px){.grid2{grid-template-columns:1fr}}
+.muted{color:var(--muted)}.small{font-size:.85rem}
+.days{display:flex;align-items:flex-end;gap:3px;height:90px;border-bottom:1px solid var(--line);padding-top:6px}
+.days div{flex:1;display:flex;flex-direction:column-reverse;min-width:6px}.days i{display:block;background:var(--ok)}.days i.w{background:var(--bad)}
+.dlbl{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted)}
+.loginwrap{max-width:380px;margin:8vh auto;background:var(--card);border-radius:14px;padding:24px}
+.loginwrap label{display:block;font-weight:700;font-size:.85rem;color:var(--muted);margin-top:10px}.loginwrap input{width:100%;margin-top:4px;padding:10px}
+.err{color:var(--bad);font-weight:700}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2b2216;color:#fff;padding:10px 18px;border-radius:10px;z-index:9;opacity:0;transition:.3s}.toast.show{opacity:1}
+details.tlog summary{cursor:pointer;color:var(--acc2);font-weight:700}
+.ped td{padding:4px}.ped input[type=text],.ped textarea{width:100%}.ped textarea{min-height:48px}.ped input[type=number]{width:60px}
+#print{display:none}
+@media print{body{background:#fff}body>*:not(#print){display:none!important}#print{display:grid!important;grid-template-columns:1fr 1fr;gap:8mm}
+ .card{border:1.5px dashed #555;border-radius:4mm;padding:6mm;break-inside:avoid;font:12pt system-ui;color:#000}
+ .card h4{margin:0 0 3mm;font:700 14pt Georgia,serif}.card .big{font:700 20pt ui-monospace,monospace;letter-spacing:2px}.card .u{font-size:9pt;color:#333}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="print"></div>
+<div class="toast" id="toast"></div>
+<script>
+const SB={url:'',key:''};   // ← ugyanaz a Supabase Project URL és publishable key, mint az index.html-ben
+const APP_URL=new URL('./',location.href).href;
+const TOPICS={betus:'Betűs kifejezések',zk:'Zárójelbontás és kiemelés'};
+const LESSONS=[{key:'betus',name:'Betűs kifejezések: összevonás, helyettesítés',ready:true,def:'open'},
+               {key:'zk',name:'Zárójelbontás és kiemelés',ready:true,def:'open'},
+               {key:'szoveges',name:'Szöveges feladatok',ready:false,def:'soon'}];
+const DEFAULT_PRIVS=[
+  {id:'p1',name:'Zene önálló munkához',desc:'Egy órán fülhallgatóval zenét hallgathatsz önálló munka közben.',lvl:2,ap:10,limit:'none',cls:'',test:false,on:true},
+  {id:'p3',name:'Ehetsz az órán',desc:'Egy órán ehetsz valamit (csendben, rendet hagyva).',lvl:3,ap:15,limit:'none',cls:'',test:false,on:true},
+  {id:'h1',name:'Új esély',desc:'Egy röpdolgozatot a következő órán írhatsz meg (előre bejelentett számonkérést nem). Csak az óra elején kérheted.',lvl:4,ap:25,limit:'month',cls:'harcos',test:true,on:true},
+  {id:'h2',name:'Ellentámadás',desc:'Egy dolgozatkérdéshez kapsz egy tippet a tanártól (irányt mutat, végeredményt nem).',lvl:6,ap:25,limit:'week',cls:'harcos',test:true,on:true},
+  {id:'m1',name:'Teleport',desc:'Egy órára helyet cserélhetsz egy osztálytársaddal (ha ő is beleegyezik).',lvl:2,ap:5,limit:'none',cls:'magus',test:false,on:true},
+  {id:'m2',name:'Időalagút',desc:'Egy dolgozatnál +5 perc jár neked.',lvl:6,ap:35,limit:'week',cls:'magus',test:true,on:true},
+  {id:'g1',name:'Szabadság',desc:'Erre az órára bárhova ülhetsz a teremben.',lvl:2,ap:5,limit:'none',cls:'gyogyito',test:false,on:true},
+  {id:'g2',name:'Lelkesedő hit',desc:'Egy röpdolgozatnál egyszer megkérdezheted a tanártól, hogy egy válaszod jó-e.',lvl:5,ap:20,limit:'week',cls:'gyogyito',test:true,on:true}];
+const CLS_NAME={harcos:'Harcos',magus:'Mágus',gyogyito:'Gyógyító'};
+
+const $=id=>document.getElementById(id);
+const esc=x=>String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtDT=s=>s?new Date(s).toLocaleString('hu-HU',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'–';
+const ago=s=>{if(!s)return 'még soha';const d=(Date.now()-new Date(s))/864e5;return d<1/24?'most':d<1?Math.round(d*24)+' órája':d<2?'tegnap':Math.floor(d)+' napja'};
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+const stars=m=>m?'★'.repeat(m)+'☆'.repeat(3-m):'–';
+function toast(t){const e=$('toast');e.textContent=t;e.className='toast show';clearTimeout(toast.t);toast.t=setTimeout(()=>e.className='toast',2600)}
+
+/* ---------- Supabase REST ---------- */
+let SESS=null;try{SESS=JSON.parse(localStorage.getItem('mk-teacher')||'null')}catch(e){}
+const base=()=>SB.url.replace(/\/+$/,'');
+async function authCall(grant,body){
+  const r=await fetch(base()+'/auth/v1/token?grant_type='+grant,{method:'POST',headers:{apikey:SB.key,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error_description||d.msg||d.message||'Hibás belépés');
+  SESS={access:d.access_token,refresh:d.refresh_token,exp:Date.now()+(d.expires_in||3600)*1000-60000,uid:d.user&&d.user.id,email:d.user&&d.user.email};
+  localStorage.setItem('mk-teacher',JSON.stringify(SESS));return SESS;
+}
+async function api(path,{method='GET',body,prefer}={},retry=true){
+  if(SESS&&Date.now()>SESS.exp){try{await authCall('refresh_token',{refresh_token:SESS.refresh})}catch(e){logout();throw e}}
+  const h={apikey:SB.key,'Content-Type':'application/json',Authorization:'Bearer '+SESS.access};if(prefer)h.Prefer=prefer;
+  const r=await fetch(base()+'/rest/v1/'+path,{method,headers:h,body:body?JSON.stringify(body):undefined});
+  if(r.status===401&&retry){try{await authCall('refresh_token',{refresh_token:SESS.refresh});return api(path,{method,body,prefer},false)}catch(e){logout();throw e}}
+  const txt=await r.text();const d=txt?JSON.parse(txt):null;
+  if(!r.ok)throw new Error((d&&d.message)||('HTTP '+r.status));return d;
+}
+const rpc=(fn,args)=>api('rpc/'+fn,{method:'POST',body:args||{}});
+function logout(){localStorage.removeItem('mk-teacher');SESS=null;location.reload()}
+
+/* ---------- állapot ---------- */
+const V={tab:'overview',classes:[],cls:null,period:30,stats:null,sort:'nick',sortDir:1,errTopic:'',student:null,detail:null,newPins:null,privDraft:null};
+const curClass=()=>V.classes.find(c=>c.id===V.cls);
+const since=()=>new Date(Date.now()-V.period*864e5).toISOString();
+async function loadClasses(){V.classes=await api('classes?select=id,name,config,created_at&order=created_at');if(!V.classes.find(c=>c.id===V.cls))V.cls=(V.classes[0]||{}).id||null;localStorage.setItem('mk-t-cls',V.cls||'')}
+async function loadStats(){V.stats=V.cls?await rpc('teacher_class_stats',{p_class:V.cls,p_since:since()}):null}
+async function refresh(){try{await loadStats()}catch(e){toast('Hiba: '+e.message)}render()}
+
+/* ---------- belépés ---------- */
+function loginView(msg){
+  $('app').innerHTML=`<form class="loginwrap" id="lf"><h2>Matek-kaland · tanári felület</h2>
+   ${SB.url?'':'<p class="err">Hiányzik a Supabase-beállítás (SB.url, SB.key) a tanar.html elején.</p>'}
+   <label>E-mail<input id="le" type="email" autocomplete="username" required></label>
+   <label>Jelszó<input id="lp" type="password" autocomplete="current-password" required></label>
+   <p class="err" id="lerr">${msg||''}</p><button class="btn" style="width:100%;padding:11px">Belépés</button>
+   <p class="small muted">A fiókot a Supabase-ben, az Authentication → Users menüben hozod létre.</p></form>`;
+  $('lf').onsubmit=async e=>{e.preventDefault();$('lerr').textContent='';
+    try{await authCall('password',{email:$('le').value,password:$('lp').value});await rpc('teacher_hello',{p_name:''});boot()}
+    catch(x){$('lerr').textContent=/Invalid login/i.test(x.message)?'Hibás e-mail vagy jelszó.':x.message}};
+}
+async function boot(){
+  if(!SESS)return loginView();
+  V.cls=localStorage.getItem('mk-t-cls')||null;
+  try{await rpc('teacher_hello',{p_name:''});await loadClasses();await loadStats()}catch(e){return loginView('A belépés lejárt, lépj be újra.')}
+  if(!V.classes.length)V.tab='manage';
+  render();
+}
+
+/* ---------- keret ---------- */
+function render(){
+  const tabs=[['overview','Áttekintés'],['errors','Hibatérkép'],['student','Tanulók'],['manage','Kezelés']];
+  $('app').innerHTML=`<header><h1>Matek-kaland<small>Tanári felület · ${esc(SESS.email||'')}</small></h1><div class="sp"></div>
+    ${V.classes.length?`<select class="hsel" id="selCls">${V.classes.map(c=>`<option value="${c.id}" ${c.id===V.cls?'selected':''}>${esc(c.name)}</option>`).join('')}</select>
+    <select class="hsel" id="selPer">${[[7,'Utolsó 7 nap'],[30,'Utolsó 30 nap'],[120,'Utolsó 4 hónap'],[365,'Egész tanév']].map(([d,n])=>`<option value="${d}" ${+d===V.period?'selected':''}>${n}</option>`).join('')}</select>`:''}
+    <button class="hbtn" id="btnRef" title="Frissítés">⟳</button><button class="hbtn" id="btnOut">Kilépés</button></header>
+   <nav>${tabs.map(([k,n])=>`<button data-tab="${k}" class="${V.tab===k?'on':''}">${n}${k==='manage'&&V.stats&&V.stats.coupons.length?` <span class="pill y">${V.stats.coupons.length}</span>`:''}</button>`).join('')}</nav>
+   <main id="main"></main>`;
+  const m=$('main');
+  if(!V.classes.length&&V.tab!=='manage')V.tab='manage';
+  m.innerHTML=V.tab==='overview'?overviewHTML():V.tab==='errors'?errorsHTML():V.tab==='student'?studentHTML():manageHTML();
+  if($('selCls'))$('selCls').onchange=async e=>{V.cls=e.target.value;localStorage.setItem('mk-t-cls',V.cls);V.student=null;V.detail=null;V.newPins=null;V.privDraft=null;await refresh()};
+  if($('selPer'))$('selPer').onchange=async e=>{V.period=+e.target.value;V.detail=null;await refresh();if(V.tab==='student'&&V.student)openStudent(V.student)};
+  $('btnRef').onclick=async()=>{await loadClasses();await refresh();if(V.tab==='student'&&V.student)openStudent(V.student)};
+  $('btnOut').onclick=logout;
+}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-tab]');if(t){V.tab=t.dataset.tab;render();if(V.tab==='student'&&V.student&&!V.detail)openStudent(V.student)}});
+
+/* ---------- Áttekintés ---------- */
+function topicMax(s,tp){const p=s.prog&&s.prog[tp];return p?p.max:null}
+function overviewHTML(){
+  const st=V.stats;if(!st)return '<p class="muted">Nincs adat.</p>';
+  const S=st.students,N=S.length,act=S.filter(s=>s.n>0).length,tot=S.reduce((a,s)=>a+s.n,0),ok=S.reduce((a,s)=>a+s.ok,0);
+  const cols=[['nick','Becenév'],['last_seen','Utoljára'],['days','Aktív nap'],['n','Feladat'],['acc','Helyes'],['betus','Összevonás'],['zk','Zárójel/kiemelés'],['clvl','Karakter'],['grades','Jegyek']];
+  const val=(s,k)=>k==='acc'?(s.n?s.ok/s.n:-1):k==='betus'||k==='zk'?(topicMax(s,k)||0):k==='grades'?s.grades.length:k==='last_seen'?(s.last_seen?new Date(s.last_seen).getTime():0):k==='nick'?s.nick.toLowerCase():(s[k]||0);
+  const rows=[...S].sort((a,b)=>{const x=val(a,V.sort),y=val(b,V.sort);return (x>y?1:x<y?-1:0)*V.sortDir});
+  return `<h2>${esc(curClass().name)} – áttekintés</h2>
+   <div class="kpis"><div class="kpi"><b>${act} / ${N}</b><span>gyakorolt az időszakban</span></div>
+    <div class="kpi"><b>${tot}</b><span>megoldott feladat</span></div>
+    <div class="kpi"><b>${pct(ok,tot)}%</b><span>helyes válasz</span></div>
+    <div class="kpi"><b>${S.reduce((a,s)=>a+s.grades.length,0)}</b><span>próbán szerzett jegy (összesen)</span></div>
+    <div class="kpi"><b>${st.coupons.length}</b><span>beváltásra váró kupon</span></div></div>
+   ${N?`<div class="tw"><table id="ovt"><thead><tr>${cols.map(([k,n])=>`<th data-sort="${k}">${n}${V.sort===k?(V.sortDir>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>
+   ${rows.map(s=>`<tr class="click ${s.n?'':'idle'}" data-stu="${s.id}"><td><b>${esc(s.nick)}</b>${s.active?'':' <span class="pill r">letiltva</span>'}${s.locked?' <span class="pill y">zárolva</span>':''}</td>
+     <td>${ago(s.last_seen)}</td><td>${s.days}</td><td>${s.n}</td>
+     <td>${s.n?`<div style="display:flex;gap:6px;align-items:center"><div class="bar ok" style="width:60px"><i style="width:${pct(s.ok,s.n)}%"></i></div>${pct(s.ok,s.n)}%</div>`:'–'}</td>
+     <td class="stars">${stars(topicMax(s,'betus'))}</td><td class="stars">${stars(topicMax(s,'zk'))}</td>
+     <td>${s.clvl?`${s.clvl}. szint${s.cls?' · '+(CLS_NAME[s.cls]||''):''}`:'–'}</td>
+     <td>${s.grades.map(g=>`<span class="grade" title="${esc(TOPICS[g.topic]||g.topic)} · ${fmtDT(g.at)}">${g.grade}</span>`).join('')||'–'}</td></tr>`).join('')}
+   </tbody></table></div>
+   <p class="small muted">A csillagok a témában elért legmagasabb fokozatot mutatják (★ alap · ★★ közepes · ★★★ haladó). A szürke sorok az időszakban nem gyakoroltak. Kattints egy diákra a részletekért.</p>`
+   :`<p>Még nincs diák ebben az osztályban. A <b>Kezelés</b> fülön tudsz felvenni.</p>`}`;
+}
+document.addEventListener('click',e=>{
+  const th=e.target.closest('#ovt [data-sort]');if(th){const k=th.dataset.sort;if(V.sort===k)V.sortDir*=-1;else{V.sort=k;V.sortDir=k==='nick'?1:-1}render();return}
+  const tr=e.target.closest('[data-stu]');if(tr){V.tab='student';openStudent(tr.dataset.stu)}
+});
+
+/* ---------- Hibatérkép ---------- */
+function errorsHTML(){
+  const st=V.stats;if(!st)return '';
+  const f=x=>!V.errTopic||x.topic===V.errTopic;
+  const errs=st.errors.filter(f),N=st.students.length;
+  const agg={};errs.forEach(e=>{const k=e.err;agg[k]=agg[k]||{err:k,n:0,topics:new Set()};agg[k].n+=e.n;agg[k].topics.add(e.topic)});
+  const stuBy={};st.matrix.filter(f).forEach(m=>{(stuBy[m.err]=stuBy[m.err]||new Set()).add(m.student_id)});
+  const list=Object.values(agg).sort((a,b)=>b.n-a.n),mx=list.length?list[0].n:1;
+  const top=list.slice(0,8).map(x=>x.err);
+  const cell={};st.matrix.filter(f).forEach(m=>{cell[m.student_id+'|'+m.err]=(cell[m.student_id+'|'+m.err]||0)+m.n});
+  const heat=n=>!n?'':`background:rgba(192,57,43,${Math.min(.85,.15+n*.12)});color:${n>4?'#fff':'#5a1a12'}`;
+  const lv=st.levels.filter(f);
+  return `<h2>Hibatérkép</h2>
+   <div class="chips">${[['','Minden téma'],...Object.entries(TOPICS)].map(([k,n])=>`<button class="chip ${V.errTopic===k?'on':''}" data-et="${k}">${n}</button>`).join('')}</div>
+   ${list.length?`<div class="box"><b>Órán érdemes gyakoroltatni:</b> ${list.slice(0,3).map(x=>`<b>${esc(x.err)}</b> (${(stuBy[x.err]||new Set()).size} diáknál)`).join(' · ')}</div>
+   <h3>Leggyakoribb hibák</h3>
+   ${list.map(x=>`<div class="errrow"><div><b>${esc(x.err)}</b><div class="small muted">${[...x.topics].map(t=>TOPICS[t]||t).join(', ')}</div></div>
+     <div class="bar"><i style="width:${x.n/mx*100}%"></i></div><div class="small">${x.n}× · ${(stuBy[x.err]||new Set()).size}/${N} diák</div></div>`).join('')}
+   <h3>Ki mivel küzd?</h3><div class="tw"><table class="heat"><thead><tr><th>Diák</th>${top.map(t=>`<th>${esc(t)}</th>`).join('')}</tr></thead><tbody>
+   ${st.students.filter(s=>top.some(t=>cell[s.id+'|'+t])).map(s=>`<tr class="click" data-stu="${s.id}"><td>${esc(s.nick)}</td>${top.map(t=>{const n=cell[s.id+'|'+t]||0;return `<td style="${heat(n)}">${n||''}</td>`}).join('')}</tr>`).join('')}
+   </tbody></table></div>`:'<p class="muted">Ebben az időszakban nincs rögzített hiba. 🎉</p>'}
+   ${lv.length?`<h3>Fokozatonként (gyakorlás)</h3><table><thead><tr><th>Téma</th><th>Fokozat</th><th>Feladat</th><th>Helyes</th><th></th></tr></thead><tbody>
+   ${lv.map(l=>`<tr><td>${TOPICS[l.topic]||l.topic}</td><td class="stars">${stars(l.level)}</td><td>${l.n}</td><td>${pct(l.ok,l.n)}%</td><td style="width:40%"><div class="bar ok"><i style="width:${pct(l.ok,l.n)}%"></i></div></td></tr>`).join('')}</tbody></table>`:''}
+   <p class="small muted">A hibát akkor számoljuk, ha a válasz rossz vagy csak részben jó volt. A hibatípust a játék ismeri fel a válaszból.</p>`;
+}
+document.addEventListener('click',e=>{const c=e.target.closest('[data-et]');if(c){V.errTopic=c.dataset.et;render()}});
+
+/* ---------- Tanulói részletek ---------- */
+async function openStudent(id){
+  V.student=id;V.detail={loading:true};render();
+  try{
+    const [ev,tr]=await Promise.all([api(`events?student_id=eq.${id}&ts=gte.${encodeURIComponent(since())}&order=ts.desc&limit=1000`),
+      api(`trials?student_id=eq.${id}&order=started_at.desc&limit=60`)]);
+    V.detail={ev,tr};
+  }catch(e){V.detail={err:e.message}}
+  if(V.tab==='student')render();
+}
+function studentHTML(){
+  const st=V.stats;if(!st||!st.students.length)return '<p class="muted">Még nincs diák.</p>';
+  const s=st.students.find(x=>x.id===V.student);
+  const sel=`<select id="selStu"><option value="">– válassz diákot –</option>${st.students.map(x=>`<option value="${x.id}" ${x.id===V.student?'selected':''}>${esc(x.nick)}</option>`).join('')}</select>`;
+  if(!s)return `<h2>Tanulói részletek</h2>${sel}`;
+  const d=V.detail||{};
+  if(d.loading)return `<h2>${esc(s.nick)}</h2>${sel}<p class="muted">Betöltés…</p>`;
+  if(d.err)return `<h2>${esc(s.nick)}</h2>${sel}<p class="err">${esc(d.err)}</p>`;
+  const ev=d.ev||[],n=ev.length,ok=ev.filter(e=>e.status==='correct').length;
+  const days=Math.min(V.period,30),by={};ev.forEach(e=>{const k=new Date(e.ts).toLocaleDateString('sv');by[k]=by[k]||{ok:0,bad:0};if(e.status==='correct')by[k].ok++;else by[k].bad++});
+  const arr=[];for(let i=days-1;i>=0;i--){const dt=new Date(Date.now()-i*864e5);const k=dt.toLocaleDateString('sv');arr.push({k,dt,...(by[k]||{ok:0,bad:0})})}
+  const mx=Math.max(1,...arr.map(a=>a.ok+a.bad));
+  const errs={};ev.filter(e=>e.status!=='correct'&&e.err).forEach(e=>{errs[e.err]=(errs[e.err]||0)+1});
+  const el=Object.entries(errs).sort((a,b)=>b[1]-a[1]);
+  const res=e=>e.status==='correct'?`<span class="pill g">jó${e.half?' (félúton)':''}</span>`:e.status==='partial'?`<span class="pill y">részben</span> ${esc(e.err)}`:`<span class="pill r">${esc(e.err||'rossz')}</span>`;
+  const modeN={practice:'Gyak.',arena:'Aréna',trial:'Próba'};
+  return `<h2>${esc(s.nick)} ${s.active?'':'<span class="pill r">letiltva</span>'}</h2>${sel}
+   <div class="kpis" style="margin-top:14px"><div class="kpi"><b>${n}</b><span>feladat az időszakban</span></div><div class="kpi"><b>${pct(ok,n)}%</b><span>helyes</span></div>
+    <div class="kpi"><b>${s.days}</b><span>aktív nap</span></div><div class="kpi"><b>${s.clvl||1}. szint</b><span>${s.xp??0} XP · ${s.gold??0} arany${s.cls?' · '+CLS_NAME[s.cls]:''}</span></div>
+    <div class="kpi"><b class="stars" style="font-size:1.1rem">${stars(topicMax(s,'betus'))} / ${stars(topicMax(s,'zk'))}</b><span>Összevonás / Zárójel – legjobb fokozat</span></div></div>
+   <div class="grid2"><div><h3>Napi aktivitás (utolsó ${days} nap)</h3><div class="days">${arr.map(a=>`<div title="${a.k}: ${a.ok} jó, ${a.bad} hibás"><i style="height:${a.ok/mx*84}px"></i><i class="w" style="height:${a.bad/mx*84}px"></i></div>`).join('')}</div>
+     <div class="dlbl"><span>${arr[0].dt.toLocaleDateString('hu-HU',{month:'short',day:'numeric'})}</span><span>ma</span></div><p class="small muted">Zöld: jó válasz, piros: rossz vagy részben jó.</p></div>
+    <div><h3>Hibái</h3>${el.length?el.map(([k,v])=>`<div class="errrow" style="grid-template-columns:1fr 1fr 40px"><b class="small">${esc(k)}</b><div class="bar"><i style="width:${v/el[0][1]*100}%"></i></div><span class="small">${v}×</span></div>`).join(''):'<p class="muted small">Nincs hibája az időszakban.</p>'}</div></div>
+   <h3>Próbák</h3>${(d.tr||[]).length?`<table><thead><tr><th>Mikor</th><th>Téma</th><th>Boss</th><th>Eredmény</th><th>Napló</th></tr></thead><tbody>
+    ${d.tr.map(t=>`<tr><td>${fmtDT(t.started_at)}</td><td>${TOPICS[t.topic]||esc(t.topic)}</td><td>${t.boss==='t5'?'5-ös boss':'4-es boss'}</td>
+     <td>${t.won?`<span class="grade">${t.grade}</span> győzelem`:t.finished_at?'<span class="pill r">vereség</span>':'<span class="pill">félbehagyva</span>'}</td>
+     <td>${Array.isArray(t.log)&&t.log.length?`<details class="tlog"><summary>${t.log.length} válasz</summary><table>${t.log.map(l=>`<tr><td class="small">${'★'.repeat(l.level||0)}</td><td class="small">${esc(l.task)}</td><td class="small"><code>${esc(l.answer)}</code></td><td>${res(l)}</td></tr>`).join('')}</table></details>`:'–'}</td></tr>`).join('')}</tbody></table>`:'<p class="muted small">Még nem próbázott.</p>'}
+   <h3>Feladatnapló (legutóbbi ${Math.min(n,300)})</h3>${n?`<div class="tw"><table><thead><tr><th>Mikor</th><th>Hol</th><th>Feladat</th><th>Válasza</th><th>Eredmény</th><th>Tipp</th></tr></thead><tbody>
+    ${ev.slice(0,300).map(e=>`<tr><td class="small">${fmtDT(e.ts)}</td><td class="small">${modeN[e.mode]||esc(e.mode)} · ${e.topic==='zk'?(e.kind==='ki'?'Kiemelés':'Bontás'):'Összevonás'} ${'★'.repeat(e.level||0)}</td>
+     <td class="small">${esc(e.task)}</td><td class="small"><code>${esc(e.answer)}</code></td><td class="small">${res(e)}</td><td class="small">${e.hint?'💡'.repeat(e.hint):''}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted small">Nincs feladat az időszakban.</p>'}`;
+}
+
+/* ---------- Kezelés ---------- */
+function lessonState(c,k){const l=LESSONS.find(x=>x.key===k);return (c.config&&c.config.lessons&&c.config.lessons[k])||l.def}
+function manageHTML(){
+  const c=curClass(),st=V.stats;
+  const classBox=`<div class="box"><b>Osztályok:</b> ${V.classes.map(x=>esc(x.name)).join(', ')||'még nincs'}
+    <form id="fcls" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><input id="clsName" placeholder="Új osztály neve, pl. 7.a" required><button class="btn">Létrehozás</button></form></div>`;
+  if(!c)return `<h2>Kezelés</h2>${classBox}<p>Először hozz létre egy osztályt.</p>`;
+  const S=st?st.students:[];
+  const privs=V.privDraft||(c.config&&Array.isArray(c.config.privs)&&c.config.privs.length?c.config.privs:DEFAULT_PRIVS).map(p=>({...p}));V.privDraft=privs;
+  return `<h2>Kezelés – ${esc(c.name)}</h2>
+   ${st&&st.coupons.length?`<h3>Beváltásra váró kuponok (${st.coupons.length})</h3><table><thead><tr><th>Diák</th><th>Kiváltság</th><th>Kód</th><th>Mikor</th><th></th></tr></thead><tbody>
+    ${st.coupons.map(k=>`<tr><td>${esc(k.nick)}</td><td>${esc(k.name)}${k.is_test?' <span class="pill y">dolgozat</span>':''}</td><td><code><b>${esc(k.code)}</b></code></td><td class="small">${fmtDT(k.created_at)}</td>
+     <td><button class="btn sm" data-redeem="${k.student_id}|${esc(k.cid)}">Beváltva</button></td></tr>`).join('')}</tbody></table>`:''}
+   <div class="grid2" style="margin-top:14px">
+    <div><h3>Új diákok</h3><p class="small muted">Soronként egy becenév. A rendszer mindegyiknek 4 jegyű PIN-t ad. A PIN-t csak most látod, utána legfeljebb újat tudsz generálni.</p>
+     <textarea id="nicks" placeholder="Villám&#10;Kiss Bence&#10;Holdfény"></textarea><p><button class="btn" id="btnCreate">Diákok felvétele</button></p>
+     ${V.newPins?`<div class="box"><b>Létrehozva:</b><table>${V.newPins.map(r=>`<tr><td>${esc(r.nick)}</td><td>${r.ok?`<code><b>${r.pin}</b></code>`:`<span class="err">${esc(r.msg)}</span>`}</td></tr>`).join('')}</table>
+      <p><button class="btn" id="btnPrint">🖨 Belépőkártyák nyomtatása</button></p></div>`:''}</div>
+    <div><h3>Helyszínek</h3><p class="small muted">Amit itt lezársz, az a diákoknál „hamarosan” állapotú lesz, és nem jön elő az arénában és a próbán sem.</p>
+     <table>${LESSONS.map(l=>{const s=lessonState(c,l.key);return `<tr><td>${esc(l.name)}${l.ready?'':' <span class="pill">még nincs kész</span>'}</td>
+      <td style="white-space:nowrap"><button class="chip ${s==='open'?'on':''}" data-lesson="${l.key}:open" ${l.ready?'':'disabled'}>Nyitva</button> <button class="chip ${s!=='open'?'on':''}" data-lesson="${l.key}:soon">Zárva</button></td></tr>`}).join('')}</table>
+     ${classBox}</div></div>
+   <h3>Diákok (${S.length})</h3>${S.length?`<table><thead><tr><th>Becenév</th><th>Utoljára</th><th>Állapot</th><th></th></tr></thead><tbody>
+    ${S.map(s=>`<tr><td><b>${esc(s.nick)}</b></td><td class="small">${ago(s.last_seen)}</td><td>${s.active?'<span class="pill g">aktív</span>':'<span class="pill r">letiltva</span>'}${s.locked?' <span class="pill y">zárolva (sok hibás PIN)</span>':''}</td>
+     <td style="white-space:nowrap"><button class="btn sm ghost" data-pin="${s.id}">Új PIN</button> <button class="btn sm ghost" data-act2="${s.id}:${s.active?0:1}">${s.active?'Letiltás':'Engedélyezés'}</button> <button class="btn sm danger" data-del="${s.id}">Törlés</button></td></tr>`).join('')}</tbody></table>`:'<p class="muted">Még nincs diák.</p>'}
+   <h3>Kiváltságok (AP-ért)</h3><p class="small muted">A szint nyitja meg, az AP-ért lehet felhasználni. Az „Osztály” a karakterosztály (üres = mindenkinek). A „Dolg.” a dolgozathoz kapcsolódó kiváltság: egyszerre csak egy lehet beváltatlan.</p>
+   <div class="tw"><table class="ped"><thead><tr><th>Aktív</th><th>Név</th><th>Leírás</th><th>Szint</th><th>AP</th><th>Gyakoriság</th><th>Osztály</th><th>Dolg.</th><th></th></tr></thead><tbody>
+    ${privs.map((p,i)=>`<tr><td><input type="checkbox" data-pv="${i}:on" ${p.on?'checked':''}></td><td><input type="text" data-pv="${i}:name" value="${esc(p.name)}"></td><td><textarea data-pv="${i}:desc">${esc(p.desc)}</textarea></td>
+     <td><input type="number" min="1" data-pv="${i}:lvl" value="${p.lvl}"></td><td><input type="number" min="1" data-pv="${i}:ap" value="${p.ap}"></td>
+     <td><select data-pv="${i}:limit">${[['none','nincs'],['week','hetente 1×'],['month','havonta 1×']].map(([k,n])=>`<option value="${k}" ${p.limit===k?'selected':''}>${n}</option>`).join('')}</select></td>
+     <td><select data-pv="${i}:cls">${[['','mindenki'],...Object.entries(CLS_NAME)].map(([k,n])=>`<option value="${k}" ${p.cls===k?'selected':''}>${n}</option>`).join('')}</select></td>
+     <td><input type="checkbox" data-pv="${i}:test" ${p.test?'checked':''}></td><td><button class="btn sm ghost" data-pdel="${i}">✕</button></td></tr>`).join('')}</tbody></table></div>
+   <p style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" id="btnPAdd">+ Új kiváltság</button><button class="btn" id="btnPSave">Kiváltságok mentése</button><button class="btn ghost" id="btnPDef">Alapértelmezés visszaállítása</button></p>`;
+}
+async function saveConfig(patch){
+  const c=curClass();const cfg={...(c.config||{}),...patch};
+  await api(`classes?id=eq.${c.id}`,{method:'PATCH',body:{config:cfg}});c.config=cfg;
+}
+function printCards(rows){
+  $('print').innerHTML=rows.map(r=>`<div class="card"><h4>Matek-kaland ⚗️</h4><div>Becenév:</div><div class="big">${esc(r.nick)}</div><div style="margin-top:2mm">PIN-kód:</div><div class="big">${esc(r.pin)}</div>
+   <div class="u" style="margin-top:3mm">${esc(APP_URL)}<br>A PIN-t ne add oda senkinek! Ha elfelejted, szólj a tanárnak.</div></div>`).join('');
+  setTimeout(()=>window.print(),100);
+}
+document.addEventListener('submit',async e=>{
+  if(e.target.id==='fcls'){e.preventDefault();const n=$('clsName').value.trim();if(!n)return;
+    try{const r=await api('classes',{method:'POST',body:{name:n,teacher_id:SESS.uid},prefer:'return=representation'});V.cls=r[0].id;localStorage.setItem('mk-t-cls',V.cls);await loadClasses();await refresh();toast('Osztály létrehozva: '+n)}catch(x){toast('Hiba: '+x.message)}}
+});
+document.addEventListener('change',e=>{if(e.target.id==='selStu'&&e.target.value)openStudent(e.target.value)});
+document.addEventListener('change',e=>{const el=e.target.closest('[data-pv]');if(!el)return;const [i,f]=el.dataset.pv.split(':');const p=V.privDraft[+i];
+  p[f]=el.type==='checkbox'?el.checked:(f==='lvl'||f==='ap')?Math.max(1,parseInt(el.value)||1):el.value});
+document.addEventListener('click',async e=>{
+  const t=e.target;
+  try{
+    if(t.id==='btnCreate'){const nicks=$('nicks').value.split('\n').map(x=>x.trim()).filter(Boolean);if(!nicks.length)return;t.disabled=true;
+      V.newPins=await rpc('teacher_create_students',{p_class:V.cls,p_nicks:nicks});await refresh();toast(`${V.newPins.filter(r=>r.ok).length} diák felvéve`);return}
+    if(t.id==='btnPrint'){printCards(V.newPins.filter(r=>r.ok));return}
+    if(t.dataset.pin){const s=V.stats.students.find(x=>x.id===t.dataset.pin);if(!confirm(`Új PIN-t generálsz ${s.nick} számára? A régi azonnal érvényét veszti, és minden eszközről kilépteti.`))return;
+      const pin=await rpc('teacher_reset_pin',{p_student:s.id});V.newPins=[{nick:s.nick,pin,ok:true}];await refresh();toast(`${s.nick} új PIN-je: ${pin}`);return}
+    if(t.dataset.act2){const [id,v]=t.dataset.act2.split(':');await api(`students?id=eq.${id}`,{method:'PATCH',body:{active:v==='1'}});await refresh();return}
+    if(t.dataset.del){const s=V.stats.students.find(x=>x.id===t.dataset.del);const a=prompt(`A törléssel ${s.nick} minden adata (haladás, napló, jegyek) végleg elvész. Ha biztos vagy benne, írd be a becenevét:`);
+      if(a===null)return;if(a.trim()!==s.nick){toast('A becenév nem egyezik, nem töröltem.');return}
+      await api(`students?id=eq.${s.id}`,{method:'DELETE'});await refresh();toast('Törölve: '+s.nick);return}
+    if(t.dataset.redeem){const [sid,cid]=t.dataset.redeem.split('|');await api(`coupons?student_id=eq.${sid}&cid=eq.${encodeURIComponent(cid)}`,{method:'PATCH',body:{redeemed_at:new Date().toISOString()}});await refresh();toast('Kupon beváltva');return}
+    if(t.dataset.lesson){const [k,v]=t.dataset.lesson.split(':');const c=curClass();await saveConfig({lessons:{...((c.config||{}).lessons||{}),[k]:v}});render();toast('Mentve – a diákoknál a következő szinkronnál frissül');return}
+    if(t.id==='btnPAdd'){V.privDraft.push({id:'p'+Date.now(),name:'Új kiváltság',desc:'',lvl:2,ap:10,limit:'none',cls:'',test:false,on:true});render();return}
+    if(t.dataset.pdel){V.privDraft.splice(+t.dataset.pdel,1);render();return}
+    if(t.id==='btnPSave'){await saveConfig({privs:V.privDraft});toast('Kiváltságok mentve');return}
+    if(t.id==='btnPDef'){if(!confirm('Visszaállítod az alapértelmezett kiváltságlistát?'))return;V.privDraft=DEFAULT_PRIVS.map(p=>({...p}));await saveConfig({privs:V.privDraft});render();toast('Visszaállítva');return}
+  }catch(x){toast('Hiba: '+x.message);t.disabled=false}
+});
+boot();
+</script>
+</body>
+</html>

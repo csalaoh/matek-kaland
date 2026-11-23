@@ -71,6 +71,10 @@ body.scifi .btn{color:#04121a}
 body.scifi .btn.ghost{color:var(--accent)}
 .btn.ghost{background:transparent;border:2px solid var(--accent);color:var(--accent)}
 .btn:disabled{opacity:.45;cursor:default}
+.topics{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.tchip{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.55);color:var(--ink);font:600 .85rem Georgia,serif;cursor:pointer}
+.tchip.on{background:var(--accent2);border-color:var(--accent2);color:#fff}
+body.scifi .tchip{background:#0a1128}body.scifi .tchip.on{background:var(--accent);color:#0a1128}
 .kp{display:none;margin-top:12px;max-width:420px}
 .kp.show{display:block}
 .kp .row{display:grid;gap:6px;margin-bottom:6px}
@@ -331,6 +335,16 @@ button.step{font-family:inherit;cursor:pointer;background:transparent}
 .pulse{transform-box:fill-box;transform-origin:center;animation:pulse 1.8s ease-out infinite}
 @keyframes pulse{0%{transform:scale(1);opacity:.9}100%{transform:scale(1.45);opacity:0}}
 
+.loginov{position:fixed;inset:0;z-index:200;background:rgba(12,20,16,.82);display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)}
+.loginbox{background:#f6ecd6;color:#2b2216;border-radius:16px;padding:22px 22px 16px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.5);font-family:inherit}
+.loginbox .lhead{display:flex;gap:12px;align-items:center;margin-bottom:14px}.loginbox .lemb{width:46px;height:46px}
+.loginbox .lhead b{display:block;font:700 1.3rem Georgia,serif}.loginbox .lhead small{color:#7a6a50}
+.loginbox label{display:block;font-weight:800;font-size:.85rem;color:#6b5a40;margin:10px 0 0}
+.loginbox input{display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:12px;font-size:1.15rem;border:1px solid #cdb98f;border-radius:10px;background:#fffaf0;color:#2b2216}
+.loginbox .btn{width:100%;margin-top:14px;padding:12px;font-size:1.05rem}
+.loginbox .lguest{width:100%;margin-top:8px;background:none;border:0;color:#7a5410;text-decoration:underline;font:inherit;cursor:pointer;padding:8px}
+.loginbox .lerr{color:#b3362b;font-weight:700;min-height:1em;margin:8px 0 0}.loginbox .lmsg{background:#fbe3c4;border-radius:8px;padding:8px 10px;margin:0 0 6px}
+.notice .nbtn{padding:2px 10px;font-size:.8rem;margin-left:6px;color:#fff;border-color:rgba(255,255,255,.5)}
 .notice{max-width:1180px;margin:0 auto 12px;padding:8px 20px;color:#fff;opacity:.85;font-size:.85rem;background:rgba(255,255,255,.08);border-radius:10px;width:calc(100% - 40px)}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
@@ -357,7 +371,7 @@ button.step{font-family:inherit;cursor:pointer;background:transparent}
     <button id="tScifi">Sci-fi</button>
   </div>
 </header>
-<div class="notice">Kipróbálós verzió: jegyet nem ad, és senki nem látja, mit csinálsz benne. A haladásod ebben a böngészőben mentődik.</div>
+<div class="notice" id="notice"></div>
 <nav class="tabs" id="tabs">
   <button data-m="falu">Falu</button>
   <button data-m="map">Térkép</button>
@@ -610,15 +624,239 @@ function checkL3(task,rawE,rawV){
   const err=!eOk?se.err:vErr?vErr.err:'';
   return {status,eOk,vOk,eErr:eOk?null:se,vErr,follow:!eOk&&vOk,err};
 }
-function l3Report(r){
-  const ok='✔',no='✘';
-  const a=r.eOk?`${ok} <b>Összevonás:</b> jó.`:`${no} <b>Összevonás – ${r.eErr.err}.</b> ${r.eErr.explain}`;
-  const b=r.vOk?`${ok} <b>Behelyettesítés és számolás:</b> jó${r.follow?' – a saját kifejezésedbe jól helyettesítettél, ezért ez a rész jár.':'.'}`
-               :`${no} <b>Behelyettesítés – ${r.vErr.err}.</b> ${r.vErr.explain}`;
-  return a+'<br>'+b;
-}
 
 /* ================= TÉMÁK (csak „bőr”: szöveg, szín, rajz) ================= */
+
+/* ================= ZÁRÓJELBONTÁS ÉS KIEMELÉS ================= */
+// Feladat: {topic:'zk', kind:'fel'|'ki', level, vars, ...}
+//  fel: parts=[{f:{c,k},inner:[terms]} | {t:term}] -> target (kibontott, összevont alak)
+//  ki : terms (kibontott alak, ezt látja) + F (közös tényező) + inner (zárójelben maradó rész)
+const mulT=(a,b)=>({c:a.c.mul(b.c),k:(a.k+b.k).split('').sort().join('')});
+const sgn=()=>Math.random()<.5?-1:1;
+const gcdList=ns=>ns.reduce((g,n)=>gcd(g,n),0)||1;
+function expandParts(parts,mode){ // mode[i]: 'ok' | 'first' (csak az első tagot szorozta) | 'mirror' (csak az első előjelet fordította)
+  const out=[];
+  parts.forEach((p,i)=>{
+    if(p.t){out.push(p.t);return}
+    const m=mode?mode[i]:'ok';
+    p.inner.forEach((r,j)=>{
+      if(j===0||m==='ok')out.push(mulT(p.f,r));
+      else if(m==='first')out.push(r);
+      else out.push(mulT({c:new Q(Math.abs(p.f.c.n),p.f.c.d),k:p.f.k},r));
+    });
+  });
+  return out;
+}
+function factorHTML(f,dot=' · '){ // f a zárójel előtt; előjel nélkül
+  const a=new Q(Math.abs(f.c.n),f.c.d);
+  if(a.n===1&&a.d===1&&!f.k)return '';
+  return (a.n===1&&a.d===1?'':absHTML(a))+letters(f.k)+dot;
+}
+function partsHTML(parts){
+  return parts.map((p,i)=>{
+    if(p.t)return termHTML(p.t,i===0);
+    const neg=p.f.c.n<0;
+    return (i===0?(neg?'−':''):(neg?' − ':' + '))+factorHTML(p.f)+'('+exprHTML(p.inner)+')';
+  }).join('');
+}
+function factoredHTML(F,inner){return (F.c.n<0?'−':'')+factorHTML(F)+'('+exprHTML(inner)+')'}
+const ZK_X=['x','a','y','b','m','n'];
+const pick2=()=>{const [u,v]=pick(VARSETS2);return Math.random()<.5?[u,v]:[v,u]};
+
+/* --- felbontás --- */
+function genFel(l){
+  for(;;){
+    let parts,vars;
+    if(l===1){
+      const x=pick(ZK_X);vars=[x];
+      const inner=[mk(pick([1,1,1,2,3]),x),mk(sgn()*rint(1,9),'')];
+      parts=[{f:mk(rint(2,9),''),inner}];
+    }else if(l===2){
+      const v=rint(1,3);
+      if(v===1){const x=pick(ZK_X);vars=[x];parts=[{f:mk(-rint(2,6),''),inner:[mk(rint(1,4),x),mk(sgn()*rint(1,9),'')]}]}
+      else if(v===2){const [u,w]=pick2();vars=[u,w];
+        const inner=Math.random()<.5?[mk(sgn()*rint(1,4),u),mk(sgn()*rint(1,4),w),mk(sgn()*rint(1,9),'')]:[mk(1,u),mk(sgn()*rint(1,9),'')];
+        inner[0].c=new Q(Math.abs(inner[0].c.n));parts=[{f:mk(-1,''),inner}]}
+      else{const [u,w]=pick2();vars=[u,w];
+        const inner=shuffle([mk(rint(2,9),''),mk(1,w)]);if(Math.random()<.4)inner[1].c=inner[1].c.neg();
+        parts=[{f:mk(pick([1,1,2,3]),u),inner}]}
+    }else{
+      const v=rint(1,4);
+      if(v<=2){const x=pick(ZK_X);vars=[x];
+        const g=()=>[mk(pick([1,1,2]),x),mk(sgn()*rint(1,9),'')];
+        parts=[{f:mk(rint(2,5),''),inner:g()},{f:mk(sgn()*pick([1,2,3,4,5]),''),inner:g()}];
+        if(v===2)parts.unshift({t:mk(sgn()*rint(1,6),x)});
+      }else if(v===3){const [u,w]=pick2();vars=[u,w];
+        const g=()=>[mk(rint(1,3),u),mk(sgn()*rint(1,4),w)];
+        parts=[{f:mk(rint(2,4),''),inner:g()},{f:mk(sgn()*pick([1,1,2]),''),inner:g()}];
+      }else{const [u,w]=pick2();vars=[u,w];
+        parts=[{f:mk(sgn()*rint(2,5),u),inner:[mk(rint(2,5),w),mk(sgn()*rint(2,7),'')]}];
+      }
+    }
+    if(parts.some(p=>p.f&&gcdList(p.inner.map(t=>t.c.n))>1))continue;
+    const products=expandParts(parts);
+    const target=combine(products);
+    if(target.size<2)continue;
+    if(l<3&&target.size!==products.length)continue;
+    const cmb=target.size<products.length;return {topic:'zk',kind:'fel',level:l,vars,parts,products,target,combine:cmb,two:cmb};
+  }
+}
+function checkFel(task,raw){
+  const p=parseExpr(raw,task.vars);if(p.err)return {status:'invalid',msg:p.err};
+  const S=combine(p.terms),T=task.target;
+  const eqMap=(A,B)=>A.size===B.size&&[...B].every(([k,c])=>A.has(k)&&A.get(k).eq(c));
+  if(eqMap(S,T)){
+    const keys=p.terms.map(t=>t.k);
+    if(keys.length!==new Set(keys).size||p.terms.some(t=>t.c.zero))return {status:'unsimplified',msg:'Jó a felbontás! Már csak vond össze az egyneműeket.'};
+    return {status:'correct'};
+  }
+  // tipikus hibák: csak az első tagot szorozta / csak az első előjelet fordította
+  const gi=task.parts.map((p,i)=>p.f?i:-1).filter(i=>i>=0);
+  const opts=i=>task.parts[i].inner.length<2?['ok']:task.parts[i].f.c.n<0?['ok','first','mirror']:['ok','first'];
+  let combos=[[]];gi.forEach(i=>{combos=combos.flatMap(c=>opts(i).map(o=>c.concat([[i,o]])))});
+  combos.sort((x,y)=>y.filter(([,o])=>o==='mirror').length-x.filter(([,o])=>o==='mirror').length);
+  for(const c of combos){
+    if(c.every(([,o])=>o==='ok'))continue;
+    const mode={};c.forEach(([i,o])=>mode[i]=o);
+    if(eqMap(S,combine(expandParts(task.parts,mode)))){
+      if(c.some(([,o])=>o==='mirror'))return {status:'wrong',err:'Mínusz-tükör hiba',explain:'A zárójel előtti mínusz a zárójelben <b>minden</b> tag előjelét megfordítja, nem csak az elsőét.'};
+      return {status:'wrong',err:'A szorzó nem ért el minden tagot',explain:'A zárójel előtti szorzóval a zárójelben lévő <b>minden</b> tagot meg kell szorozni.'};
+    }
+  }
+  const r=checkSimplify({terms:task.products,target:T},raw);
+  if(r.status==='wrong'&&task.level<3&&/^Számolási hiba/.test(r.err))return {status:'wrong',err:'Szorzási hiba',explain:'Valamelyik szorzat nem stimmel. Szorozd meg újra a zárójel előtti tényezővel a tagokat!'};
+  if(r.status==='wrong'&&r.err==='Előjelhiba')return {status:'wrong',err:'Előjelhiba',explain:'Elcsúszott egy előjel. Negatív szorzónál: mínusz-szor-mínusz plusz, mínusz-szor-plusz mínusz.'};
+  if(r.status==='correct'||r.status==='unsimplified')return {status:'wrong',err:'Hiba',explain:'Nem ez jön ki.'};
+  return r;
+}
+
+/* --- kiemelés --- */
+function genKi(l){
+  for(;;){
+    let F,inner,vars;
+    if(l===1){
+      const x=pick(ZK_X);vars=[x];F=mk(rint(2,9),'');
+      inner=[mk(rint(1,5),x),mk(sgn()*rint(1,9),'')];if(Math.random()<.2)inner.reverse();
+      if(inner.some(t=>t.c.n<0)&&inner[0].c.n<0)continue;
+    }else if(l===2){
+      const v=rint(1,3);
+      if(v===1){const [u,w]=pick2();vars=[u,w];F=mk(1,u);inner=shuffle([mk(rint(2,9),''),mk(1,w)]);if(Math.random()<.3)inner[1].c=inner[1].c.neg()}
+      else if(v===2){const x=pick(ZK_X);vars=[x];F=mk(-rint(2,6),'');inner=[mk(rint(1,4),x),mk(-rint(1,9),'')]}
+      else{const [u,w]=pick2();vars=[u,w];F=mk(rint(2,6),'');inner=[mk(rint(1,5),u),mk(sgn()*rint(1,5),w),mk(sgn()*rint(1,9),'')]}
+    }else{
+      const v=rint(1,3);
+      if(v===1){const [u,w]=pick2();vars=[u,w];F=mk(rint(2,6),u);inner=[mk(rint(1,5),w),mk(sgn()*rint(2,9),'')]}
+      else if(v===2){const [u,w]=pick2();vars=[u,w];F=mk(-rint(2,5),u);inner=[mk(rint(1,5),w),mk(-rint(2,9),'')]}
+      else{const vs=pick(VARSETS3);vars=vs;F=mk(rint(3,6),'');inner=[mk(rint(1,5),vs[0]),mk(-rint(1,5),vs[1]),mk(rint(1,9),vs[2])]}
+    }
+    if(gcdList(inner.map(t=>t.c.n))!==1)continue;
+    const terms=inner.map(t=>mulT(F,t));
+    if(terms.some(t=>Math.abs(t.c.n)>60))continue;
+    return {topic:'zk',kind:'ki',level:l,vars,F,inner,terms,target:combine(terms)};
+  }
+}
+function parseFactored(raw,allowed){
+  const s=norm(raw);if(!s)return {err:'Üres a válasz.'};
+  let m=s.match(/^([+-]?)(\d*)([a-z]*)\((.+)\)$/),sg,num,lt,inn;
+  if(m)[,sg,num,lt,inn]=m;
+  else if((m=s.match(/^\((.+)\)(\d*)([a-z]*)$/))&&(m[2]||m[3])){inn=m[1];num=m[2];lt=m[3];sg=''}
+  else return {nofactor:true};
+  if(/[()]/.test(inn))return {err:'Egy zárójel elég: a kiemelt tényező, utána a zárójel. Pl. 3(2x + 5)'};
+  for(const ch of lt)if(!allowed.includes(ch))return {err:`A(z) „${ch}” betű nem szerepel a feladatban.`};
+  const p=parseExpr(inn,allowed);if(p.err)return {err:'A zárójelen belül: '+p.err.charAt(0).toLowerCase()+p.err.slice(1)};
+  let c=new Q(num?parseInt(num,10):1);if(sg==='-')c=c.neg();
+  return {F:{c,k:lt.split('').sort().join('')},inner:p.terms,trivial:sg!=='-'&&!num&&!lt};
+}
+function checkKi(task,raw){
+  const T=task.target,eqMap=(A,B)=>A.size===B.size&&[...B].every(([k,c])=>A.has(k)&&A.get(k).eq(c));
+  const p=parseFactored(raw,task.vars);
+  if(p.nofactor){
+    const q=parseExpr(raw,task.vars);
+    if(!q.err&&eqMap(combine(q.terms),T))return {status:'invalid',msg:'Ez ugyanaz, ami a feladatban áll. Írd szorzat alakban: kiemelt tényező, utána zárójel – pl. 3(2x + 5).'};
+    return {status:'invalid',msg:'Kiemelt alakban írd be: a közös tényező, utána zárójel – pl. 3(2x + 5) vagy −4(x − 2).'};
+  }
+  if(p.err)return {status:'invalid',msg:p.err};
+  if(p.F.c.zero)return {status:'invalid',msg:'Nullát nem emelünk ki.'};
+  const prod=combine(p.inner.map(t=>mulT(p.F,t)));
+  if(eqMap(prod,T)){
+    if(p.trivial)return {status:'halfway',msg:'Még semmit nem emeltél ki. Mi a közös minden tagban?'};
+    const ins=p.inner.filter(t=>!t.c.zero);
+    if(ins.some(t=>t.c.d!==1))return {status:'halfway',msg:'Igaz, de a zárójelben egész együtthatók legyenek. Kisebb tényezőt emelj ki!'};
+    const g=gcdList(ins.map(t=>t.c.n));
+    const common=ins.map(t=>t.k).reduce((a,k)=>a.split('').filter(ch=>k.includes(ch)).join(''));
+    if(g>1||common)return {status:'halfway',msg:`Igaz, de félúton akadtál: a zárójelben maradt tagoknak még van közös ${g>1&&common?'osztója és betűje':g>1?'osztója':'betűje'}. Emeld ki azt is!`};
+    if(task.terms[0].c.n<0&&p.F.c.n>0)return {status:'correct',note:`Szebb alak, ha az első tag negatív, a mínuszt is kiemeled: ${factoredHTML(task.F,task.inner)}`};
+    return {status:'correct'};
+  }
+  const orig=task.terms.map(t=>t.k+':'+t.c.n+'/'+t.c.d);
+  if(!(Math.abs(p.F.c.n)===1&&!p.F.k)&&p.inner.some(t=>orig.includes(t.k+':'+t.c.n+'/'+t.c.d)))
+    return {status:'wrong',err:'Egy tagot nem osztottál el',explain:'A zárójelbe minden tagból az kerül, ami a kiemelt tényezővel <b>elosztva</b> megmarad. Egy tag változatlanul maradt.'};
+  const sameKeys=prod.size===T.size&&[...T.keys()].every(k=>prod.has(k));
+  if(sameKeys&&[...T].every(([k,c])=>prod.get(k).eq(c)||prod.get(k).eq(c.neg())))
+    return {status:'wrong',err:'Előjelhiba',explain:p.F.c.n<0?'Ha negatív számot emelsz ki, a zárójelben minden előjel megfordul.':'Elcsúszott egy előjel a zárójelen belül.'};
+  if(!sameKeys)return {status:'wrong',err:'Rossz tényező',explain:'Bontsd vissza a válaszod: nem az eredeti kifejezés jön ki. Tényleg minden tagban megvan a kiemelt betű?'};
+  return {status:'wrong',err:'Osztási hiba',explain:'Bontsd vissza a válaszod: nem az eredeti kifejezés jön ki. Oszd el újra a tagokat a kiemelt tényezővel!'};
+}
+function genZK(l,dir){dir=dir||S.dir||'fel';const k=dir==='mix'?pick(['fel','ki']):dir;return k==='fel'?genFel(l):genKi(l)}
+const checkZK=(t,raw,raw2)=>t.two?checkFel2(t,raw,raw2):t.kind==='fel'?checkFel(t,raw):checkKi(t,raw);
+function checkFel2(task,raw1,raw2){
+  const T=task.target,eqMap=(A,B)=>A.size===B.size&&[...B].every(([k,c])=>A.has(k)&&A.get(k).eq(c));
+  const p1=parseExpr(raw1,task.vars);if(p1.err)return {status:'invalid',msg:'1. lépés: '+p1.err};
+  const sig=ts=>ts.filter(t=>!t.c.zero).map(t=>t.k+':'+t.c.n+'/'+t.c.d).sort().join('|');
+  const own=combine(p1.terms);
+  if(sig(p1.terms)!==sig(task.products)&&eqMap(own,T))
+    return {status:'invalid',msg:'1. lépés: itt még a <b>felbontott</b> alakot kérjük, összevonás nélkül – minden szorzat külön tagként. Az összevonás a 2. lépés.'};
+  if(!raw2.trim())return {status:'invalid',msg:'2. lépés: írd be az összevont alakot is!'};
+  const p2=parseExpr(raw2,task.vars);if(p2.err)return {status:'invalid',msg:'2. lépés: '+p2.err};
+  const keys=p2.terms.map(t=>t.k),S2=combine(p2.terms);
+  if((keys.length!==new Set(keys).size||p2.terms.some(t=>t.c.zero))&&(eqMap(S2,T)||eqMap(S2,own)))return {status:'unsimplified',msg:'2. lépés: ugyanannyit ér, de még van összevonható tag.'};
+  const eOk=sig(p1.terms)===sig(task.products);
+  const e=eOk?null:checkFel(task,raw1);
+  const vOk=eqMap(S2,T)||(!eOk&&eqMap(S2,own));
+  let vErr=null;
+  if(!vOk){const r=checkSimplify({terms:eOk?task.products:p1.terms,target:eOk?T:own},raw2);vErr=r.status==='wrong'?r:{err:'Összevonási hiba',explain:'Az összevonás nem stimmel.'}}
+  const status=eOk&&vOk?'correct':(eOk||vOk)?'partial':'wrong';
+  return {status,eOk,vOk,eErr:e&&e.status==='wrong'?e:{err:'Felbontási hiba',explain:'A felbontás nem stimmel.'},vErr,follow:!eOk&&vOk,err:!eOk?(e&&e.err)||'Felbontási hiba':vErr?vErr.err:'',zk:true};
+}
+function stepReport(r){
+  const ok='✔',no='✘',zk=r.zk;
+  const a=r.eOk?`${ok} <b>${zk?'Felbontás':'Összevonás'}:</b> jó.`:`${no} <b>${zk?'Felbontás':'Összevonás'} – ${r.eErr.err}.</b> ${r.eErr.explain}`;
+  const b=r.vOk?`${ok} <b>${zk?'Összevonás':'Behelyettesítés és számolás'}:</b> jó${r.follow?` – a saját ${zk?'felbontásodat jól vontad össze':'kifejezésedbe jól helyettesítettél'}, ezért ez a rész jár.`:'.'}`
+               :`${no} <b>${zk?'Összevonás':'Behelyettesítés'} – ${r.vErr.err}.</b> ${r.vErr.explain}`;
+  return a+'<br>'+b;
+}
+function zkSolution(t){return t.kind==='fel'?(t.two?`Felbontva: ${exprHTML(t.products)}, összevonva: <b>${exprHTML(mapToTerms(t.target))}</b>`:`Helyes megoldás: <b>${exprHTML(mapToTerms(t.target))}</b>`):`Helyes megoldás: <b>${factoredHTML(t.F,t.inner)}</b>`}
+function zkHint(t){
+  let h;
+  if(t.kind==='fel'){
+    const neg=t.parts.some(p=>p.f&&p.f.c.n<0);
+    h=`<b>1. segítség:</b> A zárójel előtti szorzó a zárójelben <b>minden</b> tagot megszoroz.${neg?' A mínusz pedig minden előjelet megfordít (mínusz-tükör).':''}${t.combine?' A végén vond össze az egyneműeket!':''}<br>`;
+    if(t.hint>=2){
+      const fs=f=>{const a=new Q(Math.abs(f.c.n),f.c.d);const b=(a.n===1&&a.d===1&&f.k?'':absHTML(a))+letters(f.k);return f.c.n<0?`(−${b})`:b};
+      const rs=r=>r.c.n<0?`(${termHTML(r,true)})`:termHTML(r,true);
+      const pcs=t.parts.map((p,i)=>p.t?termHTML(p.t,i===0):(i?' + ':'')+(t.parts.length>1?'[':'')+p.inner.map(r=>`${fs(p.f)}·${rs(r)}`).join(' + ')+(t.parts.length>1?']':'')).join('');
+      h+=`<b>2. segítség:</b> Kiírva a szorzások:<div class="expr" style="font-size:1.2rem;margin:6px 0">${pcs}</div>Számold ki a szorzatokat${t.combine?', aztán vond össze':''}!<br>`;
+    }
+  }else{
+    const nums=t.terms.map(x=>Math.abs(x.c.n));
+    h=`<b>1. segítség:</b> Keresd meg, mi közös <b>minden</b> tagban: a számoknál (${nums.join(', ')}) a legnagyobb közös osztó, és nézd meg, van-e minden tagban közös betű.${t.terms[0].c.n<0?' Az első tag negatív, ezért a mínuszt is emeld ki!':''} Ellenőrizni visszabontással tudod.<br>`;
+    if(t.hint>=2){
+      const F=(t.F.c.n<0?'−':'')+factorHTML(t.F,'').replace(/^$/,'1');
+      h+=`<b>2. segítség:</b> A kiemelendő tényező: <b>${F}</b>. Oszd el vele mindegyik tagot:<div class="expr" style="font-size:1.2rem;margin:6px 0">${t.terms.map(x=>`${termHTML(x,true)} : ${F.startsWith('−')?'('+F+')':F} = ?`).join('&nbsp;&nbsp;&nbsp;')}</div>`;
+    }
+  }
+  return h;
+}
+
+const TOPICS={betus:'Betűs kifejezések',zk:'Zárójelbontás és kiemelés'};
+const isTwo=t=>t.topic==='zk'?!!t.two:t.level===3;
+const zkOpen=()=>ISLANDS.some(i=>i.lessons.some&&i.lessons.some(l=>l.play==='zk'&&l.st==='open'));
+function setTopic(tp,dir){
+  const oldDir=S.dir;if(dir)S.dir=dir;
+  if(tp!==S.topic){S.prog[S.topic]={level:S.level,max:S.max,streak:S.streak,miss:S.miss};
+    const q=S.prog[tp]||{level:1,max:1,streak:0,miss:0};S.level=q.level;S.max=q.max;S.streak=q.streak;S.miss=q.miss;S.topic=tp;S.ptask=gen(S.level)}
+  else if(tp==='zk'&&S.dir!==oldDir)S.ptask=gen(S.level);
+}
 const THEMES={
   fantasy:{
     world:'Alkimisták völgye',sub:'1. régió · Betűs kifejezések',cur:'arany',hero:'Alkimista',
@@ -632,6 +870,10 @@ const THEMES={
     lvlUp:n=>`A céh elismer: ${n}. karakterszint! Nőtt az életerőd és az aréna-sebzésed.`,
     ok:['Tökéletes keverék!','A fiola felragyog!','Szép munka, alkimista!'],
     q1:'Vond össze!',q3:'Vond össze, aztán számold ki az értékét!',
+    zkStory:[
+      'A zárójel egy varázspajzs, előtte a szorzó a varázslat. Az erdőben szétbontod: a varázs a pajzs mögött <b>mindenkit</b> eltalál. A kristálybarlangban visszacsomagolod: a közös tényezőt kihozod a pajzs elé.',
+      'Megjelennek a mínusz-tükrök és a betűs varázslatok, és már oda-vissza dolgozol: hol felbontani, hol kiemelni kell.',
+      'Mesterfok: bonts fel és vonj össze, vagy emeld ki a számot és a betűt egyszerre. Csak a teljes kiemelés számít!'],
     attacks:['Szikra','Tűzgolyó','Villámlánc'],
     arenaTitle:'Aréna – a völgy szörnyei',arenaIntro:'Válassz ellenfelet! Itt számít a karaktered szintje és a felszerelésed.',
     trialTitle:'Próba – a völgy őrzői',trialIntro:'A próbán mindenki ugyanazzal indul: 100 életerő, felszerelés nélkül. Csak a tudásod számít.',
@@ -659,6 +901,10 @@ const THEMES={
     lvlUp:n=>`Fedélzeti napló: ${n}. karakterszint! Erősebb pajzs, erősebb fegyverek.`,
     ok:['Dokkolás sikeres!','Rendszer zöld!','Pontos számítás!'],
     q1:'Vond össze!',q3:'Vond össze, aztán számold ki az értékét!',
+    zkStory:[
+      'A zárójel egy energiapajzs, előtte a szorzó a töltés. Bontásnál a töltés a pajzs mögött <b>minden</b> modulba eljut. Kiemelésnél a közös modult kiszereled a pajzs elé.',
+      'Jönnek a polaritásváltók (mínusz a zárójel előtt) és a betűs töltések. Már oda-vissza dolgozol!',
+      'Parancsnoki szint: bonts fel és vonj össze, vagy emeld ki a számot és a betűt egyszerre. Csak a teljes kiemelés számít!'],
     attacks:['Lézer','Plazmaágyú','Ionnyaláb'],
     arenaTitle:'Szimulátor – gyakorló bevetések',arenaIntro:'Válassz célpontot! Itt számít a karaktered szintje és a felszerelésed.',
     trialTitle:'Próba – éles bevetés',trialIntro:'A próbán mindenki ugyanazzal a hajóval indul: 100 pajzs, felszerelés nélkül. Csak a tudásod számít.',
@@ -889,9 +1135,9 @@ function regenAP(){ // tanítási naponként (H–P) +apDay(), legfeljebb apMax(
 }
 function couponCode(){const a='ABCDEFGHJKLMNPRSTUVXYZ23456789';return Array.from({length:4},()=>a[Math.floor(Math.random()*a.length)]).join('')}
 
-const S={theme:'fantasy',mode:'falu',level:1,max:1,streak:0,miss:0,
+const S={theme:'fantasy',mode:'falu',topic:'betus',dir:'fel',prog:{},level:1,max:1,streak:0,miss:0,
   gold:0,xp:0,clvl:1,owned:{weapon:false,hat:false,pet:false},potions:0,
-  ptask:null,battle:null,tries:{t4:DAILY_TRIES,t5:DAILY_TRIES},grades:[],log:[],anim:null,coupons:[],privs:PRIVILEGES.map(p=>({...p})),ap:AP_DAY_BASE,apDate:null,cls:null,gender:'f',hp:null,hpDay:null,eq:{weapon:true,hat:true,pet:true},beaten:[],fLast:null,iLast:null};
+  ptask:null,battle:null,trialTopic:'betus',tries:{},grades:[],log:[],anim:null,coupons:[],privs:PRIVILEGES.map(p=>({...p})),ap:AP_DAY_BASE,apDate:null,cls:null,gender:'f',hp:null,hpDay:null,eq:{weapon:true,hat:true,pet:true},beaten:[],fLast:null,iLast:null};
 const $=id=>document.getElementById(id);
 const T=()=>THEMES[S.theme];
 const decay=l=>DECAY[Math.max(0,S.max-l)];
@@ -906,29 +1152,38 @@ const HEAL_OK=20,HEAL_PART=10;
 function regenHP(){const d=isoDay();if(S.hp==null||S.hpDay!==d){S.hp=hpMax();S.hpDay=d}S.hp=Math.min(S.hp,hpMax())}
 function healHP(n){if(S.hp>=hpMax())return 0;const h=Math.min(n,hpMax()-S.hp);S.hp+=h;return h}
 const exhausted=()=>S.hp<=0;
-function gen(l){const t=l===1?genL1():l===2?genL2():genL3();t.done=false;t.hint=0;t.fb=null;t.input='';return t}
+function gen(l,tp=S.topic,dir){const t=tp==='zk'?genZK(l,dir):l===1?genL1():l===2?genL2():genL3();t.done=false;t.hint=0;t.fb=null;t.input='';return t}
 const inBattle=()=>S.battle&&((S.mode==='arena'&&S.battle.kind==='arena')||(S.mode==='trial'&&S.battle.kind==='trial'));
 const cur=()=>S.mode==='practice'?S.ptask:(inBattle()?S.battle.task:null);
 
 
 /* --- mentés ebben a böngészőben --- */
-const SAVE_KEY='matek7-kaland-v1';
+/* ================= SZERVER (Supabase) ================= */
+const SB={url:'',key:''};   // ← ide jön a Supabase Project URL és a publishable key
+const SB_ON=()=>!!(SB.url&&SB.key);
+let ACC=null;try{ACC=JSON.parse(localStorage.getItem('mk-session')||'null')}catch(e){}
+if(!SB_ON())ACC=null;
+const saveKey=()=>ACC?'matek7-kaland-u-'+ACC.id:'matek7-kaland-v1';
 const today=()=>new Date().toISOString().slice(0,10);
-function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({theme:S.theme,level:S.level,max:S.max,streak:S.streak,miss:S.miss,gold:S.gold,xp:S.xp,clvl:S.clvl,owned:S.owned,potions:S.potions,tries:S.tries,triesDay:today(),grades:S.grades,coupons:S.coupons,ap:S.ap,apDate:S.apDate,evApDay:S.evApDay,hp:S.hp,hpDay:S.hpDay,cls:S.cls,gender:S.gender,eq:S.eq,beaten:S.beaten,fLast:S.fLast,iLast:S.iLast}))}catch(e){}}
-function load(){try{const d=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');if(!d)return;
-  for(const k of ['theme','level','max','streak','miss','gold','xp','clvl','owned','potions','grades','coupons','ap','apDate','evApDay','hp','hpDay','cls','gender','eq','beaten','fLast','iLast'])if(d[k]!==undefined)S[k]=d[k];
-  if(d.triesDay===today()&&d.tries)S.tries=d.tries;}catch(e){}}
+const tKey=(tp,k)=>(tp==='betus'?'':tp+'_')+k;
+const triesLeft=(tp,k)=>{const kk=tKey(tp,k);if(S.tries[kk]==null)S.tries[kk]=DAILY_TRIES;return S.tries[kk]};
+function snapshot(){S.prog[S.topic]={level:S.level,max:S.max,streak:S.streak,miss:S.miss};return {_at:Date.now(),theme:S.theme,topic:S.topic,dir:S.dir,prog:S.prog,trialTopic:S.trialTopic,level:S.level,max:S.max,streak:S.streak,miss:S.miss,gold:S.gold,xp:S.xp,clvl:S.clvl,owned:S.owned,potions:S.potions,tries:S.tries,triesDay:today(),grades:S.grades,coupons:S.coupons,ap:S.ap,apDate:S.apDate,evApDay:S.evApDay,hp:S.hp,hpDay:S.hpDay,cls:S.cls,gender:S.gender,eq:S.eq,beaten:S.beaten,fLast:S.fLast,iLast:S.iLast}}
+function save(){try{localStorage.setItem(saveKey(),JSON.stringify(snapshot()))}catch(e){}if(ACC)NET.dirty=true}
+function load(){try{applyState(JSON.parse(localStorage.getItem(saveKey())||'null'))}catch(e){}}
+function applyState(d){if(!d)return;
+  for(const k of ['theme','topic','dir','prog','trialTopic','level','max','streak','miss','gold','xp','clvl','owned','potions','grades','coupons','ap','apDate','evApDay','hp','hpDay','cls','gender','eq','beaten','fLast','iLast'])if(d[k]!==undefined)S[k]=d[k];
+  if(d.triesDay===today()&&d.tries)S.tries=d.tries;}
 
 /* ================= RENDER ================= */
 function render(){
   if(S.mode==='falu'&&!faluOK())S.mode='map';
   const th=T();document.body.className=S.theme+(S.mode==='falu'||(S.mode==='map'&&islandOK())?' mode-falu':'');
-  $('worldName').textContent=th.world;$('worldSub').textContent=th.sub;
+  $('worldName').textContent=th.world;$('worldSub').textContent=S.topic==='zk'?th.sub.replace(TOPICS.betus,TOPICS.zk):th.sub;
   $('emblem').innerHTML=th.emblem;$('goldIcon').innerHTML=th.icon;
   $('gold').textContent=S.gold;$('goldName').textContent=th.cur;
   $('tFantasy').classList.toggle('on',S.theme==='fantasy');$('tScifi').classList.toggle('on',S.theme==='scifi');
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.m===S.mode));
-  renderChar();renderMode();renderTask();S.anim=null;save();
+  renderNotice();renderChar();renderMode();renderTask();S.anim=null;save();
 }
 function hpBar(v,m,mark){const p=Math.max(0,v)/m*100;return `<div class="bar hp ${p<30?'low':''}" style="position:relative"><span style="width:${p}%"></span>${mark?`<i style="position:absolute;left:${mark/m*100}%;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.6" title="Páncélhatár"></i>`:''}</div><div class="tiny">${Math.max(0,v)} / ${m}</div>`}
 function statBar(label,cls,v,m,txt){return `<div class="sbar"><b class="${cls}">${label}</b><div class="bar ${cls}"><span style="width:${Math.min(100,Math.max(0,v/m*100))}%"></span></div><span class="tiny">${txt}</span></div>`}
@@ -945,7 +1200,7 @@ function renderChar(){
    <div class="stat">Aréna-sebzés: <b>+${Math.round(arenaBonus()*100)}%</b> · ${th.items.potion[0]}: <b>${S.potions}</b></div>
    <div class="stat">Legyőzött próba-bossok: <b>${S.grades.length?S.grades.map(g=>g.grade).join(', '):'–'}</b></div>
    <p class="tiny" style="margin:6px 0 0">AP: tanítási naponként +${apDay()}, legfeljebb ${apMax()}. Kiváltságokra költheted.</p>
-   <p style="margin:8px 0 0;display:flex;gap:6px;flex-wrap:wrap"><button class="btn ghost" data-act="reset-all" style="padding:4px 10px;font-size:.78rem">Újrakezdés</button></p>`;
+   <p style="margin:8px 0 0;display:flex;gap:6px;flex-wrap:wrap">${ACC?`<button class="btn ghost" data-act="logout" style="padding:4px 10px;font-size:.78rem">Kilépés (${esc(ACC.nick)})</button>`:'<button class="btn ghost" data-act="reset-all" style="padding:4px 10px;font-size:.78rem">Újrakezdés</button>'}</p>`;
 }
 function renderMode(){
   const th=T(),v=$('modeView'),f=$('modeFoot');
@@ -953,7 +1208,9 @@ function renderMode(){
   if(S.mode==='map'&&islandOK()){v.innerHTML=islandHTML();if(f)f.innerHTML='';requestAnimationFrame(islandAfter);return}
   if(S.mode==='map'){v.innerHTML=`${evCardHTML()}<div class="lvl story-l">${th.mapTitle}</div><p class="introbox">${th.mapIntro}</p><div class="mapwrap">${mapSVG()}</div><p class="maphint">← Húzd oldalra a térképet →</p>`;f.innerHTML=`<p class="rules" id="mapMsg">Kattints a nyitott helyszínre az induláshoz!</p><p class="rules" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn ghost" data-act="ev-next" style="padding:4px 10px;font-size:.8rem">Tesztgomb: másik napi esemény</button>${TEACHER_DEMO?'<button class="btn ghost" data-act="cev" style="padding:4px 10px;font-size:.8rem">Tanári: napi esemény az órán (kivetítéshez)</button>':''}</p>`;return}
   if(S.mode==='practice'){
-    v.innerHTML=`${evCardHTML()}<div class="lvl story-l">${S.level}. fokozat · ${th.tiers[S.level-1]}</div><p class="introbox">${th.story[S.level-1]}</p>
+    const zk=S.topic==='zk',chips=[['betus','','Összevonás'],...(zkOpen()?[['zk','fel','Zárójelbontás'],['zk','ki','Kiemelés'],['zk','mix','Oda-vissza']]:[])];
+    v.innerHTML=`${evCardHTML()}${chips.length>1?`<div class="topics">${chips.map(([tp,d,n])=>`<button type="button" class="tchip ${S.topic===tp&&(!d||S.dir===d)?'on':''}" data-act="topic-${tp}${d?'-'+d:''}">${n}</button>`).join('')}</div>`:''}
+     <div class="lvl story-l">${zk?TOPICS.zk+' · ':''}${S.level}. fokozat · ${th.tiers[S.level-1]}</div><p class="introbox">${(zk?th.zkStory:th.story)[S.level-1]}${zk?` <b>Most: ${S.dir==='fel'?'zárójelbontás':S.dir==='ki'?'kiemelés':'oda-vissza – hol bontani, hol kiemelni kell'}.</b>`:''}</p>
      <div class="track">${[1,2,3].map(l=>`<button type="button" class="step ${l===S.level?'cur':l<=S.max?'done':''}" data-act="tier-${l}">${l}. ${th.tiers[l-1]}<span class="rw">${reward(l)} ${th.cur} · ${Math.round(XPB[l]*decay(l))} XP</span></button>`).join('')}</div><p class="tiny" style="margin:2px 0 0">Bármelyik fokozaton kezdhetsz – kattints rá!</p>
      <div class="meters"><span>Sorozat <span class="dots">${Array.from({length:upNeed()},(_,i)=>`<span class="dot ${i<S.streak?'g':''}"></span>`).join('')}</span></span>
       <span>Hibák <span class="dots">${Array.from({length:DOWN},(_,i)=>`<span class="dot ${i<S.miss?'r':''}"></span>`).join('')}</span></span>
@@ -962,8 +1219,12 @@ function renderMode(){
       <li>Bármelyik fokozaton kezdhetsz. Utána a rendszer igazít: <b>3 jó egymás után</b> → feljebb, <b>3 rossz egymás után</b> → lejjebb.</li>
       <li>Visszaesés után <b>2 jó</b> is elég, hogy visszajuss; addig az alacsonyabb fokozat csak töredék aranyat és XP-t ad.</li>
       <li>Kétféle segítséget kérhetsz: az első után a jó válasz fél, a második után negyed jutalmat ér. A végeredményt a segítség sosem árulja el. Segítséggel a válasz nem számít a sorozatba (de nem is töri meg). Rossz válaszért nem veszítesz semmit.</li>
-      <li>A 3. fokozaton két lépésben válaszolsz: előbb az összevont alak, aztán az érték. Ha csak az egyik jó, fél jutalom jár – akkor is, ha rossz összevonásba helyettesítesz be jól (továbbvitt hiba).</li>
-      <li>Az XP-vel a karaktered szintet lép: nő az életereje és az aréna-sebzése.</li></ul></details>`;
+      ${zk?`<li>Fent választod ki, mit gyakorolsz: zárójelbontást, kiemelést, vagy oda-vissza vegyesen. Az erdő a bontással, a kristálybarlang a kiemeléssel nyit. A fokozatod a három között közös.</li>
+      <li>Ha a felbontás után még össze is kell vonni, két lépésben válaszolsz: előbb a felbontott alak (összevonás nélkül), aztán az összevont. Ha csak az egyik jó, fél jutalom jár – akkor is, ha rossz felbontást vonsz össze jól (továbbvitt hiba).</li>
+      <li>Kiemelésnél a kiemelt alakot írd be, pl. <b>3(2x + 5)</b>. Ha igaz, de még kiemelhető (félúton akadtál), újrapróbálhatod: nem hiba, de csak fél jutalom jár, és nem számít a sorozatba.</li>`
+      :`<li>A 3. fokozaton két lépésben válaszolsz: előbb az összevont alak, aztán az érték. Ha csak az egyik jó, fél jutalom jár – akkor is, ha rossz összevonásba helyettesítesz be jól (továbbvitt hiba).</li>`}
+      <li>Az XP-vel a karaktered szintet lép: nő az életereje és az aréna-sebzése.</li></ul></details>
+      <p style="margin:10px 0 0"><button class="btn ghost" data-act="trial-here">🗝️ Próba ebből a témából: ${TOPICS[S.topic]}</button></p>`;
     return;
   }
   if(S.mode==='shop'){
@@ -982,31 +1243,33 @@ function renderMode(){
      <div class="lvl story-l" style="margin-top:22px">Kuponjaim</div>
      ${S.coupons.length?S.coupons.slice().reverse().map(c=>`<div class="shopitem coupon ${c.done?'used':''}"><div class="code">${c.code}</div>
         <div class="grow"><h4>${esc(c.name)}</h4><div class="tiny">${c.date} · ${c.done?'<b>beváltva</b> ('+c.done+')':'<b>beváltásra vár</b> – mutasd meg a tanárnak'}</div></div>
-        ${c.done?'':`<button class="btn ghost" data-act="redeem-${c.id}" style="font-size:.8rem;padding:6px 10px">Tanár: beváltva</button>`}</div>`).join(''):'<p class="tiny">Még nincs kuponod.</p>'}
+        ${c.done||ACC?'':`<button class="btn ghost" data-act="redeem-${c.id}" style="font-size:.8rem;padding:6px 10px">Tanár: beváltva</button>`}</div>`).join(''):'<p class="tiny">Még nincs kuponod.</p>'}
      ${TEACHER_DEMO?teacherPrivEditor():''}`;
-    f.innerHTML=`<p class="rules" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn ghost" data-act="demo-gold" style="padding:4px 10px;font-size:.8rem">Tesztgomb: +200 ${th.cur}</button><button class="btn ghost" data-act="demo-xp" style="padding:4px 10px;font-size:.8rem">Tesztgomb: +200 XP</button><button class="btn ghost" data-act="demo-day" style="padding:4px 10px;font-size:.8rem">Tesztgomb: +1 tanítási nap (AP)</button></p>`;
+    f.innerHTML=ACC?'':`<p class="rules" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn ghost" data-act="demo-gold" style="padding:4px 10px;font-size:.8rem">Tesztgomb: +200 ${th.cur}</button><button class="btn ghost" data-act="demo-xp" style="padding:4px 10px;font-size:.8rem">Tesztgomb: +200 XP</button><button class="btn ghost" data-act="demo-day" style="padding:4px 10px;font-size:.8rem">Tesztgomb: +1 tanítási nap (AP)</button></p>`;
     return;
   }
   const isTrial=S.mode==='trial';
   if(!inBattle()){
     const list=isTrial?TRIALS:ARENA,names=isTrial?th.trials:th.arena;
+    const tts=['betus',...(zkOpen()?['zk']:[])];if(!tts.includes(S.trialTopic))S.trialTopic='betus';
     v.innerHTML=`${isTrial?'':evCardHTML()}<div class="lvl story-l">${isTrial?th.trialTitle:th.arenaTitle}</div><p class="introbox">${isTrial?th.trialIntro:th.arenaIntro}</p>
+     ${isTrial&&tts.length>1?`<p class="tiny" style="margin:0 0 4px"><b>Miből próbázol?</b></p><div class="topics">${tts.map(tp=>`<button type="button" class="tchip ${S.trialTopic===tp?'on':''}" data-act="ttopic-${tp}">${TOPICS[tp]}</button>`).join('')}</div>`:''}
      ${!isTrial?(exhausted()?`<div class="fb show bad"><b class="big">Kimerültél.</b> Amíg nem gyógyulsz fel, nem indulhatsz harcba. Gyakorolj: minden jó válasz +${HEAL_OK} HP. Éjfélkor amúgy is teljesen felgyógyulsz${S.potions?`, vagy igyál meg egy ${th.items.potion[0].toLowerCase()}t`:''}.
        <p style="margin:8px 0 0"><button class="btn" data-act="go-practice-${S.level}">Irány gyakorolni</button></p></div>`
        :`<p class="tiny">Életerőd: <b>${S.hp} / ${hpMax()}</b> – a harcok között nem töltődik vissza magától. Gyakorlással, ${th.items.potion[0].toLowerCase()}lal vagy éjfélkor gyógyulsz.</p>`):''}
-     <div class="grid3">${list.map((e,i)=>{const idx=isTrial?3+i:i;const left=isTrial?S.tries[e.key]:null;
+     <div class="grid3">${list.map((e,i)=>{const idx=isTrial?3+i:i;const left=isTrial?triesLeft(S.trialTopic,e.key):null;
        return `<button class="pick" data-start="${S.mode}:${i}" ${(isTrial&&left<=0)||(!isTrial&&exhausted())?'disabled':''}>${enemySVG(S.theme,idx,names[i].c)}<h4>${names[i].n}</h4>
         <span class="tiny">${e.hp} életerő · rossz válasznál −${e.hit}</span>
-        ${isTrial?`<span class="grade">Élesben: ${e.grade===5?'5 (jeles)':'4 (jó)'}</span><span class="tiny">Ma még ${left} próbálkozás</span>`
+        ${isTrial?`<span class="grade">Élesben: ${e.grade===5?'5 (jeles)':'4 (jó)'}</span><span class="tiny">${left>0?`Ma még ${left} próbálkozás`:'<b>Mára elfogyott – holnap újra</b>'}</span>`
                  :`<span class="tiny">Gyenge támadással csak a feléig sebezhető</span><span class="tiny">Jutalom: ${e.gold} ${th.cur} + ${e.xp} XP</span>`}</button>`}).join('')}</div>`;
-    f.innerHTML=isTrial?`<ul class="rules"><li>Mindenki <b>${TRIAL_HP} életerővel</b>, felszerelés és bájital nélkül indul.</li><li>Az 1. fokozatú támadás nem hat: ${th.immune.toLowerCase()}</li><li>Bossonként <b>napi ${DAILY_TRIES} próbálkozás</b>. Ebben a kipróbálós verzióban jegyet nem kapsz.</li>
-      <li><button class="btn ghost" data-act="reset-tries" style="padding:4px 10px;font-size:.8rem">Tesztgomb: próbálkozások visszaállítása</button></li></ul>`
+    f.innerHTML=isTrial?`<ul class="rules"><li>Mindenki <b>${TRIAL_HP} életerővel</b>, felszerelés és bájital nélkül indul.</li><li>Az 1. fokozatú támadás nem hat: ${th.immune.toLowerCase()}</li><li>Témánként és bossonként <b>napi ${DAILY_TRIES} próbálkozás</b>.${zkOpen()?' A zárójelbontás és kiemelés próbáján vegyesen jön a bontás és a kiemelés.':''} ${ACC?'A győzelem valódi jegyet ér: a tanárod látja.':'Vendégként jegyet nem kapsz.'}</li>
+      ${ACC?'':'<li><button class="btn ghost" data-act="reset-tries" style="padding:4px 10px;font-size:.8rem">Tesztgomb: próbálkozások visszaállítása</button></li>'}</ul>`
      :`<ul class="rules"><li>Minden körben te választod a támadás erejét: gyengébb, de biztosabb feladat, vagy nehezebb, de nagyobbat üt.</li><li>Gyenge (1. fokozatú) támadással minden ellenfél csak az életereje <b>feléig</b> sebezhető (a jelölés a csíkon) – a győzelemhez erősebb támadás kell.</li><li>Jó válasz → az ellenfél sebződik. Rossz válasz → ő üt vissza, és megmutatjuk a helyes megoldást.</li><li>Az életerőd a harcok között megmarad. Ha 0-ra csökken, kimerülsz: gyakorlással (+20 HP jó válaszonként), bájitallal vagy éjfélkor gyógyulsz. Vereségnél semmit nem veszítesz, a megszerzett XP megmarad.</li></ul>`;
     return;
   }
   const b=S.battle,t=b.task,busy=t&&!t.done;
   const pAnim=S.anim&&S.anim.who==='p',eAnim=S.anim&&S.anim.who==='e';
-  v.innerHTML=`<div class="lvl story-l">${isTrial?'Próba':'Aréna'}: ${b.name}${isTrial?` <span class="grade">${b.grade===5?'5 (jeles)':'4 (jó)'}</span>`:''}</div>
+  v.innerHTML=`<div class="lvl story-l">${isTrial?`Próba (${TOPICS[b.topic||'betus']})`:'Aréna'}: ${b.name}${isTrial?` <span class="grade">${b.grade===5?'5 (jeles)':'4 (jó)'}</span>`:''}</div>
    <div class="field arena">${arenaBgSVG(S.theme)}
      <div class="fighter ${pAnim?'shake':''}">${avatarSVG(S.theme,isTrial?{cls:S.cls}:{...EQ(),cls:S.cls})}<div class="name">${isTrial?T().hero:(CL()?clsName():T().hero)}</div>${hpBar(b.php,b.pmax)}<div class="dmgpop p">${pAnim?S.anim.txt:''}</div></div>
      <div class="vs">VS</div>
@@ -1039,13 +1302,16 @@ function renderTask(){
   $('taskArea').classList.toggle('hidden',!t);
   const fb=$('fb');
   if(!t){fb.className='fb';return}
-  $('qlabel').textContent=t.level===3?th.q3:th.q1;
-  $('expr').innerHTML=exprHTML(t.terms);
-  $('subst').innerHTML=t.level===3?t.vars.map(v=>`<i>${v}</i> = ${numHTML(t.vals[v],t.preferFrac)}`).join(',&nbsp;&nbsp;'):'';
+  const zk=t.topic==='zk';
+  $('qlabel').textContent=zk?(t.kind==='ki'?'Emeld ki a közös tényezőt!':t.combine?'Bontsd fel a zárójelet, aztán vond össze!':'Bontsd fel a zárójelet!'):t.level===3?th.q3:th.q1;
+  $('expr').innerHTML=zk&&t.kind==='fel'?partsHTML(t.parts):exprHTML(t.terms);
+  $('subst').innerHTML=!zk&&t.level===3?t.vars.map(v=>`<i>${v}</i> = ${numHTML(t.vals[v],t.preferFrac)}`).join(',&nbsp;&nbsp;'):'';
   const a=$('ans');a.value=t.input;a.disabled=t.done;
-  a.placeholder=`pl. 5${t.vars[0]} − 3${t.vars[1]} + 2`;
-  const l3=t.level===3;['lab1','lab2','row2'].forEach(id=>$(id).classList.toggle('hidden',!l3));
-  const a2=$('ans2');a2.value=t.input2||'';a2.disabled=t.done;a2.placeholder='pl. −7 vagy 25/6';
+  $('lab1').textContent=zk?'1. lépés – a felbontott alak (összevonás nélkül):':'1. lépés – az összevont alak:';
+  $('lab2').textContent=zk?'2. lépés – az összevont alak:':'2. lépés – a helyettesítési érték:';
+  a.placeholder=zk&&t.two?`pl. 2${t.vars[0]} + 6 − 3${t.vars[0]} + 12`:zk?(t.kind==='ki'?`pl. 3(2${t.vars[0]} + 5)`:`pl. 3${t.vars[0]} + 12`):`pl. 5${t.vars[0]} − 3${t.vars[1]} + 2`;
+  const l3=isTwo(t);['lab1','lab2','row2'].forEach(id=>$(id).classList.toggle('hidden',!l3));
+  const a2=$('ans2');a2.value=t.input2||'';a2.disabled=t.done;a2.placeholder=zk?`pl. −${t.vars[0]} + 18`:'pl. −7 vagy 25/6';
   $('checkBtn').style.display=t.done?'none':'';
   $('hintBtn').style.display=(!t.done&&S.mode==='practice')?'':'none';$('hintBtn').disabled=t.hint>=2;$('hintBtn').textContent=t.hint?'Még egy segítség':'Tipp';
   $('nextBtn').style.display=(t.done&&S.mode==='practice')?'':'none';
@@ -1053,10 +1319,10 @@ function renderTask(){
   renderKP(t);
 }
 function renderKP(t){
-  const ls=[...new Set(t.terms.map(x=>x.k).join(''))].sort();
+  const ls=t.topic==='zk'?[...t.vars].sort():[...new Set(t.terms.map(x=>x.k).join(''))].sort();
   const b=(k,c='')=>`<button type="button" class="${c}" data-k="${k}">${k}</button>`;
   const lrow=ls.length?`<div class="row" style="grid-template-columns:repeat(${ls.length},1fr)">${ls.map(l=>b(l,'l')).join('')}</div>`:'';
-  $('kp').innerHTML=lrow+`<div class="row" style="grid-template-columns:repeat(4,1fr)">${['7','8','9','+','4','5','6','−','1','2','3','/','0',',','⌫','C'].map(k=>b(k)).join('')}</div>`;
+  $('kp').innerHTML=lrow+`<div class="row" style="grid-template-columns:repeat(4,1fr)">${['7','8','9','+','4','5','6','−','1','2','3','/','0',',','⌫','C'].map(k=>b(k)).join('')}</div>${t.topic==='zk'&&t.kind==='ki'?`<div class="row" style="grid-template-columns:repeat(2,1fr)">${b('(')}${b(')')}</div>`:''}`;
 }
 function renderLog(){if(!$('log'))return;
   $('log').innerHTML=S.log.slice(-12).reverse().map(r=>`<tr><td>${r.where}${r.hint?' '+'💡'.repeat(r.hint):''}</td><td>${r.ans}</td><td class="${r.ok?'okc':'badc'}">${r.ok?'jó':r.err}</td><td>${r.gain}</td></tr>`).join('')||'<tr><td colspan="4" class="tiny">Még nincs próbálkozás.</td></tr>';
@@ -1064,6 +1330,7 @@ function renderLog(){if(!$('log'))return;
 function banner(txt){const b=$('banner');b.textContent=txt;b.className='banner show';clearTimeout(banner.t);banner.t=setTimeout(()=>b.className='banner',6000)}
 function focusAns(){setTimeout(()=>{if(!$('kp').classList.contains('show')&&!$('ans').disabled)$('ans').focus()},30)}
 function solutionHTML(t){
+  if(t.topic==='zk')return zkSolution(t);
   const simp=exprHTML(mapToTerms(t.target));
   if(t.level<3)return `Helyes megoldás: <b>${simp}</b>`;
   return `Összevonva: ${simp}, értéke: <b>${numHTML(t.value,t.preferFrac)}</b>`;
@@ -1073,23 +1340,25 @@ function solutionHTML(t){
 function onCheck(e){
   e.preventDefault();const t=cur();if(!t||t.done)return;
   const raw=$('ans').value;t.input=raw;const raw2=$('ans2').value;t.input2=raw2;
-  const r=t.level<3?checkSimplify(t,raw):checkL3(t,raw,raw2);
+  const r=t.topic==='zk'?checkZK(t,raw,raw2):t.level<3?checkSimplify(t,raw):checkL3(t,raw,raw2);
   if(r.status==='invalid'){t.fb={cls:'info',html:r.msg};renderTask();return}
+  if(r.status==='halfway'){t.half=true;t.fb={cls:'info',html:`<b>${r.msg}</b> Javítsd ki!<br><span class="tiny">Nem hiba, de ennél a feladatnál már csak fél jutalom jár, és nem számít a sorozatba.</span>`};renderTask();return}
   if(r.status==='unsimplified'){t.fb={cls:'info',html:r.msg+' Folytasd!'};renderTask();return}
   t.done=true;
-  const entry={ans:(t.level<3?raw:raw+' → '+raw2).replace(/</g,'&lt;'),ok:r.status==='correct',err:r.status==='partial'?'Részben jó'+(r.err?': '+r.err:''):r.err,hint:t.hint};
+  const entry={ans:(!isTwo(t)?raw:raw+' → '+raw2).replace(/</g,'&lt;'),ok:r.status==='correct',err:r.status==='partial'?'Részben jó'+(r.err?': '+r.err:''):r.err,hint:t.hint};
+  logEvent(t,r,raw,raw2);
   if(S.mode==='practice')practiceResult(t,r,entry);else battleResult(t,r,entry);
   S.log.push(entry);render();
   if(S.mode==='practice')$('nextBtn').focus();
 }
 function practiceResult(t,r,entry){
-  const th=T();entry.where=`Gyak. ${t.level}`;
+  const th=T();entry.where=t.topic==='zk'?`${t.kind==='fel'?'Bontás':'Kiemelés'} ${t.level}`:`Gyak. ${t.level}`;
   if(r.status==='correct'){
-    const f=decay(t.level)*HINT_F[t.hint];
+    const f=decay(t.level)*HINT_F[t.hint]*(t.half?.5:1);
     const g=Math.round(BASE[t.level]*f*goldMul()),x=Math.round(XPB[t.level]*f*xpMul(t.level));
     S.gold+=g;S.miss=0;entry.gain=`+${g}`;const healed=healHP(HEAL_OK*(S.cls==='gyogyito'?2:1));
-    t.fb={cls:'ok',html:`<b class="big">${pick(th.ok)}</b> +${g} ${th.cur}, +${x} XP${t.hint?` (${t.hint===1?'fél':'negyed'} jutalom a segítség miatt)`:''}${healed?` · <b>+${healed} HP</b>${S.hp>=hpMax()?' (teljesen felgyógyultál)':''}`:''}`};
-    if(!t.hint)S.streak++;
+    t.fb={cls:'ok',html:`<b class="big">${pick(th.ok)}</b> +${g} ${th.cur}, +${x} XP${t.hint?` (${t.hint===1?'fél':'negyed'} jutalom a segítség miatt)`:''}${t.half?' (fél jutalom: elsőre félúton akadtál)':''}${r.note?`<br><span class="tiny">💡 ${r.note}</span>`:''}${healed?` · <b>+${healed} HP</b>${S.hp>=hpMax()?' (teljesen felgyógyultál)':''}`:''}`};
+    if(!t.hint&&!t.half)S.streak++;
     if(S.streak>=upNeed()){S.streak=0;
       if(S.level<3){S.level++;if(S.level>S.max){S.max=S.level;banner(th.up(th.tiers[S.level-1]))}else banner(th.back(th.tiers[S.level-1]))}
       else if(S.max<3){S.max=3;banner(`${th.tiers[2]} fokozat teljesítve – most már bármelyik bossnak nekimehetsz!`)}}
@@ -1099,33 +1368,33 @@ function practiceResult(t,r,entry){
     const g=Math.round(BASE[t.level]*f*goldMul()),x=Math.round(XPB[t.level]*f*xpMul(t.level));
     S.gold+=g;addXP(x);S.streak=0;entry.gain=`+${g}`;
     const healed=healHP(HEAL_PART*(S.cls==='gyogyito'?2:1));
-    t.fb={cls:'info',html:`<b class="big">Részben jó – fél jutalom.</b> +${g} ${th.cur}, +${x} XP${healed?`, +${healed} HP`:''}<br>${l3Report(r)}<br>${solutionHTML(t)}`};
+    t.fb={cls:'info',html:`<b class="big">Részben jó – fél jutalom.</b> +${g} ${th.cur}, +${x} XP${healed?`, +${healed} HP`:''}<br>${stepReport(r)}<br>${solutionHTML(t)}`};
   }else{
     S.streak=0;S.miss++;entry.gain='';
-    t.fb={cls:'bad',html:t.level===3?`${l3Report(r)}<br>${solutionHTML(t)}`:`<b>${r.err}.</b> ${r.explain}<br>${solutionHTML(t)}`};
+    t.fb={cls:'bad',html:isTwo(t)?`${stepReport(r)}<br>${solutionHTML(t)}`:`<b>${r.err}.</b> ${r.explain}<br>${solutionHTML(t)}`};
     if(S.miss>=DOWN){S.miss=0;if(S.level>1){S.level--;banner(th.down(th.tiers[S.level-1],S.level<S.max))}}
   }
 }
 function battleResult(t,r,entry){
   const th=T(),b=S.battle,isTrial=b.kind==='trial';
-  entry.where=`${isTrial?'Próba':'Aréna'} ${t.level}`;
+  entry.where=`${isTrial?'Próba':'Aréna'} ${t.level}${t.topic==='zk'?(t.kind==='fel'?' (bontás)':' (kiemelés)'):''}`;
   if(r.status==='correct'){
-    let dmg=isTrial?ATK[t.level]:Math.round(ATK[t.level]*(1+arenaBonus())*(S.cls==='magus'&&t.level===3?1.3:1));
+    let dmg=Math.round((isTrial?ATK[t.level]:ATK[t.level]*(1+arenaBonus())*(S.cls==='magus'&&t.level===3?1.3:1))*(t.half?.5:1));
     if(!isTrial&&t.level===1)dmg=Math.max(0,Math.min(dmg,b.ehp-armorLine(b)));
     let crit=false;if(!isTrial&&t.level===3&&Math.random()<critChance()){dmg*=2;crit=true}
     b.ehp-=dmg;S.anim={who:'e',txt:`−${dmg}${crit?'!':''}`};entry.gain=`−${dmg} HP${crit?' (krit.)':''}`;
     const x=Math.round(XPB[t.level]*xpMul(t.level));addXP(x);
     b.cstreak=(b.cstreak||0)+1;let healMsg='';if(!isTrial&&S.cls==='gyogyito'&&b.cstreak%3===0&&b.php<b.pmax){const h=Math.min(15,b.pmax-b.php);b.php+=h;healMsg=`<br><b>Gyógyító erő: +${h} életerő (3 jó egymás után)!</b>`}
-    t.fb={cls:'ok',html:`${crit?'<b class="big crit">⚡ KRITIKUS TALÁLAT – dupla sebzés!</b><br>':''}<b class="big">${pick(th.ok)}</b> ${th.attacks[t.level-1]}: −${dmg} életerő az ellenfélnek · +${x} XP${!isTrial&&t.level===1&&b.ehp<=armorLine(b)?`<br><b>${th.armor}</b>`:''}${healMsg}`};
+    t.fb={cls:'ok',html:`${crit?'<b class="big crit">⚡ KRITIKUS TALÁLAT – dupla sebzés!</b><br>':''}<b class="big">${pick(th.ok)}</b> ${th.attacks[t.level-1]}: −${dmg} életerő az ellenfélnek · +${x} XP${!isTrial&&t.level===1&&b.ehp<=armorLine(b)?`<br><b>${th.armor}</b>`:''}${healMsg}${r.note?`<br><span class="tiny">💡 ${r.note}</span>`:''}`};
   }else if(r.status==='partial'){
     const dmg=Math.round((isTrial?ATK[t.level]:ATK[t.level]*(1+arenaBonus())*(S.cls==='magus'&&t.level===3?1.3:1))/2);
     b.cstreak=0;const hit=Math.round(b.hit/2);b.ehp-=dmg;b.php-=hit;S.anim={who:'e',txt:`−${dmg}`};entry.gain=`−${dmg} / −${hit}`;
     const x=Math.round(XPB[t.level]/2*xpMul(t.level));addXP(x);
-    t.fb={cls:'info',html:`<b class="big">Részben talált!</b> Fél sebzés: −${dmg} az ellenfélnek · +${x} XP<br>${l3Report(r)}<br>${solutionHTML(t)}<br><b>${b.name} gyengén visszaüt: −${hit} életerő.</b>`};
+    t.fb={cls:'info',html:`<b class="big">Részben talált!</b> Fél sebzés: −${dmg} az ellenfélnek · +${x} XP<br>${stepReport(r)}<br>${solutionHTML(t)}<br><b>${b.name} gyengén visszaüt: −${hit} életerő.</b>`};
   }else{
     b.cstreak=0;const shield=!isTrial&&S.cls==='harcos'&&!b.shieldUsed;if(shield)b.shieldUsed=true;
     b.php-=shield?0:b.hit;S.anim={who:'p',txt:shield?'🛡️':`−${b.hit}`};entry.gain=shield?'pajzs':`−${b.hit} neked`;
-    t.fb={cls:'bad',html:`${t.level===3?l3Report(r):`<b>${r.err}.</b> ${r.explain}`}<br>${solutionHTML(t)}<br><b>${shield?`${b.name} visszaütne, de a pajzsod felfogta! (Harconként egyszer.)`:`${b.name} visszaüt: −${b.hit} életerő.`}</b>`};
+    t.fb={cls:'bad',html:`${isTwo(t)?stepReport(r):`<b>${r.err}.</b> ${r.explain}`}<br>${solutionHTML(t)}<br><b>${shield?`${b.name} visszaütne, de a pajzsod felfogta! (Harconként egyszer.)`:`${b.name} visszaüt: −${b.hit} életerő.`}</b>`};
   }
   if(r.status!=='correct'){b.errs=b.errs||{};const k=r.err||'Hiba';b.errs[k]=(b.errs[k]||0)+1;b.errTiers=b.errTiers||{};b.errTiers[t.level]=(b.errTiers[t.level]||0)+1}
   if(b.kind==='arena')S.hp=Math.max(0,b.php);
@@ -1146,28 +1415,32 @@ function endBattle(win){
     if(win){S.gold+=b.gold;addXP(b.xp);S.beaten=S.beaten||[];if(!S.beaten.includes(b.name))S.beaten.push(b.name);banner(`Legyőzted: ${b.name}! +${b.gold} ${th.cur}, +${b.xp} XP`)}
     else banner(S.hp<=0?'Kimerültél! Gyakorolj, hogy visszanyerd az életerőd – a jó válaszokért kapott XP megmaradt.':'Feladtad a harcot. A jó válaszokért kapott XP megmaradt.');
   }else{
-    if(win){S.grades.push({grade:b.grade,name:b.name});S.log.push({where:'Próba',ans:'',ok:true,err:'',gain:`<b>${b.grade}-es</b>`});
-      banner(`Próba teljesítve: ${b.name} legyőzve! Az éles változatban ezért ${b.grade===5?'5-ös (jeles)':'4-es (jó)'} járna – most ez csak próba.`)}
-    else banner(`A próba most nem sikerült. Ma még ${S.tries[b.key]} próbálkozásod van erre az ellenfélre.`);
+    if(b.trialId)endTrialOnline(b,win);
+    if(win){S.grades.push({grade:b.grade,name:b.name,topic:TOPICS[b.topic||'betus']});S.log.push({where:`Próba (${TOPICS[b.topic||'betus']})`,ans:'',ok:true,err:'',gain:`<b>${b.grade}-es</b>`});
+      banner(b.trialId?`Próba teljesítve: ${b.name} legyőzve! Megszerezted a(z) ${b.grade===5?'5-öst (jeles)':'4-est (jó)'} – a tanárod látja.`:`Próba teljesítve: ${b.name} legyőzve! Élesben ezért ${b.grade===5?'5-ös (jeles)':'4-es (jó)'} járna – vendégként ez csak próba.`)}
+    else banner(`A próba most nem sikerült. Ebből a témából ma még ${triesLeft(b.topic||'betus',b.key)} próbálkozásod van erre az ellenfélre.`);
   }
 }
-function startBattle(kind,i){
+function startBattle(kind,i,trialId){
   const th=T();
   if(kind==='arena'){const e=ARENA[i],ev=dayEvent().id,hp=Math.round(e.hp*(ev==='strong'?1.2:1)),rm=(ev==='strong'?1.5:1)*(ev==='weak'&&i===0?2:1);
     if(exhausted())return;
     S.battle={kind,idx:i,name:th.arena[i].n,col:th.arena[i].c,emax:hp,ehp:hp,hit:e.hit,gold:Math.round(e.gold*rm*goldMul()),xp:Math.round(e.xp*rm*xpMul(0)),pmax:hpMax(),php:S.hp,task:null,over:false};}
-  else{const e=TRIALS[i];if(S.tries[e.key]<=0)return;S.tries[e.key]--;
-    S.battle={kind,idx:3+i,key:e.key,grade:e.grade,name:th.trials[i].n,col:th.trials[i].c,emax:e.hp,ehp:e.hp,hit:e.hit,pmax:TRIAL_HP,php:TRIAL_HP,task:null,over:false};}
+  else{const e=TRIALS[i],tp=S.trialTopic||'betus';if(triesLeft(tp,e.key)<=0)return;
+    if(ACC&&!trialId){startTrialOnline(i,tp,e.key);return}
+    S.tries[tKey(tp,e.key)]--;
+    S.battle={kind,idx:3+i,topic:tp,trialId:trialId||null,entries:[],key:e.key,grade:e.grade,name:th.trials[i].n,col:th.trials[i].c,emax:e.hp,ehp:e.hp,hit:e.hit,pmax:TRIAL_HP,php:TRIAL_HP,task:null,over:false};}
   $('banner').className='banner';render();
 }
 function attack(l){
   const b=S.battle;if(!b||b.over||(b.task&&!b.task.done))return;
   if(b.kind==='trial'&&l===1)return;
-  b.task=gen(l);render();focusAns();
+  b.task=b.kind==='trial'?gen(l,b.topic||'betus','mix'):gen(l,pick(['betus',...(zkOpen()?['zk']:[])]),'mix');render();focusAns();
 }
 const HINT_F=[1,.5,.25];
 function onHint(){
   const t=cur();if(!t||t.done||t.hint>=2)return;t.hint++;
+  if(t.topic==='zk'){t.fb={cls:'info',html:zkHint(t)+`<span class="tiny">${t.hint===1?'Jó válasz most fél jutalmat ér. Ha kell, kérhetsz még egy segítséget (akkor negyedet ér).':'Jó válasz most a jutalom negyedét éri.'} Segítséggel a válasz nem számít a sorozatba.</span>`};renderTask();return}
   const keys=[...new Set(t.terms.map(x=>x.k))];const g=k=>keys.indexOf(k)%5;
   const groups=keys.map(k=>`<span class="g${g(k)}">${k?letters(k)+'-s':'szám'}</span>`).join(', ');
   let h=`<b>1. segítség:</b> Az azonos színűek tartoznak össze, mert azok <b>egyneműek</b> (${groups} tagok):<div class="expr" style="font-size:1.3rem;margin:6px 0">${exprHTML(t.terms,g)}</div>`;
@@ -1209,8 +1482,12 @@ document.addEventListener('click',e=>{
   if(el.dataset.start){const [k,i]=el.dataset.start.split(':');startBattle(k,+i);return}
   if(el.dataset.tier){attack(+el.dataset.tier);return}
   const a=el.dataset.act;
+  if(ACC&&/^(demo-|reset-tries|reset-all|ev-next|redeem-)/.test(a))return;
+  if(a==='login'){showLogin();return}
+  if(a==='logout'){doLogout();return}
   if(a.startsWith('tier-')){const l=+a.slice(5);if(l!==S.level){S.level=l;S.streak=0;S.miss=0;S.ptask=gen(l);render();focusAns()}return}
-  if(a==='enter'){S.mode='practice';render();focusAns();if(!S.cls&&typeof classChooser==='function')classChooser();return}
+  if(a.startsWith('topic-')){const [,tp,d]=a.split('-');setTopic(tp,d);render();focusAns();return}
+  if(a==='enter'){setTopic('betus');S.mode='practice';render();focusAns();if(!S.cls&&typeof classChooser==='function')classChooser();return}
   if(a.startsWith('locked-')){const i=+a.slice(7);$('mapMsg').innerHTML=`🔒 <b>${T().regions[i]}</b> – ${REGIONS[i].topic}: hamarosan nyílik!`;return}
   if(a==='potion'){const b=S.battle;if(S.potions>0&&b&&!b.over){S.potions--;b.php=Math.min(b.pmax,b.php+potionHeal());if(b.kind==='arena')S.hp=b.php;render()}}
   else if(a==='potion-out'){if(S.potions>0&&S.hp<hpMax()){S.potions--;healHP(potionHeal());render()}}
@@ -1219,7 +1496,7 @@ document.addEventListener('click',e=>{
   else if(a==='leave'){S.battle=null;render()}
   else if(a==='demo-xp'){addXP(200);render()}
   else if(a==='demo-day'){S.ap=Math.min(apMax(),S.ap+apDay());render()}
-  else if(a==='reset-all'){const b=e.target.closest('[data-act]');if(b.dataset.sure){try{localStorage.removeItem(SAVE_KEY)}catch(x){}location.reload()}else{b.dataset.sure='1';b.textContent='Biztos? Kattints újra – minden elvész'}}
+  else if(a==='reset-all'){const b=e.target.closest('[data-act]');if(b.dataset.sure){try{localStorage.removeItem(saveKey())}catch(x){}location.reload()}else{b.dataset.sure='1';b.textContent='Biztos? Kattints újra – minden elvész'}}
   else if(a==='demo-gold'){S.gold+=200;render()}
   else if(a==='reset-all'){location.reload()}
   else if(a==='cls-open'){classChooser()}
@@ -1230,7 +1507,9 @@ document.addEventListener('click',e=>{
   else if(a==='ev-next'){S.evOverride=(dayEvent().i+1)%DAY_EVENTS.length;applyDayBonus();render()}
   else if(a==='cev'||a==='cev-next'){classEventOverlay()}
   else if(a==='cev-close'){const o=document.getElementById('ov');if(o)o.remove()}
-  else if(a==='reset-tries'){S.tries={t4:DAILY_TRIES,t5:DAILY_TRIES};render()}
+  else if(a==='reset-tries'){S.tries={};render()}
+  else if(a.startsWith('ttopic-')){S.trialTopic=a.slice(7);render()}
+  else if(a==='trial-here'){S.trialTopic=S.topic;S.battle=null;S.mode='trial';render();window.scrollTo({top:0,behavior:'smooth'})}
   else if(a==='priv-add'){const id='p'+Date.now();S.privs.push({id,name:'Új kiváltság',desc:'Leírás…',lvl:2,ap:10,limit:'none',cls:'',test:false,on:true});render();const d=document.querySelector('details.teacher');if(d)d.open=true}
   else if(a.startsWith('priv-')){const p=S.privs.find(x=>x.id===a.slice(5));if(!p||S.clvl<p.lvl||S.ap<p.ap||(p.limit!=='none'&&usedInPeriod(p)>=1)||(p.test&&pendingTest())||(p.cls&&p.cls!==S.cls))return;
     S.ap-=p.ap;const now=new Date();S.coupons.push({id:'c'+now.getTime(),pid:p.id,name:p.name,code:couponCode(),date:now.toLocaleDateString('hu-HU'),week:weekKey(now),month:monthKey(now),test:!!p.test,done:null});
@@ -1245,9 +1524,9 @@ document.addEventListener('change',e=>{const el=e.target.closest('[data-pf]');if
   render();const d=document.querySelector('details.teacher');if(d)d.open=true});
 $('kpToggle').addEventListener('click',()=>{const k=$('kp');k.classList.toggle('show');$('ans').setAttribute('inputmode',k.classList.contains('show')?'none':'text')});
 let activeField='ans';['ans','ans2'].forEach(id=>$(id).addEventListener('focus',()=>activeField=id));
-$('ans').addEventListener('keydown',e=>{const t=cur();if(e.key==='Enter'&&t&&t.level===3&&!t.done&&!$('ans2').value.trim()){e.preventDefault();$('ans2').focus()}});
+$('ans').addEventListener('keydown',e=>{const t=cur();if(e.key==='Enter'&&t&&isTwo(t)&&!t.done&&!$('ans2').value.trim()){e.preventDefault();$('ans2').focus()}});
 $('ans2').addEventListener('input',e=>{const t=cur();if(t)t.input2=e.target.value});
-$('kp').addEventListener('click',e=>{const b=e.target.closest('button');const t=cur();if(!b||!t||t.done)return;const k=b.dataset.k;const a=$(t.level===3?activeField:'ans');
+$('kp').addEventListener('click',e=>{const b=e.target.closest('button');const t=cur();if(!b||!t||t.done)return;const k=b.dataset.k;const a=$(isTwo(t)?activeField:'ans');
   if(k==='⌫')a.value=a.value.slice(0,-1);else if(k==='C')a.value='';
   else if(k==='+'||k==='−')a.value=a.value.replace(/\s+$/,'')+(a.value.trim()?' '+k+' ':k);
   else a.value+=k;if(a.id==='ans2')t.input2=a.value;else t.input=a.value;});
@@ -1638,7 +1917,7 @@ const BG_IMG={
 };
 (function(){
   const pick=(t,k)=>BG_IMG[t+'_'+k];
-  const img=(src,vb,par)=>`<image href="${src}" x="0" y="0" width="1600" height="893" preserveAspectRatio="${par}"/>`;
+  const img=(src,vb,par)=>`<image href="${src}" x="0" y="0" width="1600" height="893" preserveAspectRatio="${par||'xMidYMid slice'}"/>`;
   const _st=stageBgSVG,_ar=arenaBgSVG,_sh=shopSceneSVG;
   stageBgSVG=t=>{const s=pick(t,'kezdo');return s?`<svg class="bg" viewBox="0 0 1600 893" preserveAspectRatio="xMidYMax slice">${img(s)}</svg>`:_st(t)};
   arenaBgSVG=t=>{const s=pick(t,'arena');return s?`<svg class="bg" viewBox="0 0 1600 893" preserveAspectRatio="xMidYMid slice">${img(s)}</svg>`:_ar(t)};
@@ -1977,7 +2256,7 @@ function heroPanel(){
     if(!S.owned[k])return `<div class="hslot empty">${itemIcon(S.theme,k)}<div>${n}</div><div class="lb">${label} · ${PRICES[k]} ${th.cur}</div></div>`;
     return `<button class="hslot ${eq[k]?'on':''}" data-feq="${k}">${eq[k]?'<span class="tag">rajtad</span>':''}${itemIcon(S.theme,k)}<div>${n}</div><div class="lb">${label}</div></button>`};
   const open=S.coupons.filter(x=>!x.done);
-  const tro=[...(S.beaten||[]).map(n=>`<span class="tro"><i>★</i>${n}</span>`),...S.grades.map(g=>`<span class="tro"><i>${g.grade}</i>${g.name}</span>`)];
+  const tro=[...(S.beaten||[]).map(n=>`<span class="tro"><i>★</i>${n}</span>`),...S.grades.map(g=>`<span class="tro"><i>${g.grade}</i>${g.name}${g.topic?` · ${g.topic}`:''}</span>`)];
   const html=`<div class="ovcard hpanel"><div class="hph"><h2>A hősöd</h2><button class="btn ghost" data-fclose>Vissza a faluba ✕</button></div>
    <div class="hgrid">
     <div>
@@ -2033,8 +2312,8 @@ const ISLANDS=[
    {n:3,t:'Műveletek a racionális számok halmazán',st:'past'},
    {n:5,t:'Összetett műveletek',st:'past'},
    {n:1,t:'Betűs kifejezések: összevonás, helyettesítés',st:'open',spot:'town',play:'betus'},
-   {n:2,t:'Zárójelbontás',st:'soon',spot:'forest'},
-   {n:3,t:'Kiemelés',st:'soon',spot:'crystal'},
+   {n:2,t:'Zárójelbontás',st:'open',spot:'forest',play:'zk',dir:'fel'},
+   {n:3,t:'Kiemelés',st:'open',spot:'crystal',play:'zk',dir:'ki'},
    {n:4,t:'Szöveges feladatok',st:'soon',spot:'port'},
   ]},
  {id:3,ch:'III.',title:'Geometriai transzformációk',name:'Tükörszigetek',lessons:['Geometriai fogalmak','Háromszögek nevezetes vonalai','Háromszögek és négyszögek','Geometriai transzformációk','Középpontos tükrözés','A középpontos tükrözés alkalmazása','Szögpárok','Középpontos és tengelyes szimmetria','Paralelogramma és deltoid','Középpontosan szimmetrikus alakzatok','Szabályos sokszögek','A kör','Szerkesztések'],boss:'Összefoglalás'},
@@ -2109,7 +2388,7 @@ function iEnter(k){
   if(k==='home'){S.mode='falu';S.fLast=null;render();window.scrollTo({top:0,behavior:'smooth'});return}
   if(k==='castle'){S.mode='trial';render();window.scrollTo({top:0,behavior:'smooth'});return}
   const l=iLessonAt(k);
-  if(l&&l.play==='betus'){S.mode='practice';render();focusAns();if(!S.cls&&typeof classChooser==='function')classChooser()}
+  if(l&&l.play){setTopic(l.play,l.dir);S.mode='practice';render();focusAns();if(!S.cls&&typeof classChooser==='function')classChooser()}
 }
 function iGo(k){
   if(iBusy)return;
@@ -2127,7 +2406,121 @@ document.addEventListener('click',e=>{
   iGo(t.dataset.ispot);
 });
 
-load();regenAP();applyDayBonus();regenHP();S.ptask=gen(S.level);render();focusAns();
+
+/* ================= BELÉPÉS, SZINKRON, ESEMÉNYNAPLÓ ================= */
+const NET={dirty:false,busy:false,status:'',out:[],trials:[],timer:null};
+const outKey=()=>'mk-out-'+(ACC?ACC.id:'');
+function netLoad(){try{const d=JSON.parse(localStorage.getItem(outKey())||'null');if(d){NET.out=d.out||[];NET.trials=d.trials||[]}}catch(e){}}
+function netSave(){try{localStorage.setItem(outKey(),JSON.stringify({out:NET.out.slice(-2000),trials:NET.trials}))}catch(e){}}
+async function rpc(fn,args,opt={}){
+  const r=await fetch(SB.url.replace(/\/+$/,'')+'/rest/v1/rpc/'+fn,{method:'POST',keepalive:!!opt.keepalive,
+    headers:{'apikey':SB.key,'Content-Type':'application/json'},body:JSON.stringify(args||{})});
+  const d=await r.json().catch(()=>null);
+  if(!r.ok){const e=new Error((d&&d.message)||('HTTP '+r.status));e.server=true;throw e}
+  return d;
+}
+function logEvent(t,r,raw,raw2){
+  const b=S.battle,mode=S.mode==='practice'?'practice':(b?b.kind:S.mode);
+  const ev={ts:new Date().toISOString(),topic:t.topic||'betus',mode,level:t.level,kind:t.kind||'',status:r.status,
+    err:r.status==='correct'?'':(r.err||''),hint:t.hint||0,half:!!t.half,
+    task:($('expr').textContent+($('subst').textContent?'; '+$('subst').textContent:'')).replace(/\s+/g,' ').trim(),
+    answer:isTwo(t)?raw+' → '+raw2:raw};
+  if(b&&b.entries)b.entries.push({level:ev.level,task:ev.task,answer:ev.answer,status:ev.status,err:ev.err});
+  if(!ACC)return;
+  NET.out.push(ev);netSave();NET.dirty=true;
+}
+function applyConfig(cfg){
+  if(!cfg)return;
+  if(cfg.lessons)ISLANDS.forEach(i=>Array.isArray(i.lessons)&&i.lessons.forEach(l=>{if(typeof l==='object'&&l.play&&cfg.lessons[l.play])l.st=cfg.lessons[l.play]}));
+  if(Array.isArray(cfg.privs)&&cfg.privs.length)S.privs=cfg.privs.map(p=>({...p}));
+}
+function applyServer(d){
+  if(!d)return;
+  if(d.config){applyConfig(d.config);try{localStorage.setItem('mk-config-'+ACC.id,JSON.stringify(d.config))}catch(e){}}
+  (d.coupons||[]).forEach(sc=>{const c=S.coupons.find(x=>x.id===sc.cid);if(c){c.sent=true;if(sc.redeemed_at&&!c.done)c.done=new Date(sc.redeemed_at).toLocaleDateString('hu-HU')}});
+  const used=d.tries||{};
+  for(const tp of Object.keys(TOPICS))for(const k of ['t4','t5'])S.tries[tKey(tp,k)]=Math.max(0,DAILY_TRIES-(used[tp+':'+k]||0)-NET.trials.filter(x=>x.topic===tp&&x.boss===k&&x.local).length);
+  if(Array.isArray(d.grades)){const th=T();S.grades=d.grades.map(g=>({grade:g.grade,name:th.trials[g.boss==='t5'?1:0].n,topic:TOPICS[g.topic]||g.topic}))}
+}
+async function sync(opt={}){
+  if(!ACC||NET.busy||!navigator.onLine&&!opt.force)return;
+  NET.busy=true;
+  try{
+    for(const tr of NET.trials.filter(x=>x.done)){await rpc('trial_end',{p_token:ACC.token,p_trial:tr.id,p_won:tr.won,p_log:tr.log});NET.trials=NET.trials.filter(x=>x!==tr);netSave()}
+    const evs=NET.out.slice(0,500),cps=S.coupons.filter(c=>!c.sent).map(c=>({cid:c.id,pid:c.pid,name:c.name,code:c.code,test:!!c.test}));
+    const d=await rpc('student_sync',{p_token:ACC.token,p_state:opt.pull?null:snapshot(),p_events:evs,p_coupons:cps},{keepalive:!!opt.keepalive});
+    NET.out=NET.out.slice(evs.length);netSave();NET.dirty=NET.out.length>0;
+    if(opt.pull&&d.state&&(d.state._at||0)>(opt.localAt||0)){applyState(d.state);S.ptask=gen(S.level)}
+    applyServer(d);NET.status='ok';NET.last=new Date();
+    if(opt.pull)NET.dirty=true;
+  }catch(e){
+    NET.status=e.server?'err':'offline';
+    if(/bad_session|inactive/.test(e.message)){NET.status='';localStorage.removeItem('mk-session');ACC=null;showLogin('A belépésed lejárt vagy a tanár letiltotta. Lépj be újra!')}
+  }finally{NET.busy=false}
+  if(!opt.keepalive){const k=document.activeElement&&document.activeElement.id;renderNotice();renderChar();if(S.mode==='trial'||S.mode==='shop'||S.mode==='map'||S.mode==='practice'){if(!(cur()&&!cur().done&&(k==='ans'||k==='ans2')))renderMode()}}
+}
+async function startTrialOnline(i,tp,key){
+  if(!navigator.onLine){banner('A próbához internetkapcsolat kell – a jegyet a szerver rögzíti.');return}
+  banner('Kapcsolódás a próbához…');
+  try{const id=await rpc('trial_start',{p_token:ACC.token,p_topic:tp,p_boss:key});startBattle('trial',i,id)}
+  catch(e){if(/no_tries/.test(e.message)){S.tries[tKey(tp,key)]=0;banner('Ebből a témából erre a bossra mára elfogyott a próbálkozásod. Holnap újra!');render()}
+    else banner('Most nem sikerült elérni a szervert. Próbáld újra egy kicsit később!')}
+}
+function endTrialOnline(b,win){
+  NET.trials.push({id:b.trialId,topic:b.topic,boss:b.key,won:!!win,log:b.entries||[],done:true});netSave();sync();
+}
+function renderNotice(){
+  const n=$('notice');if(!n)return;
+  if(ACC){const st=NET.status==='ok'?'✓ mentve':NET.status==='offline'?'⚠ nincs internet – a haladásod a telefonon megmarad, és később feltöltődik':NET.status==='err'?'⚠ szerverhiba – később újrapróbálom':'…';
+    n.innerHTML=`Belépve: <b>${esc(ACC.nick)}</b>${ACC.cls?` (${esc(ACC.cls)})`:''} · <span class="tiny" style="color:inherit">${st}</span>`;return}
+  n.innerHTML=`<b>Vendég mód:</b> jegyet nem ad, és a tanár nem látja. A haladásod csak ebben a böngészőben mentődik.${SB_ON()?' <button class="btn ghost nbtn" data-act="login">Belépés</button>':''}`;
+}
+function showLogin(msg){
+  const old=$('loginov');if(old)old.remove();
+  const o=document.createElement('div');o.id='loginov';o.className='loginov';
+  o.innerHTML=`<form class="loginbox" id="loginForm" autocomplete="off">
+    <div class="lhead"><svg viewBox="0 0 64 64" class="lemb">${THEMES.fantasy.emblem}</svg><div><b>Matek-kaland</b><small>Belépés</small></div></div>
+    ${msg?`<p class="lmsg">${msg}</p>`:''}
+    <label>Becenév<input id="lnick" autocapitalize="off" spellcheck="false" maxlength="24" required></label>
+    <label>PIN-kód<input id="lpin" inputmode="numeric" pattern="[0-9]*" maxlength="4" type="password" required></label>
+    <p class="lerr" id="lerr"></p>
+    <button class="btn" type="submit" id="lbtn">Belépés</button>
+    <button class="lguest" type="button" id="lguest">Kipróbálom vendégként</button>
+    <p class="tiny">A becenevet és a PIN-kódot a tanárodtól kapod. Vendégként a haladásod nem kerül a szerverre, és jegyet sem kapsz.</p></form>`;
+  document.body.appendChild(o);setTimeout(()=>$('lnick').focus(),50);
+  $('lguest').onclick=()=>{try{sessionStorage.setItem('mk-guest','1')}catch(e){}o.remove();if(!started)start()};
+  $('loginForm').onsubmit=async e=>{e.preventDefault();const btn=$('lbtn'),er=$('lerr');btn.disabled=true;er.textContent='';
+    try{const d=await rpc('student_login',{p_nick:$('lnick').value,p_pin:$('lpin').value});
+      if(d.error){er.textContent=d.error==='locked'?'Túl sok hibás próbálkozás. Várj 5 percet, vagy kérj új PIN-t a tanártól!':d.error==='inactive'?'Ez a fiók le van tiltva. Szólj a tanárnak!':'Hibás becenév vagy PIN-kód.';btn.disabled=false;return}
+      ACC={token:d.token,id:d.student.id,nick:d.student.nick,cls:d.student.class};localStorage.setItem('mk-session',JSON.stringify(ACC));
+      if(d.state)localStorage.setItem(saveKey(),JSON.stringify(d.state));
+      location.reload();
+    }catch(x){er.textContent='Nem sikerült elérni a szervert. Van internet?';btn.disabled=false}};
+}
+async function doLogout(){
+  if(!ACC)return;try{await sync({force:true})}catch(e){}
+  try{await rpc('student_logout',{p_token:ACC.token})}catch(e){}
+  localStorage.removeItem('mk-session');try{sessionStorage.removeItem('mk-guest')}catch(e){}location.reload();
+}
+let started=false;
+function start(){
+  started=true;load();
+  if(ACC){try{applyConfig(JSON.parse(localStorage.getItem('mk-config-'+ACC.id)||'null'))}catch(e){}netLoad()}
+  regenAP();applyDayBonus();regenHP();S.ptask=gen(S.level);render();focusAns();
+  if(ACC){
+    let localAt=0;try{localAt=(JSON.parse(localStorage.getItem(saveKey())||'{}')._at)||0}catch(e){}
+    sync({pull:true,localAt}).then(()=>{regenHP();render()});
+    NET.timer=setInterval(()=>{if(NET.dirty)sync()},20000);
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&NET.dirty)sync({keepalive:true})});
+    window.addEventListener('online',()=>sync());
+  }
+}
+function boot(){
+  let guest=false;try{guest=sessionStorage.getItem('mk-guest')==='1'}catch(e){}
+  if(SB_ON()&&!ACC&&!guest){start();showLogin()}else start();
+}
+
+boot();
 </script>
 <script>
 (function(){
