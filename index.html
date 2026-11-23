@@ -383,7 +383,7 @@ button.step{font-family:inherit;cursor:pointer;background:transparent}
   <div class="res">
     <div class="chip" id="goldChip"><svg viewBox="0 0 20 20" id="goldIcon"></svg><span id="gold">0</span><span class="tiny" id="goldName" style="color:#fff;opacity:.7"></span></div>
   </div>
-  <div class="switch" role="group" aria-label="Hangulat">
+  <div class="switch" role="group" aria-label="Hangulat" id="themeSwitch">
     <button id="tFantasy" class="on">Fantasy</button>
     <button id="tScifi">Sci-fi</button>
   </div>
@@ -1155,6 +1155,8 @@ function regenAP(){ // tanítási naponként (H–P) +apDay(), legfeljebb apMax(
 }
 function couponCode(){const a='ABCDEFGHJKLMNPRSTUVXYZ23456789';return Array.from({length:4},()=>a[Math.floor(Math.random()*a.length)]).join('')}
 
+/* ELÉRHETŐ STÍLUSOK – a sci-fi (és a későbbi új stílusok) akkor kerül ide, ha a falu, a térkép és a szörnyek is elkészültek hozzá */
+const THEMES_ON=['fantasy'];
 const S={theme:'fantasy',mode:'falu',topic:'betus',dir:'fel',prog:{},level:1,max:1,streak:0,miss:0,
   gold:0,xp:0,clvl:1,owned:{weapon:false,hat:false,pet:false},potions:0,
   ptask:null,battle:null,trialTopic:'betus',tries:{},grades:[],log:[],anim:null,coupons:[],privs:PRIVILEGES.map(p=>({...p})),ap:AP_DAY_BASE,apDate:null,cls:null,gender:'f',hp:null,hpDay:null,eq:{weapon:true,hat:true,pet:true},beaten:[],fLast:null,iLast:null};
@@ -1192,7 +1194,8 @@ function save(){try{localStorage.setItem(saveKey(),JSON.stringify(snapshot()))}c
 function load(){try{applyState(JSON.parse(localStorage.getItem(saveKey())||'null'))}catch(e){}}
 function applyState(d){if(!d)return;
   for(const k of ['theme','topic','dir','prog','trialTopic','level','max','streak','miss','gold','xp','clvl','owned','potions','grades','coupons','ap','apDate','evApDay','hp','hpDay','cls','gender','eq','beaten','fLast','iLast'])if(d[k]!==undefined)S[k]=d[k];
-  if(d.triesDay===today()&&d.tries)S.tries=d.tries;}
+  if(d.triesDay===today()&&d.tries)S.tries=d.tries;
+  if(!THEMES_ON.includes(S.theme))S.theme=THEMES_ON[0];}
 
 /* ================= RENDER ================= */
 function render(){
@@ -1202,6 +1205,7 @@ function render(){
   $('emblem').innerHTML=th.emblem;$('goldIcon').innerHTML=th.icon;
   $('gold').textContent=S.gold;$('goldName').textContent=th.cur;
   $('tFantasy').classList.toggle('on',S.theme==='fantasy');$('tScifi').classList.toggle('on',S.theme==='scifi');
+  $('themeSwitch').style.display=THEMES_ON.length>1?'':'none';$('tScifi').style.display=THEMES_ON.includes('scifi')?'':'none';
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.m===S.mode));
   renderNotice();renderChar();renderMode();renderTask();S.anim=null;save();
 }
@@ -1519,7 +1523,7 @@ $('hintBtn').addEventListener('click',onHint);
 $('nextBtn').addEventListener('click',()=>{S.ptask=gen(S.level);render();focusAns()});
 $('ans').addEventListener('input',e=>{const t=cur();if(t)t.input=e.target.value});
 $('tFantasy').addEventListener('click',()=>{S.theme='fantasy';$('banner').className='banner';if(S.battle)relabel();render()});
-$('tScifi').addEventListener('click',()=>{S.theme='scifi';$('banner').className='banner';if(S.battle)relabel();render()});
+$('tScifi').addEventListener('click',()=>{if(!THEMES_ON.includes('scifi'))return;S.theme='scifi';$('banner').className='banner';if(S.battle)relabel();render()});
 function relabel(){const b=S.battle,th=T();const src=b.kind==='arena'?th.arena[b.idx]:th.trials[b.idx-3];b.name=src.n;b.col=src.c}
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-m],[data-start],[data-tier],[data-act]');if(!el)return;
