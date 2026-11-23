@@ -57,6 +57,9 @@ textarea{width:100%;min-height:150px}
 details.tlog summary{cursor:pointer;color:var(--acc2);font-weight:700}
 .ped td{padding:4px}.ped input[type=text],.ped textarea{width:100%}.ped textarea{min-height:48px}.ped input[type=number]{width:60px}
 #print{display:none}
+.modal{position:fixed;inset:0;background:rgba(12,20,16,.75);display:flex;align-items:center;justify-content:center;z-index:8;padding:16px}
+.modal .mb{background:var(--card);border-radius:16px;padding:26px 30px;text-align:center;max-width:420px;width:100%}
+.modal .mn{font:700 1.5rem Georgia,serif;margin:4px 0 14px}.modal .mp{font:800 4.5rem ui-monospace,monospace;letter-spacing:.25em;margin:0 0 6px;padding-left:.25em}
 @media print{body{background:#fff}body>*:not(#print){display:none!important}#print{display:grid!important;grid-template-columns:1fr 1fr;gap:8mm}
  .card{border:1.5px dashed #555;border-radius:4mm;padding:6mm;break-inside:avoid;font:12pt system-ui;color:#000}
  .card h4{margin:0 0 3mm;font:700 14pt Georgia,serif}.card .big{font:700 20pt ui-monospace,monospace;letter-spacing:2px}.card .u{font-size:9pt;color:#333}}
@@ -242,7 +245,7 @@ function studentHTML(){
   const el=Object.entries(errs).sort((a,b)=>b[1]-a[1]);
   const res=e=>e.status==='correct'?`<span class="pill g">jó${e.half?' (félúton)':''}</span>`:e.status==='partial'?`<span class="pill y">részben</span> ${esc(e.err)}`:`<span class="pill r">${esc(e.err||'rossz')}</span>`;
   const modeN={practice:'Gyak.',arena:'Aréna',trial:'Próba'};
-  return `<h2>${esc(s.nick)} ${s.active?'':'<span class="pill r">letiltva</span>'}</h2>${sel}
+  return `<h2>${esc(s.nick)} ${s.active?'':'<span class="pill r">letiltva</span>'}</h2><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${sel}<button class="btn ghost" data-pin="${s.id}">🔑 Új PIN</button></div>
    <div class="kpis" style="margin-top:14px"><div class="kpi"><b>${n}</b><span>feladat az időszakban</span></div><div class="kpi"><b>${pct(ok,n)}%</b><span>helyes</span></div>
     <div class="kpi"><b>${s.days}</b><span>aktív nap</span></div><div class="kpi"><b>${s.clvl||1}. szint</b><span>${s.xp??0} XP · ${s.gold??0} arany${s.cls?' · '+CLS_NAME[s.cls]:''}</span></div>
     <div class="kpi"><b class="stars" style="font-size:1.1rem">${stars(topicMax(s,'betus'))} / ${stars(topicMax(s,'zk'))}</b><span>Összevonás / Zárójel – legjobb fokozat</span></div></div>
@@ -296,6 +299,13 @@ async function saveConfig(patch){
   const c=curClass();const cfg={...(c.config||{}),...patch};
   await api(`classes?id=eq.${c.id}`,{method:'PATCH',body:{config:cfg}});c.config=cfg;
 }
+function showPin(nick,pin){
+  const o=document.createElement('div');o.className='modal';o.id='pinModal';
+  o.innerHTML=`<div class="mb"><div class="muted">Új PIN-kód</div><div class="mn">${esc(nick)}</div><div class="mp">${esc(pin)}</div>
+   <p class="small muted">A régi PIN már nem érvényes. A haladás és a jegyek megmaradtak.</p>
+   <p style="display:flex;gap:8px;justify-content:center"><button class="btn ghost" id="pinPrint">🖨 Kártya</button><button class="btn" id="pinClose">Bezárás</button></p></div>`;
+  document.body.appendChild(o);
+}
 function printCards(rows){
   $('print').innerHTML=rows.map(r=>`<div class="card"><h4>Matek-kaland ⚗️</h4><div>Becenév:</div><div class="big">${esc(r.nick)}</div><div style="margin-top:2mm">PIN-kód:</div><div class="big">${esc(r.pin)}</div>
    <div class="u" style="margin-top:3mm">${esc(APP_URL)}<br>A PIN-t ne add oda senkinek! Ha elfelejted, szólj a tanárnak.</div></div>`).join('');
@@ -315,7 +325,9 @@ document.addEventListener('click',async e=>{
       V.newPins=await rpc('teacher_create_students',{p_class:V.cls,p_nicks:nicks});await refresh();toast(`${V.newPins.filter(r=>r.ok).length} diák felvéve`);return}
     if(t.id==='btnPrint'){printCards(V.newPins.filter(r=>r.ok));return}
     if(t.dataset.pin){const s=V.stats.students.find(x=>x.id===t.dataset.pin);if(!confirm(`Új PIN-t generálsz ${s.nick} számára? A régi azonnal érvényét veszti, és minden eszközről kilépteti.`))return;
-      const pin=await rpc('teacher_reset_pin',{p_student:s.id});V.newPins=[{nick:s.nick,pin,ok:true}];await refresh();toast(`${s.nick} új PIN-je: ${pin}`);return}
+      const pin=await rpc('teacher_reset_pin',{p_student:s.id});V.newPins=[{nick:s.nick,pin,ok:true}];await refresh();showPin(s.nick,pin);return}
+    if(t.id==='pinClose'||t.classList.contains('modal')){$('pinModal').remove();return}
+    if(t.id==='pinPrint'){printCards(V.newPins);return}
     if(t.dataset.act2){const [id,v]=t.dataset.act2.split(':');await api(`students?id=eq.${id}`,{method:'PATCH',body:{active:v==='1'}});await refresh();return}
     if(t.dataset.del){const s=V.stats.students.find(x=>x.id===t.dataset.del);const a=prompt(`A törléssel ${s.nick} minden adata (haladás, napló, jegyek) végleg elvész. Ha biztos vagy benne, írd be a becenevét:`);
       if(a===null)return;if(a.trim()!==s.nick){toast('A becenév nem egyezik, nem töröltem.');return}

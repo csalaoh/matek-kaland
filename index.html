@@ -287,6 +287,23 @@ body.scifi b.hpc{color:#ff6b6b}body.scifi b.apc{color:#6ea8ff}
 .apchip{font-family:Nunito,sans-serif;font-size:.8rem;background:#3b82f6;color:#fff;border-radius:999px;padding:2px 10px;margin-left:6px;vertical-align:middle}
 .btn.apbtn{background:#3b82f6;color:#fff}
 .shopitem.priv.locked{opacity:.8}
+.pick img.pickmon{height:130px;width:auto;max-width:100%;display:block;margin:0 auto 4px;filter:drop-shadow(0 6px 6px rgba(0,0,0,.3))}
+@media (max-width:600px){.pick img.pickmon{height:96px}}
+.bstage{position:relative;height:300px;border-radius:14px 14px 0 0;overflow:hidden;margin-top:10px;display:grid;grid-template-columns:1fr 60px 1fr;align-items:end;padding:0 4% 14px}
+.bstage>svg.bg{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);z-index:0;filter:blur(2px) saturate(.75) brightness(.8)}
+.bshade{position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse 30% 45% at 26% 72%,rgba(255,226,160,.38),transparent 70%),radial-gradient(ellipse 30% 45% at 74% 72%,rgba(255,170,140,.3),transparent 70%),linear-gradient(to bottom,rgba(20,12,4,.15),rgba(20,12,4,.05) 45%,rgba(20,12,4,.45))}
+.bfig{position:relative;z-index:2;height:250px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.bfig svg.av,.bfig img.mon,.bfig .mon-svg svg{height:230px;width:auto;max-width:100%;filter:drop-shadow(0 0 1.5px rgba(255,244,220,.95)) drop-shadow(0 0 12px rgba(255,230,170,.45)) drop-shadow(0 14px 10px rgba(0,0,0,.55))}
+.bfig .mon-svg svg{height:180px}
+.bfig.e img.mon{transform:scaleX(1)}
+.bfig::after{content:'';position:absolute;bottom:-4px;left:50%;width:62%;height:18px;transform:translateX(-50%);background:radial-gradient(ellipse at center,rgba(0,0,0,.5),transparent 70%);z-index:-1}
+.bfig .dmgpop{position:absolute;top:0;left:0;right:0;text-align:center;font-size:1.6rem;color:#fff;text-shadow:0 0 6px #b3362b,0 2px 3px #000;z-index:3;height:auto}
+.bvs{position:relative;z-index:2;align-self:center;text-align:center;font-family:var(--head);font-size:1.7rem;font-weight:800;color:#fff;text-shadow:0 0 10px rgba(0,0,0,.8),0 2px 4px #000}
+.bhud{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:linear-gradient(#3a2716,#2a1c10);padding:10px;border-radius:0 0 14px 14px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.bhud .plate{background:rgba(255,248,235,.94);border-radius:10px;padding:8px 12px}
+.bhud .plate .name{font-family:var(--head);font-weight:800;font-size:1rem;text-align:center;margin-bottom:4px}
+.bhud .plate .tiny{text-align:center}
+@media (max-width:600px){.bstage{height:210px;grid-template-columns:1fr 34px 1fr;padding:0 2% 10px}.bfig{height:180px}.bfig svg.av,.bfig img.mon{height:170px}.bfig .mon-svg svg{height:120px}.bvs{font-size:1.2rem}.bhud .plate{padding:6px 8px}.bhud .plate .name{font-size:.85rem}}
 .field.arena{position:relative;border-radius:14px;overflow:hidden;padding:16px 10px;margin-top:10px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .field.arena>svg.bg{position:absolute;inset:0;width:100%;height:100%;z-index:0}
 .field.arena>div{position:relative;z-index:1}
@@ -877,8 +894,8 @@ const THEMES={
     attacks:['Szikra','Tűzgolyó','Villámlánc'],
     arenaTitle:'Aréna – a völgy szörnyei',arenaIntro:'Válassz ellenfelet! Itt számít a karaktered szintje és a felszerelésed.',
     trialTitle:'Próba – a völgy őrzői',trialIntro:'A próbán mindenki ugyanazzal indul: 100 életerő, felszerelés nélkül. Csak a tudásod számít.',
-    arena:[{n:'Mocsári kobold',c:'#7cb342'},{n:'Kőgólem',c:'#8d8d8d'},{n:'Árnyékszörny',c:'#5b4a8c'}],
-    trials:[{n:'A Labirintus Őre',c:'#8b5a2b'},{n:'Kénköves Sárkány',c:'#b3362b'}],
+    arena:[{n:'Foltos martalóc',c:'#a8834a'},{n:'Kőelementál',c:'#7d7a6e'},{n:'Csontlovag',c:'#3f5a7a'}],
+    trials:[{n:'Ork hadúr',c:'#2f5d3a'},{n:'Obszidiánsárkány',c:'#3a1f1a'}],
     shopTitle:'A Vándor Alkimista boltja',privTitle:'A Varázstorony – kiváltságok',
     immune:'A pikkelyein lepattannak a gyenge varázslatok – erősebb támadás kell!',
     armor:'Megkeményedett a bőre: a gyenge varázslat már nem hat rá. Erősebb támadás kell!',
@@ -1185,6 +1202,13 @@ function render(){
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.m===S.mode));
   renderNotice();renderChar();renderMode();renderTask();S.anim=null;save();
 }
+/* szörnyképek: ha a fájl megvan, festett kép, különben a régi rajz */
+const MONSTER_IMG={arena:['Szornyek/gnoll.webp','Szornyek/elemental.webp','Szornyek/csontlovag.webp'],trials:['Szornyek/ork.webp','Szornyek/sarkany.webp']};
+const MON_OK=new Set();
+[...MONSTER_IMG.arena,...MONSTER_IMG.trials].forEach(src=>{const im=new Image();im.onload=()=>{MON_OK.add(src);if(S.battle&&(S.mode==='arena'||S.mode==='trial'))renderMode()};im.src=src});
+function monsterSrc(kind,i){const src=(kind==='trial'?MONSTER_IMG.trials[i]:MONSTER_IMG.arena[i]);return src&&MON_OK.has(src)?src:null}
+function monsterHTML(b){const src=monsterSrc(b.kind,b.kind==='trial'?b.idx-3:b.idx);
+  return src?`<img class="mon" src="${src}" alt="${b.name}">`:`<div class="mon-svg">${enemySVG(S.theme,b.idx,b.col)}</div>`}
 function hpBar(v,m,mark){const p=Math.max(0,v)/m*100;return `<div class="bar hp ${p<30?'low':''}" style="position:relative"><span style="width:${p}%"></span>${mark?`<i style="position:absolute;left:${mark/m*100}%;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.6" title="Páncélhatár"></i>`:''}</div><div class="tiny">${Math.max(0,v)} / ${m}</div>`}
 function statBar(label,cls,v,m,txt){return `<div class="sbar"><b class="${cls}">${label}</b><div class="bar ${cls}"><span style="width:${Math.min(100,Math.max(0,v/m*100))}%"></span></div><span class="tiny">${txt}</span></div>`}
 function renderChar(){
@@ -1258,7 +1282,7 @@ function renderMode(){
        <p style="margin:8px 0 0"><button class="btn" data-act="go-practice-${S.level}">Irány gyakorolni</button></p></div>`
        :`<p class="tiny">Életerőd: <b>${S.hp} / ${hpMax()}</b> – a harcok között nem töltődik vissza magától. Gyakorlással, ${th.items.potion[0].toLowerCase()}lal vagy éjfélkor gyógyulsz.</p>`):''}
      <div class="grid3">${list.map((e,i)=>{const idx=isTrial?3+i:i;const left=isTrial?triesLeft(S.trialTopic,e.key):null;
-       return `<button class="pick" data-start="${S.mode}:${i}" ${(isTrial&&left<=0)||(!isTrial&&exhausted())?'disabled':''}>${enemySVG(S.theme,idx,names[i].c)}<h4>${names[i].n}</h4>
+       return `<button class="pick" data-start="${S.mode}:${i}" ${(isTrial&&left<=0)||(!isTrial&&exhausted())?'disabled':''}>${(()=>{const src=monsterSrc(isTrial?'trial':'arena',i);return src?`<img class="pickmon" src="${src}" alt="">`:enemySVG(S.theme,idx,names[i].c)})()}<h4>${names[i].n}</h4>
         <span class="tiny">${e.hp} életerő · rossz válasznál −${e.hit}</span>
         ${isTrial?`<span class="grade">Élesben: ${e.grade===5?'5 (jeles)':'4 (jó)'}</span><span class="tiny">${left>0?`Ma még ${left} próbálkozás`:'<b>Mára elfogyott – holnap újra</b>'}</span>`
                  :`<span class="tiny">Gyenge támadással csak a feléig sebezhető</span><span class="tiny">Jutalom: ${e.gold} ${th.cur} + ${e.xp} XP</span>`}</button>`}).join('')}</div>`;
@@ -1270,10 +1294,14 @@ function renderMode(){
   const b=S.battle,t=b.task,busy=t&&!t.done;
   const pAnim=S.anim&&S.anim.who==='p',eAnim=S.anim&&S.anim.who==='e';
   v.innerHTML=`<div class="lvl story-l">${isTrial?`Próba (${TOPICS[b.topic||'betus']})`:'Aréna'}: ${b.name}${isTrial?` <span class="grade">${b.grade===5?'5 (jeles)':'4 (jó)'}</span>`:''}</div>
-   <div class="field arena">${arenaBgSVG(S.theme)}
-     <div class="fighter ${pAnim?'shake':''}">${avatarSVG(S.theme,isTrial?{cls:S.cls}:{...EQ(),cls:S.cls})}<div class="name">${isTrial?T().hero:(CL()?clsName():T().hero)}</div>${hpBar(b.php,b.pmax)}<div class="dmgpop p">${pAnim?S.anim.txt:''}</div></div>
-     <div class="vs">VS</div>
-     <div class="fighter ${eAnim?'shake flash':''}">${enemySVG(S.theme,b.idx,b.col)}<div class="name">${b.name}</div>${hpBar(b.ehp,b.emax,isTrial?0:armorLine(b))}<div class="dmgpop e">${eAnim?S.anim.txt:''}</div></div>
+   <div class="bstage">${arenaBgSVG(S.theme)}<div class="bshade"></div>
+     <div class="bfig p ${pAnim?'shake':''}"><div class="dmgpop p">${pAnim?S.anim.txt:''}</div>${avatarSVG(S.theme,isTrial?{cls:S.cls}:{...EQ(),cls:S.cls})}</div>
+     <div class="bvs">VS</div>
+     <div class="bfig e ${eAnim?'shake flash':''}"><div class="dmgpop e">${eAnim?S.anim.txt:''}</div>${monsterHTML(b)}</div>
+   </div>
+   <div class="bhud">
+     <div class="plate"><div class="name">${ACC?esc(ACC.nick):(CL()?clsName():T().hero)}</div>${hpBar(b.php,b.pmax)}</div>
+     <div class="plate"><div class="name">${b.name}</div>${hpBar(b.ehp,b.emax,isTrial?0:armorLine(b))}</div>
    </div>
    ${b.over?'':`<div class="attacks">${[1,2,3].map(l=>{const imm=l===1&&(isTrial||b.ehp<=armorLine(b));const dmg=isTrial?ATK[l]:Math.round(ATK[l]*(1+arenaBonus())*(S.cls==='magus'&&l===3?1.3:1));
       return `<button class="atk t${l}" data-tier="${l}" ${busy||imm?'disabled':''}><b>${th.attacks[l-1]}</b><span>${imm?(isTrial?'nem hat erre az ellenfélre':'a páncélja miatt már nem hat'):`${l}. fokozatú feladat · ${dmg} sebzés`}</span></button>`}).join('')}</div>`}
