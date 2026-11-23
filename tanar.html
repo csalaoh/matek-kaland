@@ -54,6 +54,7 @@ textarea{width:100%;min-height:150px}
 .loginwrap label{display:block;font-weight:700;font-size:.85rem;color:var(--muted);margin-top:10px}.loginwrap input{width:100%;margin-top:4px;padding:10px}
 .err{color:var(--bad);font-weight:700}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2b2216;color:#fff;padding:10px 18px;border-radius:10px;z-index:9;opacity:0;transition:.3s}.toast.show{opacity:1}
+span.gclick{cursor:pointer}span.grade.sus{background:#b45309}tr.hl td{background:color-mix(in srgb,var(--acc2) 12%,transparent)}
 details.tlog summary{cursor:pointer;color:var(--acc2);font-weight:700}
 .ped td{padding:4px}.ped input[type=text],.ped textarea{width:100%}.ped textarea{min-height:48px}.ped input[type=number]{width:60px}
 #print{display:none}
@@ -174,7 +175,7 @@ function overviewHTML(){
    <div class="kpis"><div class="kpi"><b>${act} / ${N}</b><span>gyakorolt az időszakban</span></div>
     <div class="kpi"><b>${tot}</b><span>megoldott feladat</span></div>
     <div class="kpi"><b>${pct(ok,tot)}%</b><span>helyes válasz</span></div>
-    <div class="kpi"><b>${S.reduce((a,s)=>a+s.grades.length,0)}</b><span>próbán szerzett jegy (összesen)</span></div>
+    <div class="kpi"><b>${S.reduce((a,s)=>a+s.grades.length,0)}</b><span>próbán szerzett jegy (összesen)${(()=>{const n=S.reduce((a,s)=>a+s.grades.filter(g=>gradeFlags(g).length).length,0);return n?` · <b style="color:#b45309">⚠ ${n} gyanús</b>`:''})()}</span></div>
     <div class="kpi"><b>${st.coupons.length}</b><span>beváltásra váró kupon</span></div></div>
    ${N?`<div class="tw"><table id="ovt"><thead><tr>${cols.map(([k,n])=>`<th data-sort="${k}">${n}${V.sort===k?(V.sortDir>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>
    ${rows.map(s=>`<tr class="click ${s.n?'':'idle'}" data-stu="${s.id}"><td><b>${esc(s.nick)}</b>${s.active?'':' <span class="pill r">letiltva</span>'}${s.locked?' <span class="pill y">zárolva</span>':''}</td>
@@ -182,14 +183,15 @@ function overviewHTML(){
      <td>${s.n?`<div style="display:flex;gap:6px;align-items:center"><div class="bar ok" style="width:60px"><i style="width:${pct(s.ok,s.n)}%"></i></div>${pct(s.ok,s.n)}%</div>`:'–'}</td>
      <td class="stars">${stars(topicMax(s,'betus'))}</td><td class="stars">${stars(topicMax(s,'zk'))}</td>
      <td>${s.clvl?`${s.clvl}. szint${s.cls?' · '+(CLS_NAME[s.cls]||''):''}`:'–'}</td>
-     <td>${s.grades.map(g=>`<span class="grade" title="${esc(TOPICS[g.topic]||g.topic)} · ${fmtDT(g.at)}">${g.grade}</span>`).join('')||'–'}</td></tr>`).join('')}
+     <td>${s.grades.map(g=>{const fl=gradeFlags(g);return `<span class="grade gclick${fl.length?' sus':''}" data-trial="${g.id}" data-gstu="${s.id}" title="${esc(TOPICS[g.topic]||g.topic)} · ${fmtDT(g.at)}${fl.length?' · ⚠ '+esc(fl.join('; ')):''} – kattints a naplóért">${g.grade}${fl.length?'⚠':''}</span>`}).join('')||'–'}</td></tr>`).join('')}
    </tbody></table></div>
-   <p class="small muted">A csillagok a témában elért legmagasabb fokozatot mutatják (★ alap · ★★ közepes · ★★★ haladó). A szürke sorok az időszakban nem gyakoroltak. Kattints egy diákra a részletekért.</p>`
+   <p class="small muted">A csillagok a témában elért legmagasabb fokozatot mutatják (★ alap · ★★ közepes · ★★★ haladó). A szürke sorok az időszakban nem gyakoroltak. Kattints egy diákra a részletekért, egy jegyre a próba naplójáért. A ⚠ jelű jegyeket érdemes átnézni (az okot a jegy fölé állva látod).</p>`
    :`<p>Még nincs diák ebben az osztályban. A <b>Kezelés</b> fülön tudsz felvenni.</p>`}`;
 }
 document.addEventListener('click',e=>{
   const th=e.target.closest('#ovt [data-sort]');if(th){const k=th.dataset.sort;if(V.sort===k)V.sortDir*=-1;else{V.sort=k;V.sortDir=k==='nick'?1:-1}render();return}
-  const tr=e.target.closest('[data-stu]');if(tr){V.tab='student';openStudent(tr.dataset.stu)}
+  const gt=e.target.closest('[data-trial]');if(gt){V.tab='student';V.openTrial=gt.dataset.trial;openStudent(gt.dataset.gstu);return}
+  const tr=e.target.closest('[data-stu]');if(tr){V.tab='student';V.openTrial=null;openStudent(tr.dataset.stu)}
 });
 
 /* ---------- Hibatérkép ---------- */
@@ -219,6 +221,18 @@ function errorsHTML(){
 }
 document.addEventListener('click',e=>{const c=e.target.closest('[data-et]');if(c){V.errTopic=c.dataset.et;render()}});
 
+/* ---------- Gyanús jegyek ---------- */
+const BOSS_HP={t4:120,t5:200};          // egyezzen az index.html TRIALS hp-jával
+function gradeFlags(g){
+  if(g.log_n===undefined)return [];       // régi SQL: nincs adat, nincs jelzés
+  const f=[];
+  if(!g.log_n){f.push('nincs napló');return f}
+  const need=BOSS_HP[g.boss]||0;if(g.log_dmg<need)f.push(`a napló szerint csak ${g.log_dmg} sebzés (kellett: ${need})`);
+  const sec=(new Date(g.at)-new Date(g.started))/1000;if(sec>0&&sec/g.log_n<4)f.push(`túl gyors: ${Math.round(sec)} mp alatt ${g.log_n} válasz`);
+  if(g.ev_n!==g.log_n)f.push(`a feladatnaplóban ${g.ev_n} próbaválasz van, a próbanaplóban ${g.log_n}`);
+  return f;
+}
+
 /* ---------- Tanulói részletek ---------- */
 async function openStudent(id){
   V.student=id;V.detail={loading:true};render();
@@ -228,6 +242,7 @@ async function openStudent(id){
     V.detail={ev,tr};
   }catch(e){V.detail={err:e.message}}
   if(V.tab==='student')render();
+  if(V.openTrial)setTimeout(()=>{const r=document.getElementById('tr-'+V.openTrial);if(r)r.scrollIntoView({behavior:'smooth',block:'center'})},60);
 }
 function studentHTML(){
   const st=V.stats;if(!st||!st.students.length)return '<p class="muted">Még nincs diák.</p>';
@@ -252,10 +267,11 @@ function studentHTML(){
    <div class="grid2"><div><h3>Napi aktivitás (utolsó ${days} nap)</h3><div class="days">${arr.map(a=>`<div title="${a.k}: ${a.ok} jó, ${a.bad} hibás"><i style="height:${a.ok/mx*84}px"></i><i class="w" style="height:${a.bad/mx*84}px"></i></div>`).join('')}</div>
      <div class="dlbl"><span>${arr[0].dt.toLocaleDateString('hu-HU',{month:'short',day:'numeric'})}</span><span>ma</span></div><p class="small muted">Zöld: jó válasz, piros: rossz vagy részben jó.</p></div>
     <div><h3>Hibái</h3>${el.length?el.map(([k,v])=>`<div class="errrow" style="grid-template-columns:1fr 1fr 40px"><b class="small">${esc(k)}</b><div class="bar"><i style="width:${v/el[0][1]*100}%"></i></div><span class="small">${v}×</span></div>`).join(''):'<p class="muted small">Nincs hibája az időszakban.</p>'}</div></div>
-   <h3>Próbák</h3>${(d.tr||[]).length?`<table><thead><tr><th>Mikor</th><th>Téma</th><th>Boss</th><th>Eredmény</th><th>Napló</th></tr></thead><tbody>
-    ${d.tr.map(t=>`<tr><td>${fmtDT(t.started_at)}</td><td>${TOPICS[t.topic]||esc(t.topic)}</td><td>${t.boss==='t5'?'5-ös boss':'4-es boss'}</td>
+   <h3>Próbák</h3>${(d.tr||[]).length?`<table><thead><tr><th>Mikor</th><th>Téma</th><th>Boss</th><th>Eredmény</th><th>Ellenőrzés</th><th>Napló</th></tr></thead><tbody>
+    ${d.tr.map(t=>`<tr id="tr-${t.id}"${t.id===V.openTrial?' class="hl"':''}><td>${fmtDT(t.started_at)}</td><td>${TOPICS[t.topic]||esc(t.topic)}</td><td>${t.boss==='t5'?'5-ös boss':'4-es boss'}</td>
      <td>${t.won?`<span class="grade">${t.grade}</span> győzelem`:t.finished_at?'<span class="pill r">vereség</span>':'<span class="pill">félbehagyva</span>'}</td>
-     <td>${Array.isArray(t.log)&&t.log.length?`<details class="tlog"><summary>${t.log.length} válasz</summary><table>${t.log.map(l=>`<tr><td class="small">${'★'.repeat(l.level||0)}</td><td class="small">${esc(l.task)}</td><td class="small"><code>${esc(l.answer)}</code></td><td>${res(l)}</td></tr>`).join('')}</table></details>`:'–'}</td></tr>`).join('')}</tbody></table>`:'<p class="muted small">Még nem próbázott.</p>'}
+     <td class="small">${t.won?(()=>{const g=(s.grades||[]).find(x=>x.id===t.id),fl=g?gradeFlags(g):[];return g&&g.log_n!==undefined?(fl.length?`<span class="pill y">⚠ ${esc(fl.join('; '))}</span>`:'<span class="pill g">rendben</span>'):'–'})():'–'}</td>
+     <td>${Array.isArray(t.log)&&t.log.length?`<details class="tlog"${t.id===V.openTrial?' open':''}><summary>${t.log.length} válasz</summary><table>${t.log.map(l=>`<tr><td class="small">${'★'.repeat(l.level||0)}</td><td class="small">${esc(l.task)}</td><td class="small"><code>${esc(l.answer)}</code></td><td>${res(l)}</td></tr>`).join('')}</table></details>`:'–'}</td></tr>`).join('')}</tbody></table>`:'<p class="muted small">Még nem próbázott.</p>'}
    <h3>Feladatnapló (legutóbbi ${Math.min(n,300)})</h3>${n?`<div class="tw"><table><thead><tr><th>Mikor</th><th>Hol</th><th>Feladat</th><th>Válasza</th><th>Eredmény</th><th>Tipp</th></tr></thead><tbody>
     ${ev.slice(0,300).map(e=>`<tr><td class="small">${fmtDT(e.ts)}</td><td class="small">${modeN[e.mode]||esc(e.mode)} · ${e.topic==='zk'?(e.kind==='ki'?'Kiemelés':'Bontás'):'Összevonás'} ${'★'.repeat(e.level||0)}</td>
      <td class="small">${esc(e.task)}</td><td class="small"><code>${esc(e.answer)}</code></td><td class="small">${res(e)}</td><td class="small">${e.hint?'💡'.repeat(e.hint):''}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted small">Nincs feladat az időszakban.</p>'}`;
