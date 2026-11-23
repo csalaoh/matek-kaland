@@ -1159,7 +1159,7 @@ const cur=()=>S.mode==='practice'?S.ptask:(inBattle()?S.battle.task:null);
 
 /* --- mentés ebben a böngészőben --- */
 /* ================= SZERVER (Supabase) ================= */
-const SB={url:'',key:''};   // ← ide jön a Supabase Project URL és a publishable key
+const SB={url:'https://mqckkudxqxyskvxwtunr.supabase.co',key:'sb_publishable_sQockj8mHy7ncdp1F4H70w_Wf6RrxKe'};   // ← ide jön a Supabase Project URL és a publishable key
 const SB_ON=()=>!!(SB.url&&SB.key);
 let ACC=null;try{ACC=JSON.parse(localStorage.getItem('mk-session')||'null')}catch(e){}
 if(!SB_ON())ACC=null;
