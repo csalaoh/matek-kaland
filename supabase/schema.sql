@@ -376,7 +376,6 @@ insert into public.err_map(err, monster_code) values
   ('Előjelhiba behelyettesítéskor',     'NEG')
 on conflict (err) do update set monster_code = excluded.monster_code;
 
-<<<<<<< HEAD
 
 -- ---------- VISSZAJELZÉSEK (v1.0, 2026-11-24) ----------
 create table if not exists public.feedback(
@@ -423,5 +422,3 @@ end $$;
 
 revoke execute on function public.student_feedback(uuid, text, text, text, text, text) from public;
 grant execute on function public.student_feedback(uuid, text, text, text, text, text) to anon, authenticated;
-=======
->>>>>>> d99eaf25669f3a1296c90d58fe7792e9ef6b777f

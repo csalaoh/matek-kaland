@@ -1159,7 +1159,7 @@ function couponCode(){const a='ABCDEFGHJKLMNPRSTUVXYZ23456789';return Array.from
 const THEMES_ON=['fantasy'];
 const S={theme:'fantasy',mode:'falu',topic:'betus',dir:'fel',prog:{},level:1,max:1,streak:0,miss:0,
   gold:0,xp:0,clvl:1,owned:{weapon:false,hat:false,pet:false},potions:0,
-  ptask:null,battle:null,trialTopic:'betus',tries:{},grades:[],log:[],anim:null,coupons:[],privs:PRIVILEGES.map(p=>({...p})),ap:AP_DAY_BASE,apDate:null,cls:null,gender:'f',hp:null,hpDay:null,eq:{weapon:true,hat:true,pet:true},beaten:[],fLast:null,iLast:null};
+  ptask:null,battle:null,trialTopic:'betus',tries:{},grades:[],log:[],anim:null,coupons:[],privs:PRIVILEGES.map(p=>({...p})),ap:AP_DAY_BASE,apDate:null,cls:null,gender:'f',hp:null,hpDay:null,eq:{weapon:true,hat:true,pet:true},beaten:[],fLast:null,iLast:null,gateFails:{},gateNote:null};
 const $=id=>document.getElementById(id);
 const T=()=>THEMES[S.theme];
 const decay=l=>DECAY[Math.max(0,S.max-l)];
@@ -1168,14 +1168,34 @@ const upNeed=()=>S.level<S.max?UP_BACK:UP;
 const hpMax=()=>Math.round((100+10*(S.clvl-1))*(CL()?CL().hp:1));
 const lvlBonus=()=>Math.min(.2,.04*(S.clvl-1));
 const arenaBonus=()=>lvlBonus()+(EQ().weapon?.1:0);
-const xpNeed=()=>100*S.clvl;
-function addXP(n){S.xp+=n;while(S.xp>=xpNeed()){S.xp-=xpNeed();S.clvl++;S.hp=Math.min(hpMax(),(S.hp??hpMax())+10);banner(T().lvlUp(S.clvl))}}
+/* SZINTGÖRBE (v1.1) – becslés: egy gyakorlás kb. 150 XP, heti 3 gyakorlás.
+   Az első szintek gyorsak (1–2 alkalom), utána egy szint kb. 4–5 alkalom (≈1,5 hét), később kb. 2 hét. Valódi adatok alapján újrahangolandó. */
+const xpNeedAt=l=>l===1?200:l===2?300:l===3?400:Math.min(1000,600+50*(l-4));
+const xpNeed=()=>xpNeedAt(S.clvl);
+/* KÜSZÖBŐRÖK – minden szintlépéshez le kell győzni a következő szint őrét.
+   req: ennél gyengébb (alacsonyabb fokozatú) támadás nem hat rá. A nevek Laci döntése szerint; a képek: Szornyek/kuszobor-<szint>.webp */
+const GUARDS={
+  2:{n:'Kétbalkezes Kelemen',c:'#8a6d3b'},
+  3:{n:'Zsugori Zénó',c:'#6b7f3a'},
+  4:{n:'Hebehurgya Huba',c:'#a0522d'},
+  5:{n:'Vasfogú Vencel',c:'#5b6770'},
+  6:{n:'Hétpróbás Hugó',c:'#4a5d8a'},
+  7:{n:'Gőgös Gedeon',c:'#7a3e6e'}};
+const GATE_REQ=l=>l<=2?1:l<=4?2:3;
+function guardFor(l){const g=GUARDS[l]||{n:`A(z) ${l}. küszöb őre`,c:'#5a4a3a'},k=Math.max(0,l-7);
+  const base=l<=7?{2:[60,12,30],3:[80,14,40],4:[100,16,50],5:[130,18,70],6:[150,20,80],7:[170,22,90]}[l]:[Math.min(260,170+15*k),Math.min(30,22+k),90+10*k];
+  return {lvl:l,name:g.n,col:g.c,hp:base[0],hit:base[1],gold:base[2],req:GATE_REQ(l),img:`Szornyek/kuszobor-${l}.webp`}}
+const gateReady=()=>S.xp>=xpNeed();
+const gateMercy=l=>1-.1*Math.min(3,(S.gateFails||{})[l]||0);   // vereségenként −10% életerő, legfeljebb −30%
+function addXP(n){S.xp+=n;
+  if(gateReady()&&S.gateNote!==S.clvl){S.gateNote=S.clvl;const g=guardFor(S.clvl+1);banner(`Megvan az XP a ${g.lvl}. szinthez! Az Arénában vár rád a Küszöbőr: ${g.name}.`)}}
 const HEAL_OK=20,HEAL_PART=10;
 function regenHP(){const d=isoDay();if(S.hp==null||S.hpDay!==d){S.hp=hpMax();S.hpDay=d}S.hp=Math.min(S.hp,hpMax())}
 function healHP(n){if(S.hp>=hpMax())return 0;const h=Math.min(n,hpMax()-S.hp);S.hp+=h;return h}
 const exhausted=()=>S.hp<=0;
 function gen(l,tp=S.topic,dir){const t=tp==='zk'?genZK(l,dir):l===1?genL1():l===2?genL2():genL3();t.done=false;t.hint=0;t.fb=null;t.input='';return t}
-const inBattle=()=>S.battle&&((S.mode==='arena'&&S.battle.kind==='arena')||(S.mode==='trial'&&S.battle.kind==='trial'));
+const inBattle=()=>S.battle&&((S.mode==='arena'&&(S.battle.kind==='arena'||S.battle.kind==='gate'))||(S.mode==='trial'&&S.battle.kind==='trial'));
+const islandTopics=()=>['betus',...(zkOpen()?['zk']:[])];   // az aktuális sziget nyitott leckéi
 const cur=()=>S.mode==='practice'?S.ptask:(inBattle()?S.battle.task:null);
 
 
@@ -1189,11 +1209,11 @@ const saveKey=()=>ACC?'matek7-kaland-u-'+ACC.id:'matek7-kaland-v1';
 const today=()=>new Date().toISOString().slice(0,10);
 const tKey=(tp,k)=>(tp==='betus'?'':tp+'_')+k;
 const triesLeft=(tp,k)=>{const kk=tKey(tp,k);if(S.tries[kk]==null)S.tries[kk]=DAILY_TRIES;return S.tries[kk]};
-function snapshot(){S.prog[S.topic]={level:S.level,max:S.max,streak:S.streak,miss:S.miss};return {_at:Date.now(),theme:S.theme,topic:S.topic,dir:S.dir,prog:S.prog,trialTopic:S.trialTopic,level:S.level,max:S.max,streak:S.streak,miss:S.miss,gold:S.gold,xp:S.xp,clvl:S.clvl,owned:S.owned,potions:S.potions,tries:S.tries,triesDay:today(),grades:S.grades,coupons:S.coupons,ap:S.ap,apDate:S.apDate,evApDay:S.evApDay,hp:S.hp,hpDay:S.hpDay,cls:S.cls,gender:S.gender,eq:S.eq,beaten:S.beaten,fLast:S.fLast,iLast:S.iLast}}
+function snapshot(){S.prog[S.topic]={level:S.level,max:S.max,streak:S.streak,miss:S.miss};return {_at:Date.now(),theme:S.theme,topic:S.topic,dir:S.dir,prog:S.prog,trialTopic:S.trialTopic,level:S.level,max:S.max,streak:S.streak,miss:S.miss,gold:S.gold,xp:S.xp,clvl:S.clvl,owned:S.owned,potions:S.potions,tries:S.tries,triesDay:today(),grades:S.grades,coupons:S.coupons,ap:S.ap,apDate:S.apDate,evApDay:S.evApDay,hp:S.hp,hpDay:S.hpDay,cls:S.cls,gender:S.gender,eq:S.eq,beaten:S.beaten,fLast:S.fLast,iLast:S.iLast,gateFails:S.gateFails,gateNote:S.gateNote}}
 function save(){try{localStorage.setItem(saveKey(),JSON.stringify(snapshot()))}catch(e){}if(ACC)NET.dirty=true}
 function load(){try{applyState(JSON.parse(localStorage.getItem(saveKey())||'null'))}catch(e){}}
 function applyState(d){if(!d)return;
-  for(const k of ['theme','topic','dir','prog','trialTopic','level','max','streak','miss','gold','xp','clvl','owned','potions','grades','coupons','ap','apDate','evApDay','hp','hpDay','cls','gender','eq','beaten','fLast','iLast'])if(d[k]!==undefined)S[k]=d[k];
+  for(const k of ['theme','topic','dir','prog','trialTopic','level','max','streak','miss','gold','xp','clvl','owned','potions','grades','coupons','ap','apDate','evApDay','hp','hpDay','cls','gender','eq','beaten','fLast','iLast','gateFails','gateNote'])if(d[k]!==undefined)S[k]=d[k];
   if(d.triesDay===today()&&d.tries)S.tries=d.tries;
   if(!THEMES_ON.includes(S.theme))S.theme=THEMES_ON[0];}
 
@@ -1212,9 +1232,10 @@ function render(){
 /* szörnyképek: ha a fájl megvan, festett kép, különben a régi rajz */
 const MONSTER_IMG={arena:['Szornyek/gnoll.webp','Szornyek/elemental.webp','Szornyek/csontlovag.webp'],trials:['Szornyek/ork.webp','Szornyek/sarkany.webp']};
 const MON_OK=new Set();
-[...MONSTER_IMG.arena,...MONSTER_IMG.trials].forEach(src=>{const im=new Image();im.onload=()=>{MON_OK.add(src);if(S.battle&&(S.mode==='arena'||S.mode==='trial'))renderMode()};im.src=src});
+[...MONSTER_IMG.arena,...MONSTER_IMG.trials,...[2,3,4,5,6,7].map(l=>guardFor(l).img)].forEach(src=>{const im=new Image();im.onload=()=>{MON_OK.add(src);if(S.battle&&(S.mode==='arena'||S.mode==='trial'))renderMode()};im.src=src});
 function monsterSrc(kind,i){const src=(kind==='trial'?MONSTER_IMG.trials[i]:MONSTER_IMG.arena[i]);return src&&MON_OK.has(src)?src:null}
-function monsterHTML(b){const src=monsterSrc(b.kind,b.kind==='trial'?b.idx-3:b.idx);
+function monsterHTML(b){if(b.kind==='gate'){const g=MON_OK.has(b.img)?b.img:null;return g?`<img class="mon" src="${g}" alt="${b.name}">`:`<div class="mon-svg">${enemySVG(S.theme,b.idx,b.col)}</div>`}
+  const src=monsterSrc(b.kind,b.kind==='trial'?b.idx-3:b.idx);
   return src?`<img class="mon" src="${src}" alt="${b.name}">`:`<div class="mon-svg">${enemySVG(S.theme,b.idx,b.col)}</div>`}
 function hpBar(v,m,mark){const p=Math.max(0,v)/m*100;return `<div class="bar hp ${p<30?'low':''}" style="position:relative"><span style="width:${p}%"></span>${mark?`<i style="position:absolute;left:${mark/m*100}%;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.6" title="Páncélhatár"></i>`:''}</div><div class="tiny">${Math.max(0,v)} / ${m}</div>`}
 function statBar(label,cls,v,m,txt){return `<div class="sbar"><b class="${cls}">${label}</b><div class="bar ${cls}"><span style="width:${Math.min(100,Math.max(0,v/m*100))}%"></span></div><span class="tiny">${txt}</span></div>`}
@@ -1224,7 +1245,7 @@ function renderChar(){
    <div class="stage">${stageBgSVG(S.theme)}<div class="hero">${avatarSVG(S.theme,{...EQ(),cls:S.cls})}</div></div>
    ${statBar('HP','hpc',S.hp,hpMax(),exhausted()?'<b style="color:#d64545">kimerült</b>':`${S.hp} / ${hpMax()}`)}
    ${statBar('AP','apc',S.ap,apMax(),`${S.ap} / ${apMax()}`)}
-   ${statBar('XP','xpc',S.xp,xpNeed(),`${S.xp} / ${xpNeed()}`)}
+   ${statBar('XP','xpc',S.xp,xpNeed(),gateReady()?'<b>⚔️ Küszöbőr vár az Arénában</b>':`${S.xp} / ${xpNeed()}`)}
    ${statBar('GP','gpc',1,1,`${S.gold} ${th.cur}`)}
    ${S.potions>0&&S.hp<hpMax()&&!(S.battle&&!S.battle.over)?`<p style="margin:6px 0 0"><button class="btn ghost" data-act="potion-out" style="padding:4px 10px;font-size:.8rem">${th.items.potion[0]} használata (+${potionHeal()} HP) ×${S.potions}</button></p>`:''}
    <div class="stat" style="margin-top:6px">Osztály: <b>${CL()?clsName():'még nincs'}</b> <button class="btn ghost" data-act="cls-open" style="padding:2px 8px;font-size:.75rem;margin-left:4px">${CL()?'váltás':'választás'}</button></div>
@@ -1254,7 +1275,7 @@ function renderMode(){
       <li>Ha a felbontás után még össze is kell vonni, két lépésben válaszolsz: előbb a felbontott alak (összevonás nélkül), aztán az összevont. Ha csak az egyik jó, fél jutalom jár – akkor is, ha rossz felbontást vonsz össze jól (továbbvitt hiba).</li>
       <li>Kiemelésnél a kiemelt alakot írd be, pl. <b>3(2x + 5)</b>. Ha igaz, de még kiemelhető (félúton akadtál), újrapróbálhatod: nem hiba, de csak fél jutalom jár, és nem számít a sorozatba.</li>`
       :`<li>A 3. fokozaton két lépésben válaszolsz: előbb az összevont alak, aztán az érték. Ha csak az egyik jó, fél jutalom jár – akkor is, ha rossz összevonásba helyettesítesz be jól (továbbvitt hiba).</li>`}
-      <li>Az XP-vel a karaktered szintet lép: nő az életereje és az aréna-sebzése.</li></ul></details>
+      <li>Az XP-vel gyűjtöd a következő szintet. Ha megvan, az Arénában le kell győznöd a szint <b>Küszöbőrét</b> – csak utána lépsz szintet (nő az életerőd és az aréna-sebzésed).</li></ul></details>
       <p style="margin:10px 0 0"><button class="btn ghost" data-act="trial-here">🗝️ Próba ebből a témából: ${TOPICS[S.topic]}</button></p>`;
     return;
   }
@@ -1288,6 +1309,7 @@ function renderMode(){
      ${!isTrial?(exhausted()?`<div class="fb show bad"><b class="big">Kimerültél.</b> Amíg nem gyógyulsz fel, nem indulhatsz harcba. Gyakorolj: minden jó válasz +${HEAL_OK} HP. Éjfélkor amúgy is teljesen felgyógyulsz${S.potions?`, vagy igyál meg egy ${th.items.potion[0].toLowerCase()}t`:''}.
        <p style="margin:8px 0 0"><button class="btn" data-act="go-practice-${S.level}">Irány gyakorolni</button></p></div>`
        :`<p class="tiny">Életerőd: <b>${S.hp} / ${hpMax()}</b> – a harcok között nem töltődik vissza magától. Gyakorlással, ${th.items.potion[0].toLowerCase()}lal vagy éjfélkor gyógyulsz.</p>`):''}
+     ${!isTrial?gateCardHTML():''}
      <div class="grid3">${list.map((e,i)=>{const idx=isTrial?3+i:i;const left=isTrial?triesLeft(S.trialTopic,e.key):null;
        return `<button class="pick" data-start="${S.mode}:${i}" ${(isTrial&&left<=0)||(!isTrial&&exhausted())?'disabled':''}>${(()=>{const src=monsterSrc(isTrial?'trial':'arena',i);return src?`<img class="pickmon" src="${src}" alt="">`:enemySVG(S.theme,idx,names[i].c)})()}<h4>${names[i].n}</h4>
         <span class="tiny">${e.hp} életerő · rossz válasznál −${e.hit}</span>
@@ -1300,7 +1322,8 @@ function renderMode(){
   }
   const b=S.battle,t=b.task,busy=t&&!t.done;
   const pAnim=S.anim&&S.anim.who==='p',eAnim=S.anim&&S.anim.who==='e';
-  v.innerHTML=`<div class="lvl story-l">${isTrial?`Próba (${TOPICS[b.topic||'betus']})`:'Aréna'}: ${b.name}${isTrial?` <span class="grade">${b.grade===5?'5 (jeles)':'4 (jó)'}</span>`:''}</div>
+  const isGate=b.kind==='gate';
+  v.innerHTML=`<div class="lvl story-l">${isTrial?`Próba (${TOPICS[b.topic||'betus']})`:isGate?`Küszöbőr – a ${b.lvl}. szint kapuja`:'Aréna'}: ${b.name}${isTrial?` <span class="grade">${b.grade===5?'5 (jeles)':'4 (jó)'}</span>`:''}</div>
    <div class="bstage">${arenaBgSVG(S.theme)}<div class="bshade"></div>
      <div class="bfig p ${pAnim?'shake':''}"><div class="dmgpop p">${pAnim?S.anim.txt:''}</div>${avatarSVG(S.theme,isTrial?{cls:S.cls}:{...EQ(),cls:S.cls})}</div>
      <div class="bvs">VS</div>
@@ -1308,17 +1331,17 @@ function renderMode(){
    </div>
    <div class="bhud">
      <div class="plate"><div class="name">${ACC?esc(ACC.nick):(CL()?clsName():T().hero)}</div>${hpBar(b.php,b.pmax)}</div>
-     <div class="plate"><div class="name">${b.name}</div>${hpBar(b.ehp,b.emax,isTrial?0:armorLine(b))}</div>
+     <div class="plate"><div class="name">${b.name}</div>${hpBar(b.ehp,b.emax,isTrial||isGate?0:armorLine(b))}</div>
    </div>
-   ${b.over?'':`<div class="attacks">${[1,2,3].map(l=>{const imm=l===1&&(isTrial||b.ehp<=armorLine(b));const dmg=isTrial?ATK[l]:Math.round(ATK[l]*(1+arenaBonus())*(S.cls==='magus'&&l===3?1.3:1));
-      return `<button class="atk t${l}" data-tier="${l}" ${busy||imm?'disabled':''}><b>${th.attacks[l-1]}</b><span>${imm?(isTrial?'nem hat erre az ellenfélre':'a páncélja miatt már nem hat'):`${l}. fokozatú feladat · ${dmg} sebzés`}</span></button>`}).join('')}</div>`}
+   ${b.over?'':`<div class="attacks">${[1,2,3].map(l=>{const imm=isGate?l<b.req:l===1&&(isTrial||b.ehp<=armorLine(b));const dmg=isTrial?ATK[l]:Math.round(ATK[l]*(1+arenaBonus())*(S.cls==='magus'&&l===3?1.3:1));
+      return `<button class="atk t${l}" data-tier="${l}" ${busy||imm?'disabled':''}><b>${th.attacks[l-1]}</b><span>${imm?(isTrial?'nem hat erre az ellenfélre':isGate?`nem hat – legalább ${b.req}. fokozat kell`:'a páncélja miatt már nem hat'):`${l}. fokozatú feladat · ${dmg} sebzés`}</span></button>`}).join('')}</div>`}
    <div class="subacts">
      ${!isTrial&&!b.over?`<button class="btn ghost" data-act="potion" ${S.potions<1||busy||b.php>=b.pmax?'disabled':''}>${th.items.potion[0]} (+${potionHeal()}) ×${S.potions}</button>`:''}
      ${b.over?`<button class="btn" data-act="leave">Vissza</button>`:`<button class="btn ghost" data-act="giveup">Feladom</button>`}
    </div>
    ${b.over&&b.ehp>0?defeatSummary(b):''}
    ${b.over&&b.ehp<=0?victorySummary(b):''}
-   ${!t&&!b.over?'<p class="introbox">Válassz támadást! A támadás ereje dönti el, milyen nehéz feladatot kapsz.</p>':''}`;
+   ${!t&&!b.over?`<p class="introbox">Válassz támadást! A támadás ereje dönti el, milyen nehéz feladatot kapsz.${isGate&&b.req>1?` <b>Ezt az őrt csak ${b.req}. fokozatú vagy erősebb támadás sebzi.</b>`:''}</p>`:''}`;
   f.innerHTML='';
 }
 function esc(x){return String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
@@ -1415,15 +1438,15 @@ function practiceResult(t,r,entry){
 function battleResult(t,r,entry){
   const th=T(),b=S.battle,isTrial=b.kind==='trial';
   b.nAns=(b.nAns||0)+1;if(r.status==='correct')b.nOk=(b.nOk||0)+1;else if(r.status==='partial')b.nPart=(b.nPart||0)+1;
-  entry.where=`${isTrial?'Próba':'Aréna'} ${t.level}${t.topic==='zk'?(t.kind==='fel'?' (bontás)':' (kiemelés)'):''}`;
+  entry.where=`${isTrial?'Próba':b.kind==='gate'?'Küszöbőr':'Aréna'} ${t.level}${t.topic==='zk'?(t.kind==='fel'?' (bontás)':' (kiemelés)'):''}`;
   if(r.status==='correct'){
     let dmg=Math.round((isTrial?ATK[t.level]:ATK[t.level]*(1+arenaBonus())*(S.cls==='magus'&&t.level===3?1.3:1))*(t.half?.5:1));
-    if(!isTrial&&t.level===1)dmg=Math.max(0,Math.min(dmg,b.ehp-armorLine(b)));
+    if(b.kind==='arena'&&t.level===1)dmg=Math.max(0,Math.min(dmg,b.ehp-armorLine(b)));
     let crit=false;if(!isTrial&&t.level===3&&Math.random()<critChance()){dmg*=2;crit=true}
     b.ehp-=dmg;S.anim={who:'e',txt:`−${dmg}${crit?'!':''}`};entry.gain=`−${dmg} HP${crit?' (krit.)':''}`;
     const x=Math.round(XPB[t.level]*xpMul(t.level));addXP(x);
     b.cstreak=(b.cstreak||0)+1;let healMsg='';if(!isTrial&&S.cls==='gyogyito'&&b.cstreak%3===0&&b.php<b.pmax){const h=Math.min(15,b.pmax-b.php);b.php+=h;healMsg=`<br><b>Gyógyító erő: +${h} életerő (3 jó egymás után)!</b>`}
-    t.fb={cls:'ok',html:`${crit?'<b class="big crit">⚡ KRITIKUS TALÁLAT – dupla sebzés!</b><br>':''}<b class="big">${pick(th.ok)}</b> ${th.attacks[t.level-1]}: −${dmg} életerő az ellenfélnek · +${x} XP${!isTrial&&t.level===1&&b.ehp<=armorLine(b)?`<br><b>${th.armor}</b>`:''}${healMsg}${r.note?`<br><span class="tiny">💡 ${r.note}</span>`:''}`};
+    t.fb={cls:'ok',html:`${crit?'<b class="big crit">⚡ KRITIKUS TALÁLAT – dupla sebzés!</b><br>':''}<b class="big">${pick(th.ok)}</b> ${th.attacks[t.level-1]}: −${dmg} életerő az ellenfélnek · +${x} XP${b.kind==='arena'&&t.level===1&&b.ehp<=armorLine(b)?`<br><b>${th.armor}</b>`:''}${healMsg}${r.note?`<br><span class="tiny">💡 ${r.note}</span>`:''}`};
   }else if(r.status==='partial'){
     const dmg=Math.round((isTrial?ATK[t.level]:ATK[t.level]*(1+arenaBonus())*(S.cls==='magus'&&t.level===3?1.3:1))/2);
     b.cstreak=0;const hit=Math.round(b.hit/2);b.ehp-=dmg;b.php-=hit;S.anim={who:'e',txt:`−${dmg}`};entry.gain=`−${dmg} / −${hit}`;
@@ -1435,8 +1458,17 @@ function battleResult(t,r,entry){
     t.fb={cls:'bad',html:`${isTwo(t)?stepReport(r):`<b>${r.err}.</b> ${r.explain}`}<br>${solutionHTML(t)}<br><b>${shield?`${b.name} visszaütne, de a pajzsod felfogta! (Harconként egyszer.)`:`${b.name} visszaüt: −${b.hit} életerő.`}</b>`};
   }
   if(r.status!=='correct'){b.errs=b.errs||{};const k=r.err||'Hiba';b.errs[k]=(b.errs[k]||0)+1;b.errTiers=b.errTiers||{};b.errTiers[t.level]=(b.errTiers[t.level]||0)+1}
-  if(b.kind==='arena')S.hp=Math.max(0,b.php);
+  if(b.kind!=='trial')S.hp=Math.max(0,b.php);
   if(b.ehp<=0)endBattle(true);else if(b.php<=0)endBattle(false);
+}
+function gateCardHTML(){
+  const th=T(),g=guardFor(S.clvl+1),src=MON_OK.has(g.img)?g.img:null,m=gateMercy(g.lvl),hp=Math.round(g.hp*m);
+  const pic=src?`<img class="pickmon" src="${src}" alt="">`:enemySVG(S.theme,g.lvl%3,g.col);
+  if(!gateReady())return `<p class="tiny" style="margin:4px 0 10px">🚪 <b>Küszöbőr:</b> a ${g.lvl}. szinthez le kell győznöd őt: <b>${g.name}</b>. Akkor állhatsz ki ellene, ha összegyűlt az XP (még ${xpNeed()-S.xp} XP).</p>`;
+  return `<div class="grid3" style="grid-template-columns:1fr;margin-bottom:12px"><button class="pick" data-start="gate:0" ${exhausted()?'disabled':''} style="border:2px solid #c8962e">${pic}
+    <h4>🚪 Küszöbőr: ${g.name}</h4><span class="tiny"><b>A ${g.lvl}. szint kapuja.</b> Ha legyőzöd, szintet lépsz.</span>
+    <span class="tiny">${hp} életerő${m<1?` (gyengült: −${Math.round((1-m)*100)}%)`:''} · rossz válasznál −${g.hit}</span>
+    <span class="tiny">${g.req>1?`Csak <b>${g.req}. fokozatú</b> vagy erősebb támadás sebzi.`:'Bármilyen támadás sebzi.'} Jutalom: szintlépés + ${g.gold} ${th.cur}</span></button></div>`;
 }
 function victorySummary(b){
   const th=T(),isTrial=b.kind==='trial';
@@ -1444,6 +1476,7 @@ function victorySummary(b){
   const main=isTrial
     ?(b.trialId?`Megszerezted a(z) <b>${b.grade===5?'5-öst (jeles)':'4-est (jó)'}</b>! A tanárod már látja.`
                :`Élesben ezért <b>${b.grade===5?'5-ös (jeles)':'4-es (jó)'}</b> járna – vendég módban ez csak próba, jegyet nem ad.`)
+    :b.kind==='gate'?`Kinyílt a kapu: <b>${b.lvl}. szintre léptél!</b> Nőtt az életerőd és az aréna-sebzésed. Jutalom: <b>+${b.gold} ${th.cur}</b>.${gateReady()?`<br>Már a következő szinthez is megvan az XP-d – a következő Küszöbőr: <b>${guardFor(S.clvl+1).name}</b>.`:''}`
     :`Jutalom: <b>+${b.gold} ${th.cur}</b> és <b>+${b.xp} XP</b>.`;
   return `<div class="fb show ok victory" style="margin-top:12px;text-align:center"><div style="font-size:2.2rem;line-height:1">🏆</div>
     <b class="big">Győzelem! Legyőzted: ${b.name}</b><br>${main}<br><span class="tiny">${stat}</span>
@@ -1455,12 +1488,19 @@ function defeatSummary(b){
   const rec=tiers.length?Math.max(1,+tiers[0][0]-(+tiers[0][0]===1?0:0)):S.level;
   return `<div class="fb show info" style="margin-top:12px"><b class="big">Mi ment rosszul?</b><br>
     ${errs.length?errs.map(([k,n])=>`${k}: <b>${n}×</b>`).join(' · '):'Ebben a harcban nem volt rossz válaszod – csak kifogytál az életerőből.'}<br>
-    ${b.kind==='arena'?`Javaslat: gyakorolj a <b>${rec}. fokozaton</b>. Minden jó válasz +${HEAL_OK} HP – kb. ${Math.ceil(hpMax()/HEAL_OK)} jó válasz, és újra harcképes vagy.
+    ${b.kind==='gate'?(b.mercy?`Legközelebb ${b.name} gyengébb lesz (−10% életerő). `:'')+`Az XP-d megvan, nem veszett el semmi. `:''}${b.kind!=='trial'?`Javaslat: gyakorolj a <b>${rec}. fokozaton</b>. Minden jó válasz +${HEAL_OK} HP – kb. ${Math.ceil(hpMax()/HEAL_OK)} jó válasz, és újra harcképes vagy.
     <p style="margin:8px 0 0"><button class="btn" data-act="go-practice-${rec}">Irány gyakorolni</button></p>`:'A próbát ma még újra megpróbálhatod, ha van hátra próbálkozásod.'}</div>`;
 }
 function endBattle(win){
   const th=T(),b=S.battle;b.over=true;
-  if(b.kind==='arena'){
+  if(b.kind==='gate'){
+    if(win){const need=xpNeed();S.clvl++;S.xp=Math.max(0,S.xp-need);S.gold+=b.gold;S.hp=Math.min(hpMax(),(S.hp??hpMax())+10);
+      S.gateFails=S.gateFails||{};delete S.gateFails[b.lvl];S.beaten=S.beaten||[];if(!S.beaten.includes(b.name))S.beaten.push(b.name);
+      S.log.push({where:'Küszöbőr',ans:'',ok:true,err:'',gain:`<b>${S.clvl}. szint</b>`});banner(th.lvlUp(S.clvl));
+      if(gateReady())S.gateNote=S.clvl}
+    else{if((b.nAns||0)>=3){S.gateFails=S.gateFails||{};S.gateFails[b.lvl]=Math.min(3,(S.gateFails[b.lvl]||0)+1);b.mercy=true}
+      banner(S.hp<=0?'Kimerültél! Gyakorolj, hogy visszanyerd az életerőd – az XP-d megmaradt.':`${b.name} most nem engedett át. Az XP-d megmaradt, bármikor újrapróbálhatod.`)}
+  }else if(b.kind==='arena'){
     if(win){S.gold+=b.gold;addXP(b.xp);S.beaten=S.beaten||[];if(!S.beaten.includes(b.name))S.beaten.push(b.name);banner(`Legyőzted: ${b.name}! +${b.gold} ${th.cur}, +${b.xp} XP`)}
     else banner(S.hp<=0?'Kimerültél! Gyakorolj, hogy visszanyerd az életerőd – a jó válaszokért kapott XP megmaradt.':'Feladtad a harcot. A jó válaszokért kapott XP megmaradt.');
   }else{
@@ -1472,7 +1512,9 @@ function endBattle(win){
 }
 function startBattle(kind,i,trialId){
   const th=T();
-  if(kind==='arena'){const e=ARENA[i],ev=dayEvent().id,hp=Math.round(e.hp*(ev==='strong'?1.2:1)),rm=(ev==='strong'?1.5:1)*(ev==='weak'&&i===0?2:1);
+  if(kind==='gate'){if(exhausted()||!gateReady())return;const g=guardFor(S.clvl+1),hp=Math.round(g.hp*gateMercy(g.lvl));
+    S.battle={kind,idx:g.lvl%3,lvl:g.lvl,req:g.req,img:g.img,name:g.name,col:g.col,emax:hp,ehp:hp,hit:g.hit,gold:Math.round(g.gold*goldMul()),xp:0,pmax:hpMax(),php:S.hp,task:null,over:false};}
+  else if(kind==='arena'){const e=ARENA[i],ev=dayEvent().id,hp=Math.round(e.hp*(ev==='strong'?1.2:1)),rm=(ev==='strong'?1.5:1)*(ev==='weak'&&i===0?2:1);
     if(exhausted())return;
     S.battle={kind,idx:i,name:th.arena[i].n,col:th.arena[i].c,emax:hp,ehp:hp,hit:e.hit,gold:Math.round(e.gold*rm*goldMul()),xp:Math.round(e.xp*rm*xpMul(0)),pmax:hpMax(),php:S.hp,task:null,over:false};}
   else{const e=TRIALS[i],tp=S.trialTopic||'betus';if(triesLeft(tp,e.key)<=0)return;
@@ -1484,7 +1526,8 @@ function startBattle(kind,i,trialId){
 function attack(l){
   const b=S.battle;if(!b||b.over||(b.task&&!b.task.done))return;
   if(b.kind==='trial'&&l===1)return;
-  b.task=b.kind==='trial'?gen(l,b.topic||'betus','mix'):gen(l,pick(['betus',...(zkOpen()?['zk']:[])]),'mix');render();focusAns();
+  if(b.kind==='gate'&&l<b.req)return;
+  b.task=b.kind==='trial'?gen(l,b.topic||'betus','mix'):gen(l,pick(islandTopics()),'mix');render();focusAns();
 }
 const HINT_F=[1,.5,.25];
 function onHint(){
@@ -1524,7 +1567,7 @@ $('nextBtn').addEventListener('click',()=>{S.ptask=gen(S.level);render();focusAn
 $('ans').addEventListener('input',e=>{const t=cur();if(t)t.input=e.target.value});
 $('tFantasy').addEventListener('click',()=>{S.theme='fantasy';$('banner').className='banner';if(S.battle)relabel();render()});
 $('tScifi').addEventListener('click',()=>{if(!THEMES_ON.includes('scifi'))return;S.theme='scifi';$('banner').className='banner';if(S.battle)relabel();render()});
-function relabel(){const b=S.battle,th=T();const src=b.kind==='arena'?th.arena[b.idx]:th.trials[b.idx-3];b.name=src.n;b.col=src.c}
+function relabel(){const b=S.battle,th=T();if(b.kind==='gate')return;const src=b.kind==='arena'?th.arena[b.idx]:th.trials[b.idx-3];b.name=src.n;b.col=src.c}
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-m],[data-start],[data-tier],[data-act]');if(!el)return;
   if(el.dataset.m){S.mode=el.dataset.m;$('banner').className='banner';render();if(cur())focusAns();return}
@@ -1538,7 +1581,7 @@ document.addEventListener('click',e=>{
   if(a.startsWith('topic-')){const [,tp,d]=a.split('-');setTopic(tp,d);render();focusAns();return}
   if(a==='enter'){setTopic('betus');S.mode='practice';render();focusAns();if(!S.cls&&typeof classChooser==='function')classChooser();return}
   if(a.startsWith('locked-')){const i=+a.slice(7);$('mapMsg').innerHTML=`🔒 <b>${T().regions[i]}</b> – ${REGIONS[i].topic}: hamarosan nyílik!`;return}
-  if(a==='potion'){const b=S.battle;if(S.potions>0&&b&&!b.over){S.potions--;b.php=Math.min(b.pmax,b.php+potionHeal());if(b.kind==='arena')S.hp=b.php;render()}}
+  if(a==='potion'){const b=S.battle;if(S.potions>0&&b&&!b.over){S.potions--;b.php=Math.min(b.pmax,b.php+potionHeal());if(b.kind!=='trial')S.hp=b.php;render()}}
   else if(a==='potion-out'){if(S.potions>0&&S.hp<hpMax()){S.potions--;healHP(potionHeal());render()}}
   else if(a.startsWith('go-practice-')){const l=+a.slice(12);S.battle=null;S.mode='practice';if(l!==S.level){S.level=l;S.streak=0;S.miss=0;S.ptask=gen(l)}render();focusAns()}
   else if(a==='giveup'){if(S.battle){endBattle(false);render()}}
@@ -2312,7 +2355,7 @@ function heroPanel(){
      <div class="hcard"><div class="hwho"><div class="hlvl">${S.clvl}</div><div><b>${c?clsName():th.hero}</b><span>${S.clvl}. szint${c?'':' · még nincs osztályod'}</span></div></div>
       ${bar('HP','hp',S.hp,hpMax(),exhausted()?'kimerült':`${S.hp} / ${hpMax()}`)}
       ${bar('AP','ap',S.ap,apMax(),`${S.ap} / ${apMax()}`)}<div class="hnote">Tanítási naponként +${apDay()} AP</div>
-      ${bar('XP','xp',S.xp,xpNeed(),`${S.xp} / ${xpNeed()}`)}<div class="hnote">Még ${xpNeed()-S.xp} XP a ${S.clvl+1}. szintig</div>
+      ${bar('XP','xp',S.xp,xpNeed(),`${S.xp} / ${xpNeed()}`)}<div class="hnote">${gateReady()?`Megvan az XP – győzd le az Arénában: ${guardFor(S.clvl+1).name}`:`Még ${xpNeed()-S.xp} XP a ${S.clvl+1}. szintig`}</div>
       <div class="hstat gp"><span class="k">GP</span><div></div><span>${S.gold} ${th.cur}</span></div></div>
      <div class="hcard"><h3>Képességek</h3>
       <div class="hkv"><span>Aréna-sebzés</span><b>+${Math.round(arenaBonus()*100)}%</b></div>
@@ -2598,10 +2641,15 @@ boot();
 </script>
 <script>
 /* ================= VERZIÓ, SÚGÓ, VISSZAJELZÉS (v1.0) ================= */
-const APP_VERSION='1.0';
+const APP_VERSION='1.1';
 /* Új kiadásnál: APP_VERSION + a sw.js VERSION-je + egy új bejegyzés a lista ELEJÉRE.
    by: a diák beceneve, ha az ő ötlete volt (a Súgóban és az Újdonságok ablakban megjelenik). */
 const CHANGELOG=[
+  {v:'1.1',date:'2026. november 25.',title:'Megérkeztek a Küszöbőrök',items:[
+    {t:'🚪 Minden szintlépés előtt egy Küszöbőr áll az Arénában. Ha összegyűlt az XP, le kell győznöd – csak utána lépsz szintet. Az első: Kétbalkezes Kelemen.'},
+    {t:'💪 A magasabb szintek őreit csak nehezebb feladattal lehet sebezni. Így a szint azt mutatja, mit tudsz – nem azt, hányszor ismételtél egy könnyű feladatot.'},
+    {t:'🛡️ Ha egy Küszöbőr legyőz, nem veszítesz semmit, és legközelebb gyengébb lesz.'},
+    {t:'📈 Új szintgörbe: az első szintek gyorsan jönnek, a későbbiek több munkát kérnek.'}]},
   {v:'1.0',date:'2026. november 25.',title:'Indul a Matek-kaland!',items:[
     {t:'🚀 Elindult a játék a 7.b-ben: betűs kifejezések, zárójelbontás és kiemelés, Aréna, Próba (valódi jegyért), Bolt, kiváltságok, karakterosztályok.'},
     {t:'🐞 Új gomb fent: hibát, ötletet vagy dicséretet küldhetsz. Mindet elolvasom – és ha a te ötleted kerül be, itt a neved is ott lesz!'},
@@ -2657,7 +2705,9 @@ function helpPanel(open){
      <li>Jó válasz → az ellenfél sebződik. Rossz válasz → ő üt vissza.</li>
      <li>Néha <b>kritikus ütés</b> jön: dupla sebzés.</li>
      <li>Az életerőd (HP) a harcok között megmarad. Gyakorlással (jó válaszonként +${HEAL_OK} HP), bájitallal vagy éjfélkor gyógyulsz. Vereségnél nem veszítesz semmit.</li>
-     <li>Itt számít a karaktered: szint, fegyver, osztály.</li></ul>`)}
+     <li>Itt számít a karaktered: szint, fegyver, osztály.</li>
+     <li>🚪 <b>Küszöbőr</b>: ha összegyűlt az XP a következő szinthez, itt vár rád a szint őre. Csak akkor lépsz szintet, ha legyőzöd. A magasabb szintek őreit csak nehezebb (2., majd 3. fokozatú) támadás sebzi – vagyis a szintedet a tudásoddal szerzed, nem a könnyű feladatok ismételgetésével.</li>
+     <li>Ha egy Küszöbőr legyőz, nem veszítesz semmit, az XP-d megmarad, és a következő próbálkozásnál gyengébb lesz.</li></ul>`)}
    ${sec('trial','📜 Próba – valódi jegyért',`<ul>
      <li>Ha legyőzöd a közepes Főgonoszt, <b>4-est</b>, ha az erőset, <b>5-öst</b> kapsz.</li>
      <li>Itt mindenki egyforma: ${TRIAL_HP} életerő, felszerelés és bájital nélkül. Csak a tudásod számít.</li>
@@ -2666,7 +2716,7 @@ function helpPanel(open){
      <li>A jegyet a tanár látja és ellenőrzi.</li></ul>`)}
    ${sec('res',`💰 ${cur[0].toUpperCase()+cur.slice(1)}, XP, AP – mire jó?`,`<ul>
      <li><b>${cur}</b>: a Boltban fegyvert, sapkát, háziállatot és bájitalt vehetsz. Csak a kinézetre és az Arénára hat, jegyre nem.</li>
-     <li><b>XP</b>: ettől lép szintet a karaktered. Magasabb szinten több az életerőd, erősebb az ütésed, és új kiváltságok nyílnak.</li>
+     <li><b>XP</b>: ezzel gyűjtöd a következő szintet. Ha megvan, győzd le az Arénában a szint Küszöbőrét, és szintet lépsz. Magasabb szinten több az életerőd, erősebb az ütésed, és új kiváltságok nyílnak.</li>
      <li><b>AP</b>: minden tanítási napon töltődik (az osztályodtól függ, mennyi). Ezzel váltasz ki valódi, órai kiváltságokat.</li></ul>`)}
    ${sec('priv','🎟️ Kiváltságok és kuponok',`<ul>
      <li>A Boltban találod őket. A szinted <b>nyitja</b> a kiváltságot, az AP-d <b>fizeti</b>.</li>
