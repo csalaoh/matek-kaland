@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Matek 7 – kaland (kipróbálós verzió)</title>
+<title>Matek-kaland – Matek 7</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Orbitron:wght@500;800&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
@@ -287,6 +287,23 @@ body.scifi b.hpc{color:#ff6b6b}body.scifi b.apc{color:#6ea8ff}
 .apchip{font-family:Nunito,sans-serif;font-size:.8rem;background:#3b82f6;color:#fff;border-radius:999px;padding:2px 10px;margin-left:6px;vertical-align:middle}
 .btn.apbtn{background:#3b82f6;color:#fff}
 .shopitem.priv.locked{opacity:.8}
+.pick img.pickmon{height:130px;width:auto;max-width:100%;display:block;margin:0 auto 4px;filter:drop-shadow(0 6px 6px rgba(0,0,0,.3))}
+@media (max-width:600px){.pick img.pickmon{height:96px}}
+.bstage{position:relative;height:300px;border-radius:14px 14px 0 0;overflow:hidden;margin-top:10px;display:grid;grid-template-columns:1fr 60px 1fr;align-items:end;padding:0 4% 14px}
+.bstage>svg.bg{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);z-index:0;filter:blur(2px) saturate(.75) brightness(.8)}
+.bshade{position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse 30% 45% at 26% 72%,rgba(255,226,160,.38),transparent 70%),radial-gradient(ellipse 30% 45% at 74% 72%,rgba(255,170,140,.3),transparent 70%),linear-gradient(to bottom,rgba(20,12,4,.15),rgba(20,12,4,.05) 45%,rgba(20,12,4,.45))}
+.bfig{position:relative;z-index:2;height:250px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.bfig svg.av,.bfig img.mon,.bfig .mon-svg svg{height:230px;width:auto;max-width:100%;filter:drop-shadow(0 0 1.5px rgba(255,244,220,.95)) drop-shadow(0 0 12px rgba(255,230,170,.45)) drop-shadow(0 14px 10px rgba(0,0,0,.55))}
+.bfig .mon-svg svg{height:180px}
+.bfig.e img.mon{transform:scaleX(1)}
+.bfig::after{content:'';position:absolute;bottom:-4px;left:50%;width:62%;height:18px;transform:translateX(-50%);background:radial-gradient(ellipse at center,rgba(0,0,0,.5),transparent 70%);z-index:-1}
+.bfig .dmgpop{position:absolute;top:0;left:0;right:0;text-align:center;font-size:1.6rem;color:#fff;text-shadow:0 0 6px #b3362b,0 2px 3px #000;z-index:3;height:auto}
+.bvs{position:relative;z-index:2;align-self:center;text-align:center;font-family:var(--head);font-size:1.7rem;font-weight:800;color:#fff;text-shadow:0 0 10px rgba(0,0,0,.8),0 2px 4px #000}
+.bhud{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:linear-gradient(#3a2716,#2a1c10);padding:10px;border-radius:0 0 14px 14px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.bhud .plate{background:rgba(255,248,235,.94);border-radius:10px;padding:8px 12px}
+.bhud .plate .name{font-family:var(--head);font-weight:800;font-size:1rem;text-align:center;margin-bottom:4px}
+.bhud .plate .tiny{text-align:center}
+@media (max-width:600px){.bstage{height:210px;grid-template-columns:1fr 34px 1fr;padding:0 2% 10px}.bfig{height:180px}.bfig svg.av,.bfig img.mon{height:170px}.bfig .mon-svg svg{height:120px}.bvs{font-size:1.2rem}.bhud .plate{padding:6px 8px}.bhud .plate .name{font-size:.85rem}}
 .field.arena{position:relative;border-radius:14px;overflow:hidden;padding:16px 10px;margin-top:10px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .field.arena>svg.bg{position:absolute;inset:0;width:100%;height:100%;z-index:0}
 .field.arena>div{position:relative;z-index:1}
@@ -366,7 +383,7 @@ button.step{font-family:inherit;cursor:pointer;background:transparent}
   <div class="res">
     <div class="chip" id="goldChip"><svg viewBox="0 0 20 20" id="goldIcon"></svg><span id="gold">0</span><span class="tiny" id="goldName" style="color:#fff;opacity:.7"></span></div>
   </div>
-  <div class="switch" role="group" aria-label="Hangulat">
+  <div class="switch" role="group" aria-label="Hangulat" id="themeSwitch">
     <button id="tFantasy" class="on">Fantasy</button>
     <button id="tScifi">Sci-fi</button>
   </div>
@@ -582,6 +599,9 @@ function checkSimplify(task,raw){
   const list=ks=>ks.map(nm).join(' és ');
   const signKeys=wrongKeys.filter(k=>S.get(k).eq(T.get(k).neg()));
   if(signKeys.length)return {status:'wrong',err:'Előjelhiba',explain:`Az előjel csúszott el ${list(signKeys)}. Nézd meg újra, melyik tag előtt áll mínusz!`};
+  // Láthatatlan egyes: egy 1-es együtthatójú tagot (pl. x, −a) 0-nak vett, kihagyott az összeadásból
+  const oneKeys=wrongKeys.filter(k=>k&&(task.terms||[]).some(t=>t.k===k&&t.c.d===1&&Math.abs(t.c.n)===1&&S.get(k).add(t.c).eq(T.get(k))));
+  if(oneKeys.length)return {status:'wrong',err:'Láthatatlan egyes',explain:`Elfelejtetted a láthatatlan 1-est ${list(oneKeys)}: az <i>x</i> azt jelenti, hogy 1<i>x</i>, a −<i>x</i> pedig −1<i>x</i>. Ezt is be kell számolni az összevonásba!`};
   if(wrongKeys.every(k=>k===''))return {status:'wrong',err:'Számolási hiba (szám tag)',explain:'A betű nélküli tagok összevonásánál csúszott el.'};
   return {status:'wrong',err:'Számolási hiba (együttható)',explain:`Az együttható nem stimmel ${list(wrongKeys)}. Add össze újra az előjeles együtthatókat!`};
 }
@@ -877,8 +897,8 @@ const THEMES={
     attacks:['Szikra','Tűzgolyó','Villámlánc'],
     arenaTitle:'Aréna – a völgy szörnyei',arenaIntro:'Válassz ellenfelet! Itt számít a karaktered szintje és a felszerelésed.',
     trialTitle:'Próba – a völgy őrzői',trialIntro:'A próbán mindenki ugyanazzal indul: 100 életerő, felszerelés nélkül. Csak a tudásod számít.',
-    arena:[{n:'Mocsári kobold',c:'#7cb342'},{n:'Kőgólem',c:'#8d8d8d'},{n:'Árnyékszörny',c:'#5b4a8c'}],
-    trials:[{n:'A Labirintus Őre',c:'#8b5a2b'},{n:'Kénköves Sárkány',c:'#b3362b'}],
+    arena:[{n:'Foltos martalóc',c:'#a8834a'},{n:'Kőelementál',c:'#7d7a6e'},{n:'Csontlovag',c:'#3f5a7a'}],
+    trials:[{n:'Ork hadúr',c:'#2f5d3a'},{n:'Obszidiánsárkány',c:'#3a1f1a'}],
     shopTitle:'A Vándor Alkimista boltja',privTitle:'A Varázstorony – kiváltságok',
     immune:'A pikkelyein lepattannak a gyenge varázslatok – erősebb támadás kell!',
     armor:'Megkeményedett a bőre: a gyenge varázslat már nem hat rá. Erősebb támadás kell!',
@@ -1135,6 +1155,8 @@ function regenAP(){ // tanítási naponként (H–P) +apDay(), legfeljebb apMax(
 }
 function couponCode(){const a='ABCDEFGHJKLMNPRSTUVXYZ23456789';return Array.from({length:4},()=>a[Math.floor(Math.random()*a.length)]).join('')}
 
+/* ELÉRHETŐ STÍLUSOK – a sci-fi (és a későbbi új stílusok) akkor kerül ide, ha a falu, a térkép és a szörnyek is elkészültek hozzá */
+const THEMES_ON=['fantasy'];
 const S={theme:'fantasy',mode:'falu',topic:'betus',dir:'fel',prog:{},level:1,max:1,streak:0,miss:0,
   gold:0,xp:0,clvl:1,owned:{weapon:false,hat:false,pet:false},potions:0,
   ptask:null,battle:null,trialTopic:'betus',tries:{},grades:[],log:[],anim:null,coupons:[],privs:PRIVILEGES.map(p=>({...p})),ap:AP_DAY_BASE,apDate:null,cls:null,gender:'f',hp:null,hpDay:null,eq:{weapon:true,hat:true,pet:true},beaten:[],fLast:null,iLast:null};
@@ -1172,7 +1194,8 @@ function save(){try{localStorage.setItem(saveKey(),JSON.stringify(snapshot()))}c
 function load(){try{applyState(JSON.parse(localStorage.getItem(saveKey())||'null'))}catch(e){}}
 function applyState(d){if(!d)return;
   for(const k of ['theme','topic','dir','prog','trialTopic','level','max','streak','miss','gold','xp','clvl','owned','potions','grades','coupons','ap','apDate','evApDay','hp','hpDay','cls','gender','eq','beaten','fLast','iLast'])if(d[k]!==undefined)S[k]=d[k];
-  if(d.triesDay===today()&&d.tries)S.tries=d.tries;}
+  if(d.triesDay===today()&&d.tries)S.tries=d.tries;
+  if(!THEMES_ON.includes(S.theme))S.theme=THEMES_ON[0];}
 
 /* ================= RENDER ================= */
 function render(){
@@ -1182,9 +1205,17 @@ function render(){
   $('emblem').innerHTML=th.emblem;$('goldIcon').innerHTML=th.icon;
   $('gold').textContent=S.gold;$('goldName').textContent=th.cur;
   $('tFantasy').classList.toggle('on',S.theme==='fantasy');$('tScifi').classList.toggle('on',S.theme==='scifi');
+  $('themeSwitch').style.display=THEMES_ON.length>1?'':'none';$('tScifi').style.display=THEMES_ON.includes('scifi')?'':'none';
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.m===S.mode));
   renderNotice();renderChar();renderMode();renderTask();S.anim=null;save();
 }
+/* szörnyképek: ha a fájl megvan, festett kép, különben a régi rajz */
+const MONSTER_IMG={arena:['Szornyek/gnoll.webp','Szornyek/elemental.webp','Szornyek/csontlovag.webp'],trials:['Szornyek/ork.webp','Szornyek/sarkany.webp']};
+const MON_OK=new Set();
+[...MONSTER_IMG.arena,...MONSTER_IMG.trials].forEach(src=>{const im=new Image();im.onload=()=>{MON_OK.add(src);if(S.battle&&(S.mode==='arena'||S.mode==='trial'))renderMode()};im.src=src});
+function monsterSrc(kind,i){const src=(kind==='trial'?MONSTER_IMG.trials[i]:MONSTER_IMG.arena[i]);return src&&MON_OK.has(src)?src:null}
+function monsterHTML(b){const src=monsterSrc(b.kind,b.kind==='trial'?b.idx-3:b.idx);
+  return src?`<img class="mon" src="${src}" alt="${b.name}">`:`<div class="mon-svg">${enemySVG(S.theme,b.idx,b.col)}</div>`}
 function hpBar(v,m,mark){const p=Math.max(0,v)/m*100;return `<div class="bar hp ${p<30?'low':''}" style="position:relative"><span style="width:${p}%"></span>${mark?`<i style="position:absolute;left:${mark/m*100}%;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.6" title="Páncélhatár"></i>`:''}</div><div class="tiny">${Math.max(0,v)} / ${m}</div>`}
 function statBar(label,cls,v,m,txt){return `<div class="sbar"><b class="${cls}">${label}</b><div class="bar ${cls}"><span style="width:${Math.min(100,Math.max(0,v/m*100))}%"></span></div><span class="tiny">${txt}</span></div>`}
 function renderChar(){
@@ -1258,7 +1289,7 @@ function renderMode(){
        <p style="margin:8px 0 0"><button class="btn" data-act="go-practice-${S.level}">Irány gyakorolni</button></p></div>`
        :`<p class="tiny">Életerőd: <b>${S.hp} / ${hpMax()}</b> – a harcok között nem töltődik vissza magától. Gyakorlással, ${th.items.potion[0].toLowerCase()}lal vagy éjfélkor gyógyulsz.</p>`):''}
      <div class="grid3">${list.map((e,i)=>{const idx=isTrial?3+i:i;const left=isTrial?triesLeft(S.trialTopic,e.key):null;
-       return `<button class="pick" data-start="${S.mode}:${i}" ${(isTrial&&left<=0)||(!isTrial&&exhausted())?'disabled':''}>${enemySVG(S.theme,idx,names[i].c)}<h4>${names[i].n}</h4>
+       return `<button class="pick" data-start="${S.mode}:${i}" ${(isTrial&&left<=0)||(!isTrial&&exhausted())?'disabled':''}>${(()=>{const src=monsterSrc(isTrial?'trial':'arena',i);return src?`<img class="pickmon" src="${src}" alt="">`:enemySVG(S.theme,idx,names[i].c)})()}<h4>${names[i].n}</h4>
         <span class="tiny">${e.hp} életerő · rossz válasznál −${e.hit}</span>
         ${isTrial?`<span class="grade">Élesben: ${e.grade===5?'5 (jeles)':'4 (jó)'}</span><span class="tiny">${left>0?`Ma még ${left} próbálkozás`:'<b>Mára elfogyott – holnap újra</b>'}</span>`
                  :`<span class="tiny">Gyenge támadással csak a feléig sebezhető</span><span class="tiny">Jutalom: ${e.gold} ${th.cur} + ${e.xp} XP</span>`}</button>`}).join('')}</div>`;
@@ -1270,10 +1301,14 @@ function renderMode(){
   const b=S.battle,t=b.task,busy=t&&!t.done;
   const pAnim=S.anim&&S.anim.who==='p',eAnim=S.anim&&S.anim.who==='e';
   v.innerHTML=`<div class="lvl story-l">${isTrial?`Próba (${TOPICS[b.topic||'betus']})`:'Aréna'}: ${b.name}${isTrial?` <span class="grade">${b.grade===5?'5 (jeles)':'4 (jó)'}</span>`:''}</div>
-   <div class="field arena">${arenaBgSVG(S.theme)}
-     <div class="fighter ${pAnim?'shake':''}">${avatarSVG(S.theme,isTrial?{cls:S.cls}:{...EQ(),cls:S.cls})}<div class="name">${isTrial?T().hero:(CL()?clsName():T().hero)}</div>${hpBar(b.php,b.pmax)}<div class="dmgpop p">${pAnim?S.anim.txt:''}</div></div>
-     <div class="vs">VS</div>
-     <div class="fighter ${eAnim?'shake flash':''}">${enemySVG(S.theme,b.idx,b.col)}<div class="name">${b.name}</div>${hpBar(b.ehp,b.emax,isTrial?0:armorLine(b))}<div class="dmgpop e">${eAnim?S.anim.txt:''}</div></div>
+   <div class="bstage">${arenaBgSVG(S.theme)}<div class="bshade"></div>
+     <div class="bfig p ${pAnim?'shake':''}"><div class="dmgpop p">${pAnim?S.anim.txt:''}</div>${avatarSVG(S.theme,isTrial?{cls:S.cls}:{...EQ(),cls:S.cls})}</div>
+     <div class="bvs">VS</div>
+     <div class="bfig e ${eAnim?'shake flash':''}"><div class="dmgpop e">${eAnim?S.anim.txt:''}</div>${monsterHTML(b)}</div>
+   </div>
+   <div class="bhud">
+     <div class="plate"><div class="name">${ACC?esc(ACC.nick):(CL()?clsName():T().hero)}</div>${hpBar(b.php,b.pmax)}</div>
+     <div class="plate"><div class="name">${b.name}</div>${hpBar(b.ehp,b.emax,isTrial?0:armorLine(b))}</div>
    </div>
    ${b.over?'':`<div class="attacks">${[1,2,3].map(l=>{const imm=l===1&&(isTrial||b.ehp<=armorLine(b));const dmg=isTrial?ATK[l]:Math.round(ATK[l]*(1+arenaBonus())*(S.cls==='magus'&&l===3?1.3:1));
       return `<button class="atk t${l}" data-tier="${l}" ${busy||imm?'disabled':''}><b>${th.attacks[l-1]}</b><span>${imm?(isTrial?'nem hat erre az ellenfélre':'a páncélja miatt már nem hat'):`${l}. fokozatú feladat · ${dmg} sebzés`}</span></button>`}).join('')}</div>`}
@@ -1282,6 +1317,7 @@ function renderMode(){
      ${b.over?`<button class="btn" data-act="leave">Vissza</button>`:`<button class="btn ghost" data-act="giveup">Feladom</button>`}
    </div>
    ${b.over&&b.ehp>0?defeatSummary(b):''}
+   ${b.over&&b.ehp<=0?victorySummary(b):''}
    ${!t&&!b.over?'<p class="introbox">Válassz támadást! A támadás ereje dönti el, milyen nehéz feladatot kapsz.</p>':''}`;
   f.innerHTML='';
 }
@@ -1349,6 +1385,7 @@ function onCheck(e){
   logEvent(t,r,raw,raw2);
   if(S.mode==='practice')practiceResult(t,r,entry);else battleResult(t,r,entry);
   S.log.push(entry);render();
+  if(S.battle&&S.battle.over){const v=document.querySelector('.victory');if(v)setTimeout(()=>v.scrollIntoView({behavior:'smooth',block:'center'}),50)}
   if(S.mode==='practice')$('nextBtn').focus();
 }
 function practiceResult(t,r,entry){
@@ -1377,6 +1414,7 @@ function practiceResult(t,r,entry){
 }
 function battleResult(t,r,entry){
   const th=T(),b=S.battle,isTrial=b.kind==='trial';
+  b.nAns=(b.nAns||0)+1;if(r.status==='correct')b.nOk=(b.nOk||0)+1;else if(r.status==='partial')b.nPart=(b.nPart||0)+1;
   entry.where=`${isTrial?'Próba':'Aréna'} ${t.level}${t.topic==='zk'?(t.kind==='fel'?' (bontás)':' (kiemelés)'):''}`;
   if(r.status==='correct'){
     let dmg=Math.round((isTrial?ATK[t.level]:ATK[t.level]*(1+arenaBonus())*(S.cls==='magus'&&t.level===3?1.3:1))*(t.half?.5:1));
@@ -1399,6 +1437,17 @@ function battleResult(t,r,entry){
   if(r.status!=='correct'){b.errs=b.errs||{};const k=r.err||'Hiba';b.errs[k]=(b.errs[k]||0)+1;b.errTiers=b.errTiers||{};b.errTiers[t.level]=(b.errTiers[t.level]||0)+1}
   if(b.kind==='arena')S.hp=Math.max(0,b.php);
   if(b.ehp<=0)endBattle(true);else if(b.php<=0)endBattle(false);
+}
+function victorySummary(b){
+  const th=T(),isTrial=b.kind==='trial';
+  const stat=`${b.nAns||0} válaszból ${b.nOk||0} jó${b.nPart?`, ${b.nPart} részben jó`:''} · megmaradt életerőd: ${Math.max(0,b.php)} / ${b.pmax}`;
+  const main=isTrial
+    ?(b.trialId?`Megszerezted a(z) <b>${b.grade===5?'5-öst (jeles)':'4-est (jó)'}</b>! A tanárod már látja.`
+               :`Élesben ezért <b>${b.grade===5?'5-ös (jeles)':'4-es (jó)'}</b> járna – vendég módban ez csak próba, jegyet nem ad.`)
+    :`Jutalom: <b>+${b.gold} ${th.cur}</b> és <b>+${b.xp} XP</b>.`;
+  return `<div class="fb show ok victory" style="margin-top:12px;text-align:center"><div style="font-size:2.2rem;line-height:1">🏆</div>
+    <b class="big">Győzelem! Legyőzted: ${b.name}</b><br>${main}<br><span class="tiny">${stat}</span>
+    <p style="margin:10px 0 0"><button class="btn" data-act="leave">Vissza</button></p></div>`;
 }
 function defeatSummary(b){
   const errs=Object.entries(b.errs||{}).sort((a,c)=>c[1]-a[1]);
@@ -1474,7 +1523,7 @@ $('hintBtn').addEventListener('click',onHint);
 $('nextBtn').addEventListener('click',()=>{S.ptask=gen(S.level);render();focusAns()});
 $('ans').addEventListener('input',e=>{const t=cur();if(t)t.input=e.target.value});
 $('tFantasy').addEventListener('click',()=>{S.theme='fantasy';$('banner').className='banner';if(S.battle)relabel();render()});
-$('tScifi').addEventListener('click',()=>{S.theme='scifi';$('banner').className='banner';if(S.battle)relabel();render()});
+$('tScifi').addEventListener('click',()=>{if(!THEMES_ON.includes('scifi'))return;S.theme='scifi';$('banner').className='banner';if(S.battle)relabel();render()});
 function relabel(){const b=S.battle,th=T();const src=b.kind==='arena'?th.arena[b.idx]:th.trials[b.idx-3];b.name=src.n;b.col=src.c}
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-m],[data-start],[data-tier],[data-act]');if(!el)return;
@@ -2296,7 +2345,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('mouseover',e=>{const b=e.target.closest&&e.target.closest('[data-fb]');document.querySelectorAll('.flbl.hover').forEach(l=>l.classList.remove('hover'));if(b){const l=$('fl-'+b.dataset.fb);if(l)l.classList.add('hover')}});
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){closeHeroPanel();return}
-  if(S.mode!=='falu'||$('hpov')||document.querySelector('.overlay.show,.clsbox'))return;
+  if(S.mode!=='falu'||$('hpov')||$('hlpov')||document.querySelector('.overlay.show,.clsbox'))return;
   if(/^(INPUT|TEXTAREA)$/.test((document.activeElement||{}).tagName||''))return;
   const b=FALU.find(x=>x.key===e.key);if(b)fGo(b.k);else if(e.key==='h'||e.key==='H')heroPanel();
 });
@@ -2546,6 +2595,164 @@ boot();
       '<p style="margin-top:14px"><button class="btn" data-act="cev-close">Rendben</button></p></div>';
   });
 })();
+</script>
+<script>
+/* ================= VERZIÓ, SÚGÓ, VISSZAJELZÉS (v1.0) ================= */
+const APP_VERSION='1.0';
+/* Új kiadásnál: APP_VERSION + a sw.js VERSION-je + egy új bejegyzés a lista ELEJÉRE.
+   by: a diák beceneve, ha az ő ötlete volt (a Súgóban és az Újdonságok ablakban megjelenik). */
+const CHANGELOG=[
+  {v:'1.0',date:'2026. november 25.',title:'Indul a Matek-kaland!',items:[
+    {t:'🚀 Elindult a játék a 7.b-ben: betűs kifejezések, zárójelbontás és kiemelés, Aréna, Próba (valódi jegyért), Bolt, kiváltságok, karakterosztályok.'},
+    {t:'🐞 Új gomb fent: hibát, ötletet vagy dicséretet küldhetsz. Mindet elolvasom – és ha a te ötleted kerül be, itt a neved is ott lesz!'},
+    {t:'❓ Súgó: minden szabály egy helyen.'},
+    {t:'🎁 Hamarosan: óranyitó ládanyitás – minden matekórát egy titkos napi esemény nyit, és a gyakorlásért sorsjegyet kapsz a nyitásra.'}]}
+];
+(function(){
+  const st=document.createElement('style');
+  st.textContent=`
+  .hlpbtn{cursor:pointer;font-family:inherit;color:#fff}
+  .hlpbtn.ver{font-size:.75rem;opacity:.8;padding:4px 9px}
+  @media (max-width:600px){.hlpbtn.ver{display:none}}
+  .hlpov{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:60;padding:10px}
+  .hlpcard{width:100%;max-width:760px;max-height:92vh;overflow:auto;background:var(--panel);color:var(--ink);border-radius:20px;padding:22px 24px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:left}
+  .hlpcard h2{font-family:var(--head);margin:0 0 4px;font-size:1.5rem}
+  .hlpcard details{border-radius:12px;background:rgba(127,127,127,.09);margin:8px 0;padding:2px 14px}
+  .hlpcard summary{cursor:pointer;font-weight:800;padding:10px 0;font-size:1.02rem}
+  .hlpcard details[open]{padding-bottom:10px}
+  .hlpcard ul{margin:4px 0 6px;padding-left:20px;line-height:1.55}
+  .hlpcard .hx{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .hlpcard .vtag{display:inline-block;font-weight:900;border-radius:99px;padding:1px 9px;background:#c8962e;color:#1b140a;font-size:.8rem;margin-right:6px}
+  .hlpcard .by{font-weight:800;color:#c8962e}
+  .fbkinds{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+  .fbkinds button{flex:1;min-width:110px;border:2px solid rgba(127,127,127,.35);background:transparent;color:inherit;border-radius:12px;padding:10px;font-weight:800;font-family:inherit;cursor:pointer;font-size:.95rem}
+  .fbkinds button.on{border-color:#c8962e;background:rgba(200,150,46,.18)}
+  .hlpcard textarea{width:100%;box-sizing:border-box;min-height:120px;border-radius:12px;border:1px solid rgba(127,127,127,.4);padding:10px;font:inherit;font-size:1rem;background:rgba(255,255,255,.9);color:#222}
+  .hlpcard .fbmsg{min-height:1.2em;font-weight:700;margin:6px 0}`;
+  document.head.appendChild(st);
+})();
+const hlpEsc=x=>String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function hlpOpen(html){hlpClose();const o=document.createElement('div');o.id='hlpov';o.className='hlpov';o.innerHTML=`<div class="hlpcard">${html}</div>`;
+  o.addEventListener('click',e=>{if(e.target===o)hlpClose()});document.body.appendChild(o);return o}
+function hlpClose(){const o=document.getElementById('hlpov');if(o)o.remove()}
+function changelogHTML(n){return CHANGELOG.slice(0,n||CHANGELOG.length).map(r=>`<div style="margin:6px 0 12px"><div><span class="vtag">v${r.v}</span><b>${hlpEsc(r.title)}</b> <span class="tiny">${hlpEsc(r.date)}</span></div>
+  <ul>${r.items.map(i=>`<li>${hlpEsc(i.t)}${i.by?` <span class="by">– ${hlpEsc(i.by)} ötlete alapján</span>`:''}</li>`).join('')}</ul></div>`).join('')}
+
+function helpPanel(open){
+  const th=T(),cur=th.cur,e=dayEvent();
+  const cls=Object.entries(CLASSES).map(([k,c])=>`<li><b>${S.theme==='fantasy'?c.f:c.s}</b>: ${hlpEsc(c.perk)} <i>Hátrány:</i> ${hlpEsc(c.minus)}</li>`).join('');
+  const sec=(id,title,body)=>`<details ${open===id?'open':''} data-hs="${id}"><summary>${title}</summary>${body}</details>`;
+  hlpOpen(`<div class="hx"><h2>❓ Súgó</h2><button class="btn ghost" data-hlp="close">Bezár</button></div>
+   <p class="tiny" style="margin:0 0 6px">Matek-kaland · v${APP_VERSION}</p>
+   ${sec('play','🎯 Hogyan játszom?',`<ul>
+     <li>A <b>Térképen</b> (a Városkapun át) választod ki a leckét, és ott gyakorolsz.</li>
+     <li>Három fokozat van: minél nehezebb, annál több ${cur} és XP jár. Bármelyiken kezdhetsz.</li>
+     <li>A gép igazít: <b>${UP} jó egymás után</b> → feljebb lépsz, <b>${DOWN} rossz egymás után</b> → lejjebb. Visszaesés után ${UP_BACK} jó is elég a visszajutáshoz.</li>
+     <li>Könnyű feladatokkal nem lehet gyűjtögetni: a már túllépett fokozat csak töredék jutalmat ad.</li>
+     <li>Kétféle segítséget kérhetsz. Az első után fél, a második után negyed jutalom jár. A végeredményt a segítség sosem árulja el.</li>
+     <li>Rossz válaszért gyakorláskor nem veszítesz semmit – és megmutatjuk, hol csúszott el.</li></ul>`)}
+   ${sec('arena','⚔️ Aréna – gyakorló harc',`<ul>
+     <li>Te választod a támadás erejét: könnyebb feladat kisebbet üt, nehezebb nagyobbat.</li>
+     <li>Gyenge (1. fokozatú) támadással minden ellenfél csak a <b>feléig</b> sebezhető – a győzelemhez erősebb támadás kell.</li>
+     <li>Jó válasz → az ellenfél sebződik. Rossz válasz → ő üt vissza.</li>
+     <li>Néha <b>kritikus ütés</b> jön: dupla sebzés.</li>
+     <li>Az életerőd (HP) a harcok között megmarad. Gyakorlással (jó válaszonként +${HEAL_OK} HP), bájitallal vagy éjfélkor gyógyulsz. Vereségnél nem veszítesz semmit.</li>
+     <li>Itt számít a karaktered: szint, fegyver, osztály.</li></ul>`)}
+   ${sec('trial','📜 Próba – valódi jegyért',`<ul>
+     <li>Ha legyőzöd a közepes Főgonoszt, <b>4-est</b>, ha az erőset, <b>5-öst</b> kapsz.</li>
+     <li>Itt mindenki egyforma: ${TRIAL_HP} életerő, felszerelés és bájital nélkül. Csak a tudásod számít.</li>
+     <li>Az 1. fokozatú támadás nem hat rá.</li>
+     <li>Témánként és Főgonoszonként <b>naponta ${DAILY_TRIES} próbálkozásod</b> van.</li>
+     <li>A jegyet a tanár látja és ellenőrzi.</li></ul>`)}
+   ${sec('res',`💰 ${cur[0].toUpperCase()+cur.slice(1)}, XP, AP – mire jó?`,`<ul>
+     <li><b>${cur}</b>: a Boltban fegyvert, sapkát, háziállatot és bájitalt vehetsz. Csak a kinézetre és az Arénára hat, jegyre nem.</li>
+     <li><b>XP</b>: ettől lép szintet a karaktered. Magasabb szinten több az életerőd, erősebb az ütésed, és új kiváltságok nyílnak.</li>
+     <li><b>AP</b>: minden tanítási napon töltődik (az osztályodtól függ, mennyi). Ezzel váltasz ki valódi, órai kiváltságokat.</li></ul>`)}
+   ${sec('priv','🎟️ Kiváltságok és kuponok',`<ul>
+     <li>A Boltban találod őket. A szinted <b>nyitja</b> a kiváltságot, az AP-d <b>fizeti</b>.</li>
+     <li>Vásárlás után kupont kapsz – mutasd meg a tanárnak, ő váltja be.</li>
+     <li>Van, amit csak hetente vagy havonta egyszer kérhetsz. Dolgozatos kuponból egyszerre csak egy lehet nálad.</li>
+     <li>Néhány kiváltság csak egy karakterosztályé.</li></ul>`)}
+   ${sec('cls','🧝 Karakterosztályok',`<ul>${cls}</ul><p class="tiny">Az osztályt a hősöd lapján váltod (${CLASS_CHANGE_COST} ${cur}). A Próbán az osztály nem számít.</p>`)}
+   ${sec('event','✨ Napi esemény',`<p style="margin:4px 0">Minden nap más esemény van, és aznap mindenkinek ugyanaz.</p>
+     <p style="margin:4px 0"><b>Ma: ${hlpEsc(e.name)}</b> – ${hlpEsc(e.desc)}</p>
+     <p class="tiny">Hamarosan: minden matekórát egy lepecsételt láda nyit. A gyakorlásért sorsjegyet kapsz – aki gyakorol, az esélyes, hogy ő nyithassa ki!</p>`)}
+   ${sec('news','🆕 Mi frissült legutóbb?',changelogHTML())}
+   ${sec('fb','🐞 Hiba vagy ötlet bejelentése',`<p style="margin:4px 0">Valami nem működik? Van egy jó ötleted? Tetszik valami? Írd meg!</p><p><button class="btn" data-hlp="fb">🐞 Bejelentés küldése</button></p>`)}`);
+  if(open){const d=document.querySelector(`[data-hs="${open}"]`);if(d)d.scrollIntoView({block:'start'})}
+}
+
+/* ---------- visszajelzés ---------- */
+const FB_KINDS={bug:'🐞 Hiba',idea:'💡 Ötlet',like:'❤️ Tetszik'};
+const fbQKey=()=>'mk-fb-out-'+(ACC?ACC.id:'');
+function fbScreen(){const b=S.battle;return [S.mode,b&&b.kind&&b.kind!==S.mode?b.kind:'',S.mode==='practice'?S.topic+' '+S.level+'.':''].filter(Boolean).join(' · ')}
+function fbDevice(){const sa=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  const ua=navigator.userAgent;const os=/android/i.test(ua)?'Android':/iphone|ipad|ipod/i.test(ua)?'iOS':/windows/i.test(ua)?'Windows':/mac/i.test(ua)?'Mac':/linux/i.test(ua)?'Linux':'?';
+  const br=/edg\//i.test(ua)?'Edge':/samsungbrowser/i.test(ua)?'Samsung':/crios|chrome/i.test(ua)?'Chrome':/fxios|firefox/i.test(ua)?'Firefox':/safari/i.test(ua)?'Safari':'?';
+  return `${os} · ${br} · ${window.innerWidth}×${window.innerHeight}${sa?' · telepítve':''}`}
+function fbPanel(kind){
+  if(!ACC){hlpOpen(`<div class="hx"><h2>🐞 Bejelentés</h2><button class="btn ghost" data-hlp="close">Bezár</button></div>
+    <p>Bejelentést a saját fiókodból tudsz küldeni. Lépj be a beceneveddel és a PIN-kódoddal!</p><p><button class="btn" data-act="login">Belépés</button></p>`);return}
+  const k=kind||'bug';
+  hlpOpen(`<div class="hx"><h2>🐞 Hiba / ötlet</h2><button class="btn ghost" data-hlp="close">Bezár</button></div>
+   <p class="tiny" style="margin:0">Mindet elolvasom. Ha a te ötleted kerül be, a neved is ott lesz a „Mi frissült?” listában.</p>
+   <div class="fbkinds">${Object.entries(FB_KINDS).map(([x,n])=>`<button type="button" data-fbk="${x}" class="${x===k?'on':''}">${n}</button>`).join('')}</div>
+   <textarea id="fbText" maxlength="1000" placeholder="${k==='bug'?'Mi történt? Mit csináltál előtte? (pl. „A Próbán a 2. feladatnál nem fogadta el a jó választ.”)':k==='idea'?'Mi legyen a játékban? Minél pontosabban írd le!':'Mi tetszik? :)'}"></textarea>
+   <p class="tiny" style="margin:4px 0 0">A verziószámot, a képernyőt (${hlpEsc(fbScreen())}) és a készülék típusát automatikusan mellékeljük, hogy könnyebb legyen megtalálni a hibát.</p>
+   <p class="fbmsg" id="fbMsg"></p>
+   <p style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-hlp="send" data-kind="${k}">Küldés</button><button class="btn ghost" data-hlp="help">Vissza a Súgóhoz</button></p>`);
+  setTimeout(()=>{const t=document.getElementById('fbText');if(t)t.focus()},50);
+}
+async function fbSendOne(it){const d=await rpc('student_feedback',{p_token:ACC.token,p_kind:it.kind,p_body:it.body,p_version:it.version,p_screen:it.screen,p_device:it.device});return d||{}}
+function fbQueue(){try{return JSON.parse(localStorage.getItem(fbQKey())||'[]')}catch(e){return []}}
+function fbQueueSave(q){try{localStorage.setItem(fbQKey(),JSON.stringify(q.slice(-30)))}catch(e){}}
+async function fbFlush(){if(!ACC||!SB_ON())return;const q=fbQueue();if(!q.length)return;const left=[];
+  for(const it of q){try{const d=await fbSendOne(it);if(d.error==='too_many')left.push(it)}catch(e){if(e.server&&/bad_session|inactive/.test(e.message))return;left.push(it)}}
+  fbQueueSave(left)}
+async function fbSend(btn){
+  const ta=document.getElementById('fbText'),msg=document.getElementById('fbMsg');const body=(ta.value||'').trim();
+  if(body.length<2){msg.textContent='Írj néhány szót!';return}
+  const it={kind:btn.dataset.kind,body,version:APP_VERSION,screen:fbScreen(),device:fbDevice(),at:new Date().toISOString()};
+  btn.disabled=true;msg.textContent='Küldés…';
+  try{const d=await fbSendOne(it);
+    if(d.error==='too_many'){msg.textContent='Mára elég sokat küldtél – holnap újra lehet. Köszönöm!';btn.disabled=false;return}
+    if(d.error){msg.textContent='Ez így nem ment át. Írj egy kicsit bővebben!';btn.disabled=false;return}
+    hlpOpen(`<h2>Köszönöm! 🙌</h2><p>Megkaptam${it.kind==='bug'?', utánanézek.':it.kind==='idea'?'. Ha bekerül, a neved is ott lesz a „Mi frissült?” listában!':' – jólesik!'}</p><p><button class="btn" data-hlp="close">Rendben</button></p>`);
+  }catch(e){
+    if(e.server){msg.textContent='Hiba a küldésnél. Próbáld újra egy kicsit később!';btn.disabled=false;return}
+    const q=fbQueue();q.push(it);fbQueueSave(q);
+    hlpOpen(`<h2>Elmentettem 📦</h2><p>Most nincs internet, de a bejelentésed megvan: amint újra van net, magától elküldöm.</p><p><button class="btn" data-hlp="close">Rendben</button></p>`);
+  }
+}
+
+/* ---------- Újdonságok ablak frissítés után ---------- */
+function whatsNew(force){
+  let seen=null;try{seen=localStorage.getItem('mk-seen-ver')}catch(e){}
+  if(!force&&seen===APP_VERSION)return;
+  if(!force&&(document.getElementById('loginov')||document.getElementById('ov')||document.getElementById('hlpov')||document.getElementById('hpov'))){setTimeout(()=>whatsNew(),4000);return}
+  try{localStorage.setItem('mk-seen-ver',APP_VERSION)}catch(e){}
+  hlpOpen(`<h2>🆕 Újdonságok</h2>${changelogHTML(1)}
+   <p style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn" data-hlp="close">Szuper!</button><button class="btn ghost" data-hlp="news">Összes változás a Súgóban →</button></p>`);
+}
+
+/* ---------- gombok a fejlécben ---------- */
+(function(){
+  const res=document.querySelector('header .res');if(!res)return;
+  const mk=(cls,txt,act,title)=>{const b=document.createElement('button');b.type='button';b.className='chip hlpbtn '+cls;b.textContent=txt;b.dataset.hlp=act;b.title=title;return b};
+  res.prepend(mk('ver','v'+APP_VERSION,'news','Mi frissült legutóbb?'));
+  res.appendChild(mk('','❓','help','Súgó'));
+  res.appendChild(mk('','🐞','fb','Hiba vagy ötlet bejelentése'));
+})();
+document.addEventListener('click',e=>{
+  const k=e.target.closest('[data-fbk]');
+  if(k){const t=document.getElementById('fbText'),v=t?t.value:'';fbPanel(k.dataset.fbk);const n=document.getElementById('fbText');if(n)n.value=v;return}
+  const b=e.target.closest('[data-hlp]');if(!b)return;const a=b.dataset.hlp;
+  if(a==='close')hlpClose();else if(a==='help')helpPanel();else if(a==='news')helpPanel('news');else if(a==='fb')fbPanel();else if(a==='send')fbSend(b);
+});
+document.addEventListener('click',e=>{if(e.target.closest('[data-act="login"]'))hlpClose()},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')hlpClose()});
+window.addEventListener('online',()=>fbFlush());
+setTimeout(()=>{fbFlush();whatsNew()},1500);
 </script>
 </body>
 </html>

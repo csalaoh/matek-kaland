@@ -54,9 +54,13 @@ textarea{width:100%;min-height:150px}
 .loginwrap label{display:block;font-weight:700;font-size:.85rem;color:var(--muted);margin-top:10px}.loginwrap input{width:100%;margin-top:4px;padding:10px}
 .err{color:var(--bad);font-weight:700}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2b2216;color:#fff;padding:10px 18px;border-radius:10px;z-index:9;opacity:0;transition:.3s}.toast.show{opacity:1}
+span.gclick{cursor:pointer}span.grade.sus{background:#b45309}tr.hl td{background:color-mix(in srgb,var(--acc2) 12%,transparent)}
 details.tlog summary{cursor:pointer;color:var(--acc2);font-weight:700}
 .ped td{padding:4px}.ped input[type=text],.ped textarea{width:100%}.ped textarea{min-height:48px}.ped input[type=number]{width:60px}
 #print{display:none}
+.modal{position:fixed;inset:0;background:rgba(12,20,16,.75);display:flex;align-items:center;justify-content:center;z-index:8;padding:16px}
+.modal .mb{background:var(--card);border-radius:16px;padding:26px 30px;text-align:center;max-width:420px;width:100%}
+.modal .mn{font:700 1.5rem Georgia,serif;margin:4px 0 14px}.modal .mp{font:800 4.5rem ui-monospace,monospace;letter-spacing:.25em;margin:0 0 6px;padding-left:.25em}
 @media print{body{background:#fff}body>*:not(#print){display:none!important}#print{display:grid!important;grid-template-columns:1fr 1fr;gap:8mm}
  .card{border:1.5px dashed #555;border-radius:4mm;padding:6mm;break-inside:avoid;font:12pt system-ui;color:#000}
  .card h4{margin:0 0 3mm;font:700 14pt Georgia,serif}.card .big{font:700 20pt ui-monospace,monospace;letter-spacing:2px}.card .u{font-size:9pt;color:#333}}
@@ -117,7 +121,8 @@ const V={tab:'overview',classes:[],cls:null,period:30,stats:null,sort:'nick',sor
 const curClass=()=>V.classes.find(c=>c.id===V.cls);
 const since=()=>new Date(Date.now()-V.period*864e5).toISOString();
 async function loadClasses(){V.classes=await api('classes?select=id,name,config,created_at&order=created_at');if(!V.classes.find(c=>c.id===V.cls))V.cls=(V.classes[0]||{}).id||null;localStorage.setItem('mk-t-cls',V.cls||'')}
-async function loadStats(){V.stats=V.cls?await rpc('teacher_class_stats',{p_class:V.cls,p_since:since()}):null}
+async function loadStats(){V.stats=V.cls?await rpc('teacher_class_stats',{p_class:V.cls,p_since:since()}):null;await loadFeedback()}
+async function loadFeedback(){V.fb=null;if(!V.cls)return;try{V.fb=await api('feedback?class_id=eq.'+V.cls+'&select=id,nick,kind,body,app_version,screen,device,status,created_at&order=created_at.desc&limit=500')}catch(e){V.fb=null;V.fbErr=e.message}}
 async function refresh(){try{await loadStats()}catch(e){toast('Hiba: '+e.message)}render()}
 
 /* ---------- belépés ---------- */
@@ -142,16 +147,16 @@ async function boot(){
 
 /* ---------- keret ---------- */
 function render(){
-  const tabs=[['overview','Áttekintés'],['errors','Hibatérkép'],['student','Tanulók'],['manage','Kezelés']];
+  const tabs=[['overview','Áttekintés'],['errors','Hibatérkép'],['student','Tanulók'],['feedback','Visszajelzések'],['manage','Kezelés']];
   $('app').innerHTML=`<header><h1>Matek-kaland<small>Tanári felület · ${esc(SESS.email||'')}</small></h1><div class="sp"></div>
     ${V.classes.length?`<select class="hsel" id="selCls">${V.classes.map(c=>`<option value="${c.id}" ${c.id===V.cls?'selected':''}>${esc(c.name)}</option>`).join('')}</select>
     <select class="hsel" id="selPer">${[[7,'Utolsó 7 nap'],[30,'Utolsó 30 nap'],[120,'Utolsó 4 hónap'],[365,'Egész tanév']].map(([d,n])=>`<option value="${d}" ${+d===V.period?'selected':''}>${n}</option>`).join('')}</select>`:''}
     <button class="hbtn" id="btnRef" title="Frissítés">⟳</button><button class="hbtn" id="btnOut">Kilépés</button></header>
-   <nav>${tabs.map(([k,n])=>`<button data-tab="${k}" class="${V.tab===k?'on':''}">${n}${k==='manage'&&V.stats&&V.stats.coupons.length?` <span class="pill y">${V.stats.coupons.length}</span>`:''}</button>`).join('')}</nav>
+   <nav>${tabs.map(([k,n])=>`<button data-tab="${k}" class="${V.tab===k?'on':''}">${n}${k==='manage'&&V.stats&&V.stats.coupons.length?` <span class="pill y">${V.stats.coupons.length}</span>`:''}${k==='feedback'&&fbNew()?` <span class="pill r">${fbNew()}</span>`:''}</button>`).join('')}</nav>
    <main id="main"></main>`;
   const m=$('main');
   if(!V.classes.length&&V.tab!=='manage')V.tab='manage';
-  m.innerHTML=V.tab==='overview'?overviewHTML():V.tab==='errors'?errorsHTML():V.tab==='student'?studentHTML():manageHTML();
+  m.innerHTML=V.tab==='overview'?overviewHTML():V.tab==='errors'?errorsHTML():V.tab==='student'?studentHTML():V.tab==='feedback'?feedbackHTML():manageHTML();
   if($('selCls'))$('selCls').onchange=async e=>{V.cls=e.target.value;localStorage.setItem('mk-t-cls',V.cls);V.student=null;V.detail=null;V.newPins=null;V.privDraft=null;await refresh()};
   if($('selPer'))$('selPer').onchange=async e=>{V.period=+e.target.value;V.detail=null;await refresh();if(V.tab==='student'&&V.student)openStudent(V.student)};
   $('btnRef').onclick=async()=>{await loadClasses();await refresh();if(V.tab==='student'&&V.student)openStudent(V.student)};
@@ -171,7 +176,7 @@ function overviewHTML(){
    <div class="kpis"><div class="kpi"><b>${act} / ${N}</b><span>gyakorolt az időszakban</span></div>
     <div class="kpi"><b>${tot}</b><span>megoldott feladat</span></div>
     <div class="kpi"><b>${pct(ok,tot)}%</b><span>helyes válasz</span></div>
-    <div class="kpi"><b>${S.reduce((a,s)=>a+s.grades.length,0)}</b><span>próbán szerzett jegy (összesen)</span></div>
+    <div class="kpi"><b>${S.reduce((a,s)=>a+s.grades.length,0)}</b><span>próbán szerzett jegy (összesen)${(()=>{const n=S.reduce((a,s)=>a+s.grades.filter(g=>gradeFlags(g).length).length,0);return n?` · <b style="color:#b45309">⚠ ${n} gyanús</b>`:''})()}</span></div>
     <div class="kpi"><b>${st.coupons.length}</b><span>beváltásra váró kupon</span></div></div>
    ${N?`<div class="tw"><table id="ovt"><thead><tr>${cols.map(([k,n])=>`<th data-sort="${k}">${n}${V.sort===k?(V.sortDir>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>
    ${rows.map(s=>`<tr class="click ${s.n?'':'idle'}" data-stu="${s.id}"><td><b>${esc(s.nick)}</b>${s.active?'':' <span class="pill r">letiltva</span>'}${s.locked?' <span class="pill y">zárolva</span>':''}</td>
@@ -179,14 +184,15 @@ function overviewHTML(){
      <td>${s.n?`<div style="display:flex;gap:6px;align-items:center"><div class="bar ok" style="width:60px"><i style="width:${pct(s.ok,s.n)}%"></i></div>${pct(s.ok,s.n)}%</div>`:'–'}</td>
      <td class="stars">${stars(topicMax(s,'betus'))}</td><td class="stars">${stars(topicMax(s,'zk'))}</td>
      <td>${s.clvl?`${s.clvl}. szint${s.cls?' · '+(CLS_NAME[s.cls]||''):''}`:'–'}</td>
-     <td>${s.grades.map(g=>`<span class="grade" title="${esc(TOPICS[g.topic]||g.topic)} · ${fmtDT(g.at)}">${g.grade}</span>`).join('')||'–'}</td></tr>`).join('')}
+     <td>${s.grades.map(g=>{const fl=gradeFlags(g);return `<span class="grade gclick${fl.length?' sus':''}" data-trial="${g.id}" data-gstu="${s.id}" title="${esc(TOPICS[g.topic]||g.topic)} · ${fmtDT(g.at)}${fl.length?' · ⚠ '+esc(fl.join('; ')):''} – kattints a naplóért">${g.grade}${fl.length?'⚠':''}</span>`}).join('')||'–'}</td></tr>`).join('')}
    </tbody></table></div>
-   <p class="small muted">A csillagok a témában elért legmagasabb fokozatot mutatják (★ alap · ★★ közepes · ★★★ haladó). A szürke sorok az időszakban nem gyakoroltak. Kattints egy diákra a részletekért.</p>`
+   <p class="small muted">A csillagok a témában elért legmagasabb fokozatot mutatják (★ alap · ★★ közepes · ★★★ haladó). A szürke sorok az időszakban nem gyakoroltak. Kattints egy diákra a részletekért, egy jegyre a próba naplójáért. A ⚠ jelű jegyeket érdemes átnézni (az okot a jegy fölé állva látod).</p>`
    :`<p>Még nincs diák ebben az osztályban. A <b>Kezelés</b> fülön tudsz felvenni.</p>`}`;
 }
 document.addEventListener('click',e=>{
   const th=e.target.closest('#ovt [data-sort]');if(th){const k=th.dataset.sort;if(V.sort===k)V.sortDir*=-1;else{V.sort=k;V.sortDir=k==='nick'?1:-1}render();return}
-  const tr=e.target.closest('[data-stu]');if(tr){V.tab='student';openStudent(tr.dataset.stu)}
+  const gt=e.target.closest('[data-trial]');if(gt){V.tab='student';V.openTrial=gt.dataset.trial;openStudent(gt.dataset.gstu);return}
+  const tr=e.target.closest('[data-stu]');if(tr){V.tab='student';V.openTrial=null;openStudent(tr.dataset.stu)}
 });
 
 /* ---------- Hibatérkép ---------- */
@@ -216,6 +222,18 @@ function errorsHTML(){
 }
 document.addEventListener('click',e=>{const c=e.target.closest('[data-et]');if(c){V.errTopic=c.dataset.et;render()}});
 
+/* ---------- Gyanús jegyek ---------- */
+const BOSS_HP={t4:120,t5:200};          // egyezzen az index.html TRIALS hp-jával
+function gradeFlags(g){
+  if(g.log_n===undefined)return [];       // régi SQL: nincs adat, nincs jelzés
+  const f=[];
+  if(!g.log_n){f.push('nincs napló');return f}
+  const need=BOSS_HP[g.boss]||0;if(g.log_dmg<need)f.push(`a napló szerint csak ${g.log_dmg} sebzés (kellett: ${need})`);
+  const sec=(new Date(g.at)-new Date(g.started))/1000;if(sec>0&&sec/g.log_n<4)f.push(`túl gyors: ${Math.round(sec)} mp alatt ${g.log_n} válasz`);
+  if(g.ev_n!==g.log_n)f.push(`a feladatnaplóban ${g.ev_n} próbaválasz van, a próbanaplóban ${g.log_n}`);
+  return f;
+}
+
 /* ---------- Tanulói részletek ---------- */
 async function openStudent(id){
   V.student=id;V.detail={loading:true};render();
@@ -225,6 +243,7 @@ async function openStudent(id){
     V.detail={ev,tr};
   }catch(e){V.detail={err:e.message}}
   if(V.tab==='student')render();
+  if(V.openTrial)setTimeout(()=>{const r=document.getElementById('tr-'+V.openTrial);if(r)r.scrollIntoView({behavior:'smooth',block:'center'})},60);
 }
 function studentHTML(){
   const st=V.stats;if(!st||!st.students.length)return '<p class="muted">Még nincs diák.</p>';
@@ -242,17 +261,18 @@ function studentHTML(){
   const el=Object.entries(errs).sort((a,b)=>b[1]-a[1]);
   const res=e=>e.status==='correct'?`<span class="pill g">jó${e.half?' (félúton)':''}</span>`:e.status==='partial'?`<span class="pill y">részben</span> ${esc(e.err)}`:`<span class="pill r">${esc(e.err||'rossz')}</span>`;
   const modeN={practice:'Gyak.',arena:'Aréna',trial:'Próba'};
-  return `<h2>${esc(s.nick)} ${s.active?'':'<span class="pill r">letiltva</span>'}</h2>${sel}
+  return `<h2>${esc(s.nick)} ${s.active?'':'<span class="pill r">letiltva</span>'}</h2><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${sel}<button class="btn ghost" data-pin="${s.id}">🔑 Új PIN</button></div>
    <div class="kpis" style="margin-top:14px"><div class="kpi"><b>${n}</b><span>feladat az időszakban</span></div><div class="kpi"><b>${pct(ok,n)}%</b><span>helyes</span></div>
     <div class="kpi"><b>${s.days}</b><span>aktív nap</span></div><div class="kpi"><b>${s.clvl||1}. szint</b><span>${s.xp??0} XP · ${s.gold??0} arany${s.cls?' · '+CLS_NAME[s.cls]:''}</span></div>
     <div class="kpi"><b class="stars" style="font-size:1.1rem">${stars(topicMax(s,'betus'))} / ${stars(topicMax(s,'zk'))}</b><span>Összevonás / Zárójel – legjobb fokozat</span></div></div>
    <div class="grid2"><div><h3>Napi aktivitás (utolsó ${days} nap)</h3><div class="days">${arr.map(a=>`<div title="${a.k}: ${a.ok} jó, ${a.bad} hibás"><i style="height:${a.ok/mx*84}px"></i><i class="w" style="height:${a.bad/mx*84}px"></i></div>`).join('')}</div>
      <div class="dlbl"><span>${arr[0].dt.toLocaleDateString('hu-HU',{month:'short',day:'numeric'})}</span><span>ma</span></div><p class="small muted">Zöld: jó válasz, piros: rossz vagy részben jó.</p></div>
     <div><h3>Hibái</h3>${el.length?el.map(([k,v])=>`<div class="errrow" style="grid-template-columns:1fr 1fr 40px"><b class="small">${esc(k)}</b><div class="bar"><i style="width:${v/el[0][1]*100}%"></i></div><span class="small">${v}×</span></div>`).join(''):'<p class="muted small">Nincs hibája az időszakban.</p>'}</div></div>
-   <h3>Próbák</h3>${(d.tr||[]).length?`<table><thead><tr><th>Mikor</th><th>Téma</th><th>Boss</th><th>Eredmény</th><th>Napló</th></tr></thead><tbody>
-    ${d.tr.map(t=>`<tr><td>${fmtDT(t.started_at)}</td><td>${TOPICS[t.topic]||esc(t.topic)}</td><td>${t.boss==='t5'?'5-ös boss':'4-es boss'}</td>
+   <h3>Próbák</h3>${(d.tr||[]).length?`<table><thead><tr><th>Mikor</th><th>Téma</th><th>Boss</th><th>Eredmény</th><th>Ellenőrzés</th><th>Napló</th></tr></thead><tbody>
+    ${d.tr.map(t=>`<tr id="tr-${t.id}"${t.id===V.openTrial?' class="hl"':''}><td>${fmtDT(t.started_at)}</td><td>${TOPICS[t.topic]||esc(t.topic)}</td><td>${t.boss==='t5'?'5-ös boss':'4-es boss'}</td>
      <td>${t.won?`<span class="grade">${t.grade}</span> győzelem`:t.finished_at?'<span class="pill r">vereség</span>':'<span class="pill">félbehagyva</span>'}</td>
-     <td>${Array.isArray(t.log)&&t.log.length?`<details class="tlog"><summary>${t.log.length} válasz</summary><table>${t.log.map(l=>`<tr><td class="small">${'★'.repeat(l.level||0)}</td><td class="small">${esc(l.task)}</td><td class="small"><code>${esc(l.answer)}</code></td><td>${res(l)}</td></tr>`).join('')}</table></details>`:'–'}</td></tr>`).join('')}</tbody></table>`:'<p class="muted small">Még nem próbázott.</p>'}
+     <td class="small">${t.won?(()=>{const g=(s.grades||[]).find(x=>x.id===t.id),fl=g?gradeFlags(g):[];return g&&g.log_n!==undefined?(fl.length?`<span class="pill y">⚠ ${esc(fl.join('; '))}</span>`:'<span class="pill g">rendben</span>'):'–'})():'–'}</td>
+     <td>${Array.isArray(t.log)&&t.log.length?`<details class="tlog"${t.id===V.openTrial?' open':''}><summary>${t.log.length} válasz</summary><table>${t.log.map(l=>`<tr><td class="small">${'★'.repeat(l.level||0)}</td><td class="small">${esc(l.task)}</td><td class="small"><code>${esc(l.answer)}</code></td><td>${res(l)}</td></tr>`).join('')}</table></details>`:'–'}</td></tr>`).join('')}</tbody></table>`:'<p class="muted small">Még nem próbázott.</p>'}
    <h3>Feladatnapló (legutóbbi ${Math.min(n,300)})</h3>${n?`<div class="tw"><table><thead><tr><th>Mikor</th><th>Hol</th><th>Feladat</th><th>Válasza</th><th>Eredmény</th><th>Tipp</th></tr></thead><tbody>
     ${ev.slice(0,300).map(e=>`<tr><td class="small">${fmtDT(e.ts)}</td><td class="small">${modeN[e.mode]||esc(e.mode)} · ${e.topic==='zk'?(e.kind==='ki'?'Kiemelés':'Bontás'):'Összevonás'} ${'★'.repeat(e.level||0)}</td>
      <td class="small">${esc(e.task)}</td><td class="small"><code>${esc(e.answer)}</code></td><td class="small">${res(e)}</td><td class="small">${e.hint?'💡'.repeat(e.hint):''}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted small">Nincs feladat az időszakban.</p>'}`;
@@ -296,6 +316,13 @@ async function saveConfig(patch){
   const c=curClass();const cfg={...(c.config||{}),...patch};
   await api(`classes?id=eq.${c.id}`,{method:'PATCH',body:{config:cfg}});c.config=cfg;
 }
+function showPin(nick,pin){
+  const o=document.createElement('div');o.className='modal';o.id='pinModal';
+  o.innerHTML=`<div class="mb"><div class="muted">Új PIN-kód</div><div class="mn">${esc(nick)}</div><div class="mp">${esc(pin)}</div>
+   <p class="small muted">A régi PIN már nem érvényes. A haladás és a jegyek megmaradtak.</p>
+   <p style="display:flex;gap:8px;justify-content:center"><button class="btn ghost" id="pinPrint">🖨 Kártya</button><button class="btn" id="pinClose">Bezárás</button></p></div>`;
+  document.body.appendChild(o);
+}
 function printCards(rows){
   $('print').innerHTML=rows.map(r=>`<div class="card"><h4>Matek-kaland ⚗️</h4><div>Becenév:</div><div class="big">${esc(r.nick)}</div><div style="margin-top:2mm">PIN-kód:</div><div class="big">${esc(r.pin)}</div>
    <div class="u" style="margin-top:3mm">${esc(APP_URL)}<br>A PIN-t ne add oda senkinek! Ha elfelejted, szólj a tanárnak.</div></div>`).join('');
@@ -315,7 +342,9 @@ document.addEventListener('click',async e=>{
       V.newPins=await rpc('teacher_create_students',{p_class:V.cls,p_nicks:nicks});await refresh();toast(`${V.newPins.filter(r=>r.ok).length} diák felvéve`);return}
     if(t.id==='btnPrint'){printCards(V.newPins.filter(r=>r.ok));return}
     if(t.dataset.pin){const s=V.stats.students.find(x=>x.id===t.dataset.pin);if(!confirm(`Új PIN-t generálsz ${s.nick} számára? A régi azonnal érvényét veszti, és minden eszközről kilépteti.`))return;
-      const pin=await rpc('teacher_reset_pin',{p_student:s.id});V.newPins=[{nick:s.nick,pin,ok:true}];await refresh();toast(`${s.nick} új PIN-je: ${pin}`);return}
+      const pin=await rpc('teacher_reset_pin',{p_student:s.id});V.newPins=[{nick:s.nick,pin,ok:true}];await refresh();showPin(s.nick,pin);return}
+    if(t.id==='pinClose'||t.classList.contains('modal')){$('pinModal').remove();return}
+    if(t.id==='pinPrint'){printCards(V.newPins);return}
     if(t.dataset.act2){const [id,v]=t.dataset.act2.split(':');await api(`students?id=eq.${id}`,{method:'PATCH',body:{active:v==='1'}});await refresh();return}
     if(t.dataset.del){const s=V.stats.students.find(x=>x.id===t.dataset.del);const a=prompt(`A törléssel ${s.nick} minden adata (haladás, napló, jegyek) végleg elvész. Ha biztos vagy benne, írd be a becenevét:`);
       if(a===null)return;if(a.trim()!==s.nick){toast('A becenév nem egyezik, nem töröltem.');return}
@@ -329,6 +358,40 @@ document.addEventListener('click',async e=>{
   }catch(x){toast('Hiba: '+x.message);t.disabled=false}
 });
 boot();
+
+/* ---------- Visszajelzések (🐞 gomb, v1.0) ---------- */
+const FB_KIND={bug:'🐞 Hiba',idea:'💡 Ötlet',like:'❤️ Tetszik'};
+const FB_ST={new:['Új','r'],planned:['Tervben','y'],done:['Beépítve','g'],rejected:['Elvetve','']};
+const fbNew=()=>(V.fb||[]).filter(f=>f.status==='new').length;
+function feedbackHTML(){
+  if(V.fb==null)return `<h2>Visszajelzések</h2><div class="box"><b>A visszajelzések táblája még nincs létrehozva.</b><p class="small">Futtasd le egyszer a <code>supabase/v1.0-visszajelzes.sql</code> fájlt a Supabase SQL Editorában, majd frissíts (⟳).</p>${V.fbErr?`<p class="small muted">${esc(V.fbErr)}</p>`:''}</div>`;
+  const fk=V.fbKind||'',fs=V.fbSt==null?'open':V.fbSt;
+  const list=V.fb.filter(f=>(!fk||f.kind===fk)&&(fs==='all'||(fs==='open'?(f.status==='new'||f.status==='planned'):f.status===fs)));
+  const cnt=k=>V.fb.filter(f=>f.kind===k).length;
+  return `<h2>Visszajelzések</h2>
+   <p class="small muted">A diákok a 🐞 gombbal küldik. Amit <b>Beépítve</b> állapotba teszel, azt a „Lista másolása” gombbal átadhatod a következő frissítéshez – a diák beceneve bekerül a „Mi frissült?” listába.</p>
+   <div class="chips" style="margin:8px 0">${[['','Mind ('+V.fb.length+')'],...Object.entries(FB_KIND).map(([k,n])=>[k,n+' ('+cnt(k)+')'])].map(([k,n])=>`<button class="chip ${fk===k?'on':''}" data-fbkind="${k}">${n}</button>`).join(' ')}</div>
+   <div class="chips" style="margin:8px 0">${[['open','Nyitott (új + tervben)'],['new','Új'],['planned','Tervben'],['done','Beépítve'],['rejected','Elvetve'],['all','Összes']].map(([k,n])=>`<button class="chip ${fs===k?'on':''}" data-fbst="${k}">${n}</button>`).join(' ')}
+     <button class="btn sm" id="fbCopy" style="margin-left:8px">📋 Lista másolása</button></div>
+   ${list.length?list.map(f=>`<div class="box" style="margin-bottom:10px">
+     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>${FB_KIND[f.kind]||esc(f.kind)}</b> · <b>${esc(f.nick||'?')}</b> <span class="small muted">${fmtDT(f.created_at)} · v${esc(f.app_version||'?')} · ${esc(f.screen||'')}</span>
+       <span class="pill ${FB_ST[f.status][1]}">${FB_ST[f.status][0]}</span></div>
+     <p style="margin:8px 0;white-space:pre-wrap">${esc(f.body)}</p>
+     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${Object.entries(FB_ST).map(([k,[n]])=>`<button class="chip ${f.status===k?'on':''}" data-fbset="${f.id}:${k}">${n}</button>`).join(' ')}
+       <span class="small muted" style="margin-left:auto">${esc(f.device||'')}</span></div></div>`).join(''):'<p class="muted">Ebben a szűrésben nincs visszajelzés.</p>'}`;
+}
+document.addEventListener('click',async e=>{
+  const k=e.target.closest('[data-fbkind]');if(k){V.fbKind=k.dataset.fbkind;render();return}
+  const s=e.target.closest('[data-fbst]');if(s){V.fbSt=s.dataset.fbst;render();return}
+  const b=e.target.closest('[data-fbset]');
+  if(b){const [id,st]=b.dataset.fbset.split(':');try{await api('feedback?id=eq.'+id,{method:'PATCH',body:{status:st},prefer:'return=minimal'});const f=V.fb.find(x=>String(x.id)===id);if(f)f.status=st;render()}catch(x){toast('Hiba: '+x.message)}return}
+  if(e.target.closest('#fbCopy')){
+    const grp=st=>V.fb.filter(f=>f.status===st);
+    const line=f=>`- [${FB_KIND[f.kind]}] ${f.nick||'?'} (${new Date(f.created_at).toLocaleDateString('hu-HU')}, v${f.app_version||'?'}, ${f.screen||''}, ${f.device||''}): ${f.body.replace(/\s+/g,' ')}`;
+    const txt=`Matek-kaland visszajelzések – ${(curClass()||{}).name||''}\n\nBEÉPÍTVE (kerüljön a „Mi frissült?” listába a becenévvel):\n${grp('done').map(line).join('\n')||'–'}\n\nTERVBEN:\n${grp('planned').map(line).join('\n')||'–'}\n\nÚJ:\n${grp('new').map(line).join('\n')||'–'}\n`;
+    try{await navigator.clipboard.writeText(txt);toast('Vágólapra másolva – illeszd be a Claude-os beszélgetésbe.')}catch(x){prompt('Másold ki:',txt)}
+  }
+});
 </script>
 </body>
 </html>

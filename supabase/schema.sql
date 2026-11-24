@@ -279,7 +279,15 @@ begin
         'n', (select count(*) from public.events e where e.student_id = st.id and e.ts >= p_since),
         'ok', (select count(*) from public.events e where e.student_id = st.id and e.ts >= p_since and e.status = 'correct'),
         'days', (select count(distinct (e.ts at time zone 'Europe/Budapest')::date) from public.events e where e.student_id = st.id and e.ts >= p_since),
-        'grades', coalesce((select jsonb_agg(jsonb_build_object('grade', t.grade, 'topic', t.topic, 'at', t.finished_at, 'id', t.id) order by t.finished_at)
+        'grades', coalesce((select jsonb_agg(jsonb_build_object('grade', t.grade, 'topic', t.topic, 'at', t.finished_at, 'id', t.id,
+                              'boss', t.boss, 'started', t.started_at,
+                              'log_n', case when jsonb_typeof(t.log) = 'array' then jsonb_array_length(t.log) else 0 end,
+                              'log_dmg', (select coalesce(sum(case x->>'status' when 'correct' then a.d when 'partial' then round(a.d / 2.0) else 0 end), 0)
+                                          from jsonb_array_elements(case when jsonb_typeof(t.log) = 'array' then t.log else '[]'::jsonb end) x
+                                          cross join lateral (select case x->>'level' when '1' then 10 when '2' then 20 when '3' then 35 else 0 end as d) a),
+                              'ev_n', (select count(*) from public.events e where e.student_id = st.id and e.mode = 'trial'
+                                       and e.ts between t.started_at - interval '2 minutes' and t.finished_at + interval '2 minutes')
+                            ) order by t.finished_at)
                             from public.trials t where t.student_id = st.id and t.won), '[]'::jsonb)
       ) order by st.nick_key) from public.students st where st.class_id = p_class), '[]'::jsonb),
     'errors', coalesce((select jsonb_agg(x) from (
@@ -322,3 +330,95 @@ grant execute on function public.student_login(text, text), public.student_logou
 grant execute on function public.teacher_hello(text), public.teacher_create_students(uuid, text[]), public.teacher_reset_pin(uuid),
   public.teacher_class_stats(uuid, timestamptz), public.is_teacher(), public.owns_class(uuid), public.owns_student(uuid)
   to authenticated;
+
+-- ---------- SZÖRNYEK (motivációs rendszer, 2026-11-23) ----------
+create table if not exists public.monsters(
+  code text primary key,
+  name text not null,
+  topic text not null,             -- events.topic
+  kinds text[] not null,           -- events.kind értékek, ahol a hiba elkövethető ('' = összevonás/helyettesítés)
+  rule_hint text not null,
+  image_path text,
+  designed_by uuid references public.students(id) on delete set null
+);
+
+create table if not exists public.err_map(
+  err text primary key,            -- events.err pontos szövege, vagy 'status:halfway'
+  monster_code text not null references public.monsters(code)
+);
+
+alter table public.monsters enable row level security;
+alter table public.err_map  enable row level security;
+revoke all on public.monsters, public.err_map from anon, authenticated;
+grant select on public.monsters, public.err_map to authenticated;
+drop policy if exists monsters_read on public.monsters;
+create policy monsters_read on public.monsters for select to authenticated using (true);
+drop policy if exists err_map_read on public.err_map;
+create policy err_map_read on public.err_map for select to authenticated using (true);
+
+insert into public.monsters(code, name, topic, kinds, rule_hint) values
+  ('ELO', 'Mínuszfaló',          'zk',    array['fel'],     'A zárójel előtti mínusz a zárójelben minden tag előjelét megfordítja.'),
+  ('SZO', 'Felső-szorzó papóca', 'zk',    array['fel'],     'A zárójel előtti szorzóval a zárójelben minden tagot meg kell szorozni.'),
+  ('KEV', 'Keverő-kígyó',        'betus', array['','fel'],  'Csak az azonos betűrészű tagok vonhatók össze.'),
+  ('EGY', 'Láthatatlan Egyes',   'betus', array['','fel'],  'Az x azt jelenti: 1x. A −x pedig −1x.'),
+  ('MAR', 'Maradék-moly',        'zk',    array['ki'],      'Kiemelésnél minden tagot el kell osztani a kiemelt tényezővel.'),
+  ('FEL', 'Félúton-manó',        'zk',    array['ki'],      'A legnagyobb közös tényezőt emeld ki.'),
+  ('NEG', 'Előjel-kísértet',     'betus', array[''],        'Negatív számot zárójelben helyettesíts be.')
+on conflict (code) do update set name = excluded.name, topic = excluded.topic, kinds = excluded.kinds, rule_hint = excluded.rule_hint;
+
+insert into public.err_map(err, monster_code) values
+  ('Mínusz-tükör hiba',                 'ELO'),
+  ('A szorzó nem ért el minden tagot',  'SZO'),
+  ('Különnemű tagok összevonása',       'KEV'),
+  ('Láthatatlan egyes',                 'EGY'),
+  ('Egy tagot nem osztottál el',        'MAR'),
+  ('status:halfway',                    'FEL'),
+  ('Előjelhiba behelyettesítéskor',     'NEG')
+on conflict (err) do update set monster_code = excluded.monster_code;
+
+
+-- ---------- VISSZAJELZÉSEK (v1.0, 2026-11-24) ----------
+create table if not exists public.feedback(
+  id bigserial primary key,
+  student_id uuid references public.students(id) on delete cascade,
+  class_id uuid references public.classes(id) on delete cascade,
+  nick text,
+  kind text not null check (kind in ('bug','idea','like')),
+  body text not null,
+  app_version text,
+  screen text,
+  device text,
+  status text not null default 'new' check (status in ('new','planned','done','rejected')),
+  created_at timestamptz not null default now()
+);
+create index if not exists feedback_class_ts_idx on public.feedback(class_id, created_at desc);
+
+alter table public.feedback enable row level security;
+revoke all on public.feedback from anon, authenticated;
+grant select, delete on public.feedback to authenticated;
+grant update (status) on public.feedback to authenticated;
+grant usage, select on sequence public.feedback_id_seq to authenticated;
+
+drop policy if exists feedback_own on public.feedback;
+create policy feedback_own on public.feedback for all to authenticated
+  using (public.owns_class(class_id)) with check (public.owns_class(class_id));
+
+-- a diák ezzel küld (bejelentkezve); naponta legfeljebb 15 bejelentés diákonként
+create or replace function public.student_feedback(p_token uuid, p_kind text, p_body text,
+  p_version text default '', p_screen text default '', p_device text default '')
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare sid uuid := public.mk_student(p_token); st public.students; n int;
+begin
+  if p_kind not in ('bug','idea','like') then return jsonb_build_object('error','bad_kind'); end if;
+  if length(trim(coalesce(p_body,''))) < 2 then return jsonb_build_object('error','empty'); end if;
+  select count(*) into n from public.feedback
+   where student_id = sid and (created_at at time zone 'Europe/Budapest')::date = public.mk_today();
+  if n >= 15 then return jsonb_build_object('error','too_many'); end if;
+  select * into st from public.students where id = sid;
+  insert into public.feedback(student_id, class_id, nick, kind, body, app_version, screen, device)
+  values (sid, st.class_id, st.nick, p_kind, left(trim(p_body),1000), left(p_version,20), left(p_screen,60), left(p_device,200));
+  return jsonb_build_object('ok', true);
+end $$;
+
+revoke execute on function public.student_feedback(uuid, text, text, text, text, text) from public;
+grant execute on function public.student_feedback(uuid, text, text, text, text, text) to anon, authenticated;
