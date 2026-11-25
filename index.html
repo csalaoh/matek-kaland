@@ -1446,8 +1446,9 @@ function renderTask(){
   if(!t){fb.className='fb';return}
   const zk=t.topic==='zk';
   $('qlabel').textContent=zk?(t.kind==='ki'?'Emeld ki a közös tényezőt!':t.combine?'Bontsd fel a zárójelet, aztán vond össze!':'Bontsd fel a zárójelet!'):t.level===3?th.q3:th.q1;
-  $('expr').innerHTML=zk&&t.kind==='fel'?partsHTML(t.parts):zk?exprHTML(t.terms):markExprHTML(t);
-  $('pens').innerHTML=zk?'':pensHTML(t);
+  const pen=!zk&&S.mode==='practice';   // a Kiemelő csak gyakorlásnál segít, harcban (Aréna, Próba, szintőr) nem
+  $('expr').innerHTML=zk&&t.kind==='fel'?partsHTML(t.parts):pen?markExprHTML(t):exprHTML(t.terms);
+  $('pens').innerHTML=pen?pensHTML(t):'';
   $('subst').innerHTML=!zk&&t.level===3?t.vars.map(v=>`<i>${v}</i> = ${numHTML(t.vals[v],t.preferFrac)}`).join(',&nbsp;&nbsp;'):'';
   const a=$('ans');a.value=t.input;a.disabled=t.done;
   $('lab1').textContent=zk?'1. lépés – a felbontott alak (összevonás nélkül):':'1. lépés – az összevont alak:';
@@ -1705,10 +1706,10 @@ $('ans2').addEventListener('input',e=>{const t=cur();if(t)t.input2=e.target.valu
 /* v1.4: a virtuális billentyűzet a kurzor helyére ír és onnan töröl – bárhol lehet javítani a beírt válaszban */
 const kpCaret={ans:null,ans2:null};
 ['ans','ans2'].forEach(id=>{const el=$(id);['keyup','click','select','input','focus'].forEach(ev=>el.addEventListener(ev,()=>{kpCaret[id]=[el.selectionStart,el.selectionEnd]}))});
-$('expr').addEventListener('click',e=>{const el=e.target.closest('.tm');const t=cur();if(!el||!t||t.topic==='zk')return;
+$('expr').addEventListener('click',e=>{const el=e.target.closest('.tm');const t=cur();if(!el||!t||t.topic==='zk'||S.mode!=='practice')return;
   const i=+el.dataset.ti;t.marks=t.marks||{};if(t.marks[i]===penSel)delete t.marks[i];else t.marks[i]=penSel;
   $('expr').innerHTML=markExprHTML(t);$('pens').innerHTML=pensHTML(t)});
-$('pens').addEventListener('click',e=>{const b=e.target.closest('[data-pen]');const t=cur();if(!b||!t)return;
+$('pens').addEventListener('click',e=>{const b=e.target.closest('[data-pen]');const t=cur();if(!b||!t||S.mode!=='practice')return;
   if(b.dataset.pen==='clr')t.marks={};else penSel=+b.dataset.pen;
   $('expr').innerHTML=markExprHTML(t);$('pens').innerHTML=pensHTML(t)});
 $('kp').addEventListener('pointerdown',e=>{if(e.target.closest('button'))e.preventDefault()});   // a gomb ne vegye el a fókuszt (és a kurzort)
@@ -2745,10 +2746,12 @@ boot();
 </script>
 <script>
 /* ================= VERZIÓ, SÚGÓ, VISSZAJELZÉS (v1.0) ================= */
-const APP_VERSION='1.4';
+const APP_VERSION='1.4.1';
 /* Új kiadásnál: APP_VERSION + a sw.js VERSION-je + egy új bejegyzés a lista ELEJÉRE.
    by: a diák beceneve, ha az ő ötlete volt (a Súgóban és az Újdonságok ablakban megjelenik). */
 const CHANGELOG=[
+  {v:'1.4.1',date:'2026. november 25.',title:'Kiemelő csak gyakorláshoz',items:[
+    {t:'🖍️ A Kiemelő mostantól csak a Gyakorlásban segít. Harcban (Aréna, Próba, szintőr) nincs, mert ott azt nézzük, megy-e már segítség nélkül – így mindenki ugyanolyan feltételekkel harcol a jegyért.'}]},
   {v:'1.4',date:'2026. november 25.',title:'Varázslótorony és Kiemelő',items:[
     {t:'🏰 A kiváltságok új helyre költöztek: a Varázslótoronyba. A faluban a toronyra koppintva vagy a Kiváltságok menüponttal éred el, a kuponjaid is ott vannak. A Bolt mostantól csak aranyért árul.'},
     {t:'🖍️ Új Kiemelő az összevonásnál: koppints a tagokra, és jelöld meg egy színnel az egyneműeket. A megjelölt tagok elhalványulnak, így látod, mi maradt még.'},
