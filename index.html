@@ -59,6 +59,17 @@ body.scifi .step.cur{color:#04121a}
 .expr{font-size:1.75rem;margin:10px 0 6px;line-height:1.5;word-spacing:.08em}
 @media (max-width:600px){.expr{font-size:1.3rem}}
 .expr i{font-family:Georgia,'Times New Roman',serif;font-weight:600}
+.expr .tm{cursor:pointer;border-radius:6px;padding:0 1px;transition:opacity .2s,background .2s;white-space:nowrap}
+.expr .tm:hover{background:rgba(0,0,0,.05)}
+.expr .tm.mk{opacity:.38;text-decoration:underline;text-decoration-thickness:4px;text-underline-offset:5px}
+.expr .tm.pc0{text-decoration-color:#e8a317;background:rgba(232,163,23,.18)}.expr .tm.pc1{text-decoration-color:#2b8fd6;background:rgba(43,143,214,.16)}
+.expr .tm.pc2{text-decoration-color:#d6336c;background:rgba(214,51,108,.14)}.expr .tm.pc3{text-decoration-color:#2f9e44;background:rgba(47,158,68,.16)}
+.pens{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 8px;font-size:.85rem}
+.pens .pl{font-weight:700;opacity:.8}.pens .ph{opacity:.65;font-size:.8rem}
+.pens .pen{width:26px;height:26px;border-radius:50%;border:2px solid rgba(0,0,0,.15);cursor:pointer;padding:0}
+.pens .pen.on{outline:3px solid var(--ink);outline-offset:2px}
+.pens .pen.pc0{background:#e8a317}.pens .pen.pc1{background:#2b8fd6}.pens .pen.pc2{background:#d6336c}.pens .pen.pc3{background:#2f9e44}
+.pens .pen-clr{border:1px solid var(--line);background:transparent;color:inherit;border-radius:8px;padding:3px 10px;font:inherit;font-size:.8rem;cursor:pointer}
 .subst{font-size:1.15rem;margin:4px 0 0}
 .frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.8em;line-height:1.05;margin:0 2px}
 .frac>span:first-child{border-bottom:1.5px solid currentColor;padding:0 2px}
@@ -107,6 +118,7 @@ td.okc{color:var(--ok);font-weight:800}td.badc{color:var(--bad);font-weight:800}
 
 .tabs{display:flex;gap:6px;padding:0 20px 14px;max-width:1180px;margin:0 auto;flex-wrap:wrap}
 .tabs button{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font:inherit;font-weight:800;padding:8px 16px;border-radius:999px;cursor:pointer}
+.tabs .ts{display:none}
 .tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 body.scifi .tabs button.on{color:#04121a}
 aside{display:flex;flex-direction:column;gap:18px}
@@ -337,7 +349,8 @@ body.scifi .evcard{background:linear-gradient(90deg,#3b2f80,#1c4f6e)}
   .notice{font-size:.72rem;padding:6px 10px;margin-bottom:8px;width:calc(100% - 20px)}
   .tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;margin:0;max-width:none;justify-content:space-around;gap:2px;flex-wrap:nowrap;
     padding:6px 4px calc(6px + env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid rgba(255,255,255,.15);box-shadow:0 -6px 16px rgba(0,0,0,.35)}
-  .tabs button{padding:8px 6px;font-size:.78rem;flex:1;border-radius:10px}
+  .tabs button{padding:8px 3px;font-size:.72rem;flex:1 1 auto;min-width:0;border-radius:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tabs .tl{display:none}.tabs .ts{display:inline}
   body{padding-bottom:64px}
   main{padding:0 10px 16px;gap:12px}.card{padding:12px 12px}
   .evcard{padding:8px 10px;gap:8px;margin-bottom:8px}.evcard .evic{font-size:1.2rem}.evcard b{font-size:.9rem}.evcard span{font-size:.8rem}
@@ -363,6 +376,19 @@ button.step{font-family:inherit;cursor:pointer;background:transparent}
 .loginbox .lerr{color:#b3362b;font-weight:700;min-height:1em;margin:8px 0 0}.loginbox .lmsg{background:#fbe3c4;border-radius:8px;padding:8px 10px;margin:0 0 6px}
 .notice .nbtn{padding:2px 10px;font-size:.8rem;margin-left:6px;color:#fff;border-color:rgba(255,255,255,.5)}
 .notice{max-width:1180px;margin:0 auto 12px;padding:8px 20px;color:#fff;opacity:.85;font-size:.85rem;background:rgba(255,255,255,.08);border-radius:10px;width:calc(100% - 40px)}
+/* v1.3 napi láda */
+.fev{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}.fev .evcard{flex:1 1 300px;margin:0;font-size:.88rem}
+.evcard.ev-r{border-color:#3b6fd1;box-shadow:0 0 0 1px #3b6fd133 inset}
+.evcard.ev-l{border-color:#c9971a;box-shadow:0 0 14px #f2c94c66;background:linear-gradient(135deg,rgba(255,236,170,.35),transparent)}
+.evcard.ev-u{border-color:#c0392b;background:linear-gradient(135deg,rgba(255,210,210,.35),transparent)}
+.evrar{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:1px 6px;border-radius:8px;margin-right:6px;background:#3b6fd1;color:#fff}
+.ev-l .evrar{background:#c9971a}.ev-u .evrar{background:#c0392b}
+.ovtxt.ev-l{color:#b07d10;text-shadow:0 0 12px #f2c94c}.ovtxt.ev-r{color:#3b6fd1}
+.evby{font-size:.82rem;margin:2px 0}
+.evseal .evlock{animation:evwob 2.4s ease-in-out infinite;display:inline-block}
+@keyframes evwob{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-8deg)}90%{transform:rotate(8deg)}95%{transform:rotate(-4deg)}}
+.fwand{position:absolute;z-index:40;font-size:22px;line-height:1;background:none;border:0;padding:4px;cursor:pointer;opacity:.9;animation:fwand 1.8s ease-in-out infinite;transform:translate(-50%,-50%)}
+@keyframes fwand{0%,100%{filter:drop-shadow(0 0 3px #fff6a0)}50%{filter:drop-shadow(0 0 10px #ffe14d)}}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#1c2a22">
@@ -396,6 +422,7 @@ button.step{font-family:inherit;cursor:pointer;background:transparent}
   <button data-m="arena">Aréna</button>
   <button data-m="trial">Próba</button>
   <button data-m="shop">Bolt</button>
+  <button data-m="guild"><span class="tl">Kiváltságok</span><span class="ts">Torony</span></button>
 </nav>
 
 <main>
@@ -408,6 +435,7 @@ button.step{font-family:inherit;cursor:pointer;background:transparent}
         <button class="btn ghost" id="kpToggle" style="padding:6px 10px;font-size:.85rem">⌨ Billentyűzet</button>
       </div>
       <div class="expr" id="expr"></div>
+      <div class="pens" id="pens"></div>
       <div class="subst" id="subst"></div>
       <form id="form" autocomplete="off">
         <label class="flabel hidden" id="lab1" for="ans">1. lépés – az összevont alak:</label>
@@ -432,6 +460,7 @@ button.step{font-family:inherit;cursor:pointer;background:transparent}
   </aside>
 </main>
 
+<script src="esemenyek.js"></script>
 <script>
 /* ================= ENGINE (téma-független) ================= */
 function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=a%b;a=b;b=t}return a||1}
@@ -480,6 +509,13 @@ function termHTML(t,first){
   const sign=first?(neg?'−':''):(neg?' − ':' + ');
   return sign+coef+letters(t.k);
 }
+/* v1.4: Kiemelő – az összevonandó feladatban a tagokra koppintva megjelölheted (és elhalványíthatod) az egynemű tagokat */
+const PEN_N=4;let penSel=0;
+function markExprHTML(t){t.marks=t.marks||{};
+  return t.terms.map((x,i)=>{const m=t.marks[i];return `<span class="tm${m!==undefined?' mk pc'+m:''}" data-ti="${i}">${termHTML(x,i===0)}</span>`}).join('')}
+function pensHTML(t){const n=Object.keys(t.marks||{}).length;
+  return `<span class="pl">🖍 Kiemelő:</span>${Array.from({length:PEN_N},(_,i)=>`<button type="button" class="pen pc${i} ${i===penSel?'on':''}" data-pen="${i}" aria-label="${i+1}. szín"></button>`).join('')}
+   ${n?`<button type="button" class="pen-clr" data-pen="clr">Törlés</button>`:''}<span class="ph">${n?'':'Koppints az egynemű tagokra, egy színnel egy csoportot!'}</span>`}
 function exprHTML(terms,groupOf){
   if(!terms.length)return '0';
   return terms.map((t,i)=>{const h=termHTML(t,i===0);
@@ -899,7 +935,7 @@ const THEMES={
     trialTitle:'Próba – a völgy őrzői',trialIntro:'A próbán mindenki ugyanazzal indul: 100 életerő, felszerelés nélkül. Csak a tudásod számít.',
     arena:[{n:'Foltos martalóc',c:'#a8834a'},{n:'Kőelementál',c:'#7d7a6e'},{n:'Csontlovag',c:'#3f5a7a'}],
     trials:[{n:'Ork hadúr',c:'#2f5d3a'},{n:'Obszidiánsárkány',c:'#3a1f1a'}],
-    shopTitle:'A Vándor Alkimista boltja',privTitle:'A Varázstorony – kiváltságok',
+    shopTitle:'A Vándor Alkimista boltja',privTitle:'A Varázslótorony – kiváltságok',guildIn:'a Varázslótoronyban',
     immune:'A pikkelyein lepattannak a gyenge varázslatok – erősebb támadás kell!',
     armor:'Megkeményedett a bőre: a gyenge varázslat már nem hat rá. Erősebb támadás kell!',
     items:{weapon:['Kristálypálca','+10% sebzés az arénában'],hat:['Csillagos süveg','Csak a szépség kedvéért'],pet:['Sárkányfióka','Harc közben szurkol neked'],potion:['Gyógyital','+30 életerő az arénában (a próbán nem használható)']},
@@ -930,7 +966,7 @@ const THEMES={
     trialTitle:'Próba – éles bevetés',trialIntro:'A próbán mindenki ugyanazzal a hajóval indul: 100 pajzs, felszerelés nélkül. Csak a tudásod számít.',
     arena:[{n:'Felderítő drón',c:'#5c7cfa'},{n:'Páncélos robot',c:'#8f9bad'},{n:'Rajvezér',c:'#7048e8'}],
     trials:[{n:'Kvazár-őrhajó',c:'#e8590c'},{n:'Fekete Lyuk Titánja',c:'#c2255c'}],
-    shopTitle:'Fedélzeti raktár',privTitle:'Parancsnoki terminál – kiváltságok',
+    shopTitle:'Fedélzeti raktár',privTitle:'Parancsnoki terminál – kiváltságok',guildIn:'a Parancsnoki terminálon',
     immune:'A pajzsa elnyeli a gyenge lövéseket – erősebb fegyver kell!',
     armor:'Bekapcsolt a pajzsa: a gyenge lövés már nem hat rá. Erősebb fegyver kell!',
     items:{weapon:['Plazmapisztoly','+10% sebzés a szimulátorban'],hat:['Arany sisakrostély','Csak a szépség kedvéért'],pet:['Segítő drón','Bevetés közben melletted lebeg'],potion:['Javítócsomag','+30 pajzs a szimulátorban (a próbán nem használható)']},
@@ -1079,6 +1115,15 @@ const PRIVILEGES=[
   {id:'m1',name:'Teleport',desc:'Egy órára helyet cserélhetsz egy osztálytársaddal (ha ő is beleegyezik).',lvl:2,ap:5,limit:'none',cls:'magus',test:false,on:true},
   {id:'m2',name:'Időalagút',desc:'Egy dolgozatnál +5 perc jár neked.',lvl:6,ap:35,limit:'week',cls:'magus',test:true,on:true},
   {id:'g1',name:'Szabadság',desc:'Erre az órára bárhova ülhetsz a teremben.',lvl:2,ap:5,limit:'none',cls:'gyogyito',test:false,on:true},
+  {id:'k1',name:'Passz-kártya',desc:'Ha felszólítanak, egyszer passzolhatsz. (Feleletre és dolgozatra nem vonatkozik.)',lvl:2,ap:8,limit:'week',cls:'',test:false,on:true},
+  {id:'k2',name:'DJ',desc:'Az óra utolsó 3 percében te választod a zenét az egész osztálynak (tisztességes szöveggel).',lvl:2,ap:12,limit:'week',cls:'',test:false,on:true},
+  {id:'k3',name:'Táblaművész',desc:'Az óra elején rajzolhatsz valamit a tábla sarkába, és ott maradhat az óra végéig.',lvl:2,ap:6,limit:'none',cls:'',test:false,on:true},
+  {id:'k4',name:'Viccrendelés',desc:'A Mester elmond egy általad választott (tisztességes) viccet az óra elején.',lvl:3,ap:10,limit:'week',cls:'',test:false,on:true},
+  {id:'k5',name:'Személyes kérdés',desc:'Feltehetsz a Mesternek egy személyes kérdést, és ő őszintén felel rá.',lvl:3,ap:12,limit:'week',cls:'',test:false,on:true},
+  {id:'k6',name:'Telefonos 5 perc',desc:'Az óra utolsó 5 percében csendben telefonozhatsz.',lvl:3,ap:15,limit:'week',cls:'',test:false,on:true},
+  {id:'k7',name:'Varázslósüveges óra',desc:'A Mester egy egész órán varázslósüvegben tanít.',lvl:4,ap:25,limit:'month',cls:'',test:false,on:true},
+  {id:'k8',name:'Hősmatrica',desc:'Matricát kapsz a saját hősöd képéből.',lvl:5,ap:25,limit:'month',cls:'',test:false,on:true},
+  {id:'k9',name:'3D-s társ',desc:'3D nyomtatott kulcstartót kapsz a társadból (a petedből).',lvl:7,ap:25,limit:'month',cls:'',test:false,on:true},
   {id:'g2',name:'Lelkesedő hit',desc:'Egy röpdolgozatnál egyszer megkérdezheted a tanártól, hogy egy válaszod jó-e.',lvl:5,ap:20,limit:'week',cls:'gyogyito',test:true,on:true}];
 const pendingTest=()=>S.coupons.some(c=>!c.done&&c.test);
 /* KARAKTEROSZTÁLYOK – Laci 2017-es Classcraft-szabályzata alapján (Harcos: sok HP/kevés AP, Mágus: fordítva, Gyógyító: kiegyensúlyozott) */
@@ -1095,32 +1140,73 @@ const AP_MAX_BASE=30,AP_DAY_BASE=10;
 const potionHeal=()=>S.cls==='gyogyito'?45:30;
 const CLASS_CHANGE_COST=100;
 const apMax=()=>CL()?CL().apMax:AP_MAX_BASE, apDay=()=>CL()?CL().apDay:AP_DAY_BASE;
-/* NAPI ESEMÉNY – a dátumból számolva, így aznap mindenkinek ugyanaz */
-const DAY_EVENTS=[
-  {id:'gold',f:['Aranyeső','A kincstár ma bőkezű: minden arany-jutalom másfélszeres.'],s:['Energiahullám','Ma minden energia-jutalom másfélszeres.']},
-  {id:'xp',f:['A tudás napja','Ma minden XP másfélszeres.'],s:['Tanulási protokoll','Ma minden XP másfélszeres.']},
-  {id:'crit',f:['Szerencsecsillag','Ma kétszer gyakrabban jön kritikus ütés (30%).'],s:['Célzórendszer-frissítés','Ma 30% az esély a kritikus találatra.']},
-  {id:'ap',f:['Varázsforrás','Ma +5 AP-t kapsz ajándékba.'],s:['Tartalék energiacella','Ma +5 AP-t kapsz.']},
-  {id:'weak',f:['Edzőnap','{e0}: ma dupla jutalom jár a legyőzéséért.'],s:['Gyakorló bevetés','{e0}: ma dupla jutalom jár a legyőzéséért.']},
-  {id:'strong',f:['Megerősödött szörnyek','Az aréna ellenfelei ma 20%-kal erősebbek, de másfélszeres jutalmat adnak.'],s:['Riadókészültség','A szimulátor célpontjai ma 20%-kal erősebbek, de másfélszeres jutalmat adnak.']},
-  {id:'brave',f:['A bátrak napja','Ma a 3. fokozatú jó válasz másfélszeres XP-t ér.'],s:['Elit küldetés','Ma a 3. fokozatú jó válasz másfélszeres XP-t ér.']},
-  {id:'calm',f:['Csendes nap','Ma nincs különleges esemény – sima gyakorlás.'],s:['Nyugodt műszak','Ma nincs különleges esemény – sima gyakorlás.']}];
-const CLASS_EVENTS=[
-  'Villámkérdés: az első három jó válaszoló +30 XP-t kap.',
-  'Fordított szerep: ma egy diák vezeti az óra eleji fejtörőt.',
-  'Dupla XP: ma minden órai munka dupla XP-t ér.',
-  'A tanár felel: egy diák feltehet a tanárnak egy fejtörőt. Ha a tanár nem tudja megoldani, az osztály minden tagja +20 XP-t kap.',
-  'Hibavadászat: a táblán elrejtett számolási hiba megtalálója +25 XP-t kap.',
-  'Szerencsés padsor: a tanár kisorsol egy padsort, annak minden tagja +15 XP-t kap.',
-  'Zenés önálló munka: ma mindenki hallgathat zenét az önálló feladat alatt.',
-  'Nyugodt nap: ma nincs különleges esemény.'];
-function dayEvent(){let i;if(S.evOverride!=null)i=S.evOverride;else{let h=0;for(const ch of isoDay())h=(h*31+ch.charCodeAt(0))%9973;i=h%DAY_EVENTS.length}
-  const e=DAY_EVENTS[i],[n,d]=S.theme==='fantasy'?e.f:e.s;return {id:e.id,i,name:n,desc:d.replace('{e0}',T().arena[0].n)}}
-const goldMul=()=>dayEvent().id==='gold'?1.5:1;
-const xpMul=l=>(dayEvent().id==='xp'?1.5:1)*(dayEvent().id==='brave'&&l===3?1.5:1);
-const critChance=()=>dayEvent().id==='crit'?.3:.15;
-function applyDayBonus(){const today=isoDay();if(dayEvent().id==='ap'&&S.evApDay!==today){S.ap=Math.min(apMax(),S.ap+5);S.evApDay=today}}
-function evCardHTML(){const e=dayEvent();return `<div class="evcard"><span class="evic">${{gold:'💰',xp:'📘',crit:'⚡',ap:'🔮',weak:'🎯',strong:'🛡️',brave:'🔥',calm:'🌙'}[e.id]}</span><div><b>Mai esemény: ${e.name}</b><br><span>${e.desc}</span></div></div>`}
+/* NAPI ESEMÉNY (v1.3) – óranyitó láda. A lista az esemenyek.js-ben van (közös a tanári felülettel).
+   Belépve: osztályonként a szerver tárolja, mi jött ki aznap; amíg a láda nincs kinyitva, nincs hatása.
+   Vendég módban: a dátumból számolva, azonnal nyitva. */
+let DAY=null,DAYT=null;
+function dayLoad(){try{DAY=JSON.parse(localStorage.getItem('mk-day-'+(ACC?ACC.id:'g'))||'null')}catch(e){DAY=null}if(DAY&&DAY.day!==isoDay())DAY=null}
+function daySave(){try{localStorage.setItem('mk-day-'+(ACC?ACC.id:'g'),JSON.stringify(DAY))}catch(e){}}
+function activeEvents(){
+  if(S.evOverride!=null){const e=MK_EVENTS[S.evOverride%MK_EVENTS.length];return e?[e]:[]}
+  if(!ACC){const d=isoDay();return [mkPickEvent({ora:false,rnd:mkDateRnd(d)}),mkHoliday(d)].filter(Boolean)}
+  if(!DAY||DAY.day!==isoDay()||!DAY.opened)return [];
+  return [mkEvById(DAY.ev),mkEvById(DAY.ev2)].filter(Boolean);
+}
+const fxMul=k=>activeEvents().reduce((m,e)=>m*((e.fx||{})[k]||1),1);
+const fxSum=k=>activeEvents().reduce((m,e)=>m+((e.fx||{})[k]||0),0);
+const goldMul=()=>fxMul('gold');
+const xpMul=l=>fxMul('xp')*(l===3?fxMul('brave'):1);
+const critChance=()=>Math.max(.15,...activeEvents().map(e=>(e.fx||{}).crit||0));
+const shopPrice=k=>Math.round(PRICES[k]*fxMul('shop'));
+const privCost=p=>Math.max(1,Math.round(p.ap*fxMul('kupon')));
+function evDesc(e){return (e.d||'').replace('{e0}',T().arena[0].n)}
+function applyDayBonus(){
+  const today=isoDay();S.evGifts=S.evGifts||{};let msg=[];
+  for(const e of activeEvents()){const fx=e.fx||{},k=today+':'+e.id;if((fx.ap||fx.arany)&&!S.evGifts[k]){S.evGifts[k]=1;
+    if(fx.ap){S.ap=Math.min(apMax(),S.ap+fx.ap);msg.push(`+${fx.ap} AP`)}if(fx.arany){S.gold+=fx.arany;msg.push(`+${fx.arany} ${T().cur}`)}}}
+  for(const k of Object.keys(S.evGifts))if(k.slice(0,10)<today)delete S.evGifts[k];
+  if(msg.length&&started)banner(`Napi esemény ajándéka: ${msg.join(', ')}!`);
+}
+const RAR_TXT={c:'',r:'Ritka',l:'Legendás',u:'Ünnepi'};
+const tkLine=(n,xp,pre)=>{const t='🎟️'.repeat(n);return n>=5?`${pre} <b>5 sorsjegyed</b> van ${t} – ennél több nem lehet.`:n?`${pre} <b>${n} sorsjegyed</b> van ${t} (még ${n*20-xp+1} XP, és ${n+1} lesz).`:`${pre} még nincs sorsjegyed. Egy jó válasz, és lesz!`};
+function evCardHTML(){
+  const ev=activeEvents();
+  if(ev.length){
+    const who=ACC&&DAY&&DAY.opened?(DAY.opener_nick&&DAY.how==='class'?`<div class="evby">A ládát ma <b>${esc(DAY.opener_nick)}</b> nyitotta ki.</div>`:DAY.how==='auto'?`<div class="evby">Ma nincs matekóra, a láda magától nyílt ki.</div>`:''):'';
+    const nxt=ACC&&DAY&&DAY.opened?`<div class="evby">${DAY.iOpen?'Ma te nyitottál, a következő ládát más nyitja. ':''}${tkLine(DAY.nextTickets||0,DAY.nextXp||0,'A következő ládára')}</div>`:'';
+    return ev.map(e=>`<div class="evcard ev-${e.r}"><span class="evic">${e.ic||'✨'}</span><div>${RAR_TXT[e.r]?`<span class="evrar">${RAR_TXT[e.r]}</span>`:''}<b>Mai esemény: ${e.n}</b><br><span>${evDesc(e)}</span>${e.ora?'<br><span class="tiny">Ez az órán történik.</span>':''}</div></div>`).join('')+(who||nxt?`<div class="evcard evinfo"><span class="evic">🎟️</span><div>${who}${nxt}</div></div>`:'');
+  }
+  if(!DAY)return `<div class="evcard evseal"><span class="evic">🔒</span><div><b>Mai esemény: lepecsételt láda</b><br><span>Betöltés… (internet kell hozzá)</span></div></div>`;
+  const hol=mkHoliday(DAY.day),two=hol?' Ma ünnepnap van, ezért <b>két</b> esemény rejtőzik benne!':'';
+  const who=DAY.iOpen?'<br><b>🎉 Ma te nyitod ki a ládát!</b> Az órán kattints rá a kivetítőn.':DAY.opener_nick?`<br>🎉 Ma <b>${esc(DAY.opener_nick)}</b> nyitja ki a ládát.`:'';
+  const tk=DAY.blocked?'<br><span class="tiny">Legutóbb te nyitottál, ezért ma pihensz. A következő ládára már gyűjtheted a sorsjegyeket.</span>':DAY.opener_nick?'':`<br><span class="tiny">${tkLine(DAY.myTickets||0,DAY.myXp||0,'A mai nyitásra')} Aki gyakorol, az esélyes!</span>`;
+  return `<div class="evcard evseal"><span class="evic evlock">🧰</span><div><b>Mai esemény: lepecsételt láda</b><br><span>${DAY.mathDay&&DAY.hour<15?'A mai esemény a matekórán nyílik ki.':'Mindjárt kinyílik…'}${two}</span>${who}${tk}</div></div>`;
+}
+async function dayFetch(){
+  if(!ACC||!navigator.onLine)return;
+  try{
+    let d=await rpc('student_day',{p_token:ACC.token});
+    if(!d.opened&&(!d.mathDay||d.hour>=15)){const e=mkPickEvent({ora:false,recent:d.recent||[]}),h=mkHoliday(d.day);
+      d=await rpc('student_day_open',{p_token:ACC.token,p_ev:e.id,p_ev2:h?h.id:null})}
+    const was=DAY&&DAY.day===d.day&&DAY.opened,before=DAY?DAY.ev+'|'+DAY.ev2:'';DAY=d;daySave();
+    if(d.opened&&(!was||before!==d.ev+'|'+d.ev2)){applyDayBonus();if(was!==undefined&&started&&DAYT)dayReveal()}
+    if(typeof render==='function'&&!(cur()&&!cur().done&&document.activeElement&&/^ans/.test(document.activeElement.id)))render();
+  }catch(e){}
+  clearTimeout(DAYT);DAYT=setTimeout(dayFetch,DAY&&!DAY.opened?30000:300000);
+}
+function dayReveal(){
+  const ev=activeEvents();if(!ev.length)return;
+  let o=document.getElementById('ov');if(!o){o=document.createElement('div');o.id='ov';o.className='overlay';document.body.appendChild(o)}
+  o.innerHTML=`<div class="ovcard"><div class="tiny" style="letter-spacing:.1em;text-transform:uppercase">A láda kinyílt!</div>
+   ${ev.map(e=>`<div class="ovtxt ev-${e.r}" style="font-size:1.3rem">${e.ic||'✨'} ${e.n}</div><p>${evDesc(e)}</p>`).join('')}
+   <p style="margin-top:14px"><button class="btn" data-act="cev-close">Szuper!</button></p></div>`;
+}
+/* a Mester elhagyott varázspálcája: aznap mindenkinél ugyanott van a faluban */
+function wandHTML(){
+  if(!fxSum('palca')||S.wandDay===isoDay())return '';
+  const r=mkDateRnd(isoDay()+'palca'),x=12+r()*76,y=38+r()*48;
+  return `<button class="fwand" data-act="wand" style="left:${x}%;top:${y}%" aria-label="Varázspálca">🪄</button>`;
+}
 function classChooser(){
   const th=T(),first=!S.cls;
   let o=document.getElementById('ov');if(!o){o=document.createElement('div');o.id='ov';o.className='overlay';document.body.appendChild(o)}
@@ -1132,14 +1218,6 @@ function classChooser(){
       <div class="tiny"><b>+</b> ${c.perk}</div><div class="tiny"><b>−</b> ${c.minus}</div><div class="tiny"><b>Saját kiváltságok:</b> ${privs}</div>
       <button class="btn" data-act="cls-pick-${k}" ${S.cls===k||(!first&&S.gold<CLASS_CHANGE_COST)?'disabled':''}>${S.cls===k?'Ez a tiéd':first?'Ezt választom':`Váltás (${CLASS_CHANGE_COST} ${th.cur})`}</button></div>`}).join('')}</div>
    <p style="margin-top:12px"><button class="btn ghost" data-act="cev-close">${first?'Később':'Bezár'}</button></p></div>`;
-}
-function classEventOverlay(){
-  S.cevUsed=S.cevUsed||[];if(S.cevUsed.length>=CLASS_EVENTS.length)S.cevUsed=[];
-  const free=CLASS_EVENTS.map((_,k)=>k).filter(k=>!S.cevUsed.includes(k));const k=pick(free);S.cevUsed.push(k);
-  let o=document.getElementById('ov');if(!o){o=document.createElement('div');o.id='ov';o.className='overlay';document.body.appendChild(o)}
-  o.innerHTML=`<div class="ovcard"><div class="tiny" style="letter-spacing:.1em;text-transform:uppercase">Napi esemény az órán</div><div class="ovtxt">${CLASS_EVENTS[k]}</div>
-    <div class="tiny">Még ${CLASS_EVENTS.length-S.cevUsed.length} esemény van hátra, mielőtt a lista újraindul.</div>
-    <p style="display:flex;gap:10px;justify-content:center;margin-top:18px"><button class="btn" data-act="cev-next">Másik esemény</button><button class="btn ghost" data-act="cev-close">Bezár</button></p></div>`;
 }
 const LIMIT_TXT={none:'',week:'hetente 1×',month:'havonta 1×'};
 function weekKey(d=new Date()){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return t.getUTCFullYear()+'-W'+Math.ceil(((t-y)/86400000+1)/7)}
@@ -1209,11 +1287,11 @@ const saveKey=()=>ACC?'matek7-kaland-u-'+ACC.id:'matek7-kaland-v1';
 const today=()=>new Date().toISOString().slice(0,10);
 const tKey=(tp,k)=>(tp==='betus'?'':tp+'_')+k;
 const triesLeft=(tp,k)=>{const kk=tKey(tp,k);if(S.tries[kk]==null)S.tries[kk]=DAILY_TRIES;return S.tries[kk]};
-function snapshot(){S.prog[S.topic]={level:S.level,max:S.max,streak:S.streak,miss:S.miss};return {_at:Date.now(),theme:S.theme,topic:S.topic,dir:S.dir,prog:S.prog,trialTopic:S.trialTopic,level:S.level,max:S.max,streak:S.streak,miss:S.miss,gold:S.gold,xp:S.xp,clvl:S.clvl,owned:S.owned,potions:S.potions,tries:S.tries,triesDay:today(),grades:S.grades,coupons:S.coupons,ap:S.ap,apDate:S.apDate,evApDay:S.evApDay,hp:S.hp,hpDay:S.hpDay,cls:S.cls,gender:S.gender,eq:S.eq,beaten:S.beaten,fLast:S.fLast,iLast:S.iLast,gateFails:S.gateFails,gateNote:S.gateNote}}
+function snapshot(){S.prog[S.topic]={level:S.level,max:S.max,streak:S.streak,miss:S.miss};return {_at:Date.now(),theme:S.theme,topic:S.topic,dir:S.dir,prog:S.prog,trialTopic:S.trialTopic,level:S.level,max:S.max,streak:S.streak,miss:S.miss,gold:S.gold,xp:S.xp,clvl:S.clvl,owned:S.owned,potions:S.potions,tries:S.tries,triesDay:today(),grades:S.grades,coupons:S.coupons,ap:S.ap,apDate:S.apDate,evApDay:S.evApDay,evGifts:S.evGifts,wandDay:S.wandDay,hp:S.hp,hpDay:S.hpDay,cls:S.cls,gender:S.gender,eq:S.eq,beaten:S.beaten,fLast:S.fLast,iLast:S.iLast,gateFails:S.gateFails,gateNote:S.gateNote}}
 function save(){try{localStorage.setItem(saveKey(),JSON.stringify(snapshot()))}catch(e){}if(ACC)NET.dirty=true}
 function load(){try{applyState(JSON.parse(localStorage.getItem(saveKey())||'null'))}catch(e){}}
 function applyState(d){if(!d)return;
-  for(const k of ['theme','topic','dir','prog','trialTopic','level','max','streak','miss','gold','xp','clvl','owned','potions','grades','coupons','ap','apDate','evApDay','hp','hpDay','cls','gender','eq','beaten','fLast','iLast','gateFails','gateNote'])if(d[k]!==undefined)S[k]=d[k];
+  for(const k of ['theme','topic','dir','prog','trialTopic','level','max','streak','miss','gold','xp','clvl','owned','potions','grades','coupons','ap','apDate','evApDay','evGifts','wandDay','hp','hpDay','cls','gender','eq','beaten','fLast','iLast','gateFails','gateNote'])if(d[k]!==undefined)S[k]=d[k];
   if(d.triesDay===today()&&d.tries)S.tries=d.tries;
   if(!THEMES_ON.includes(S.theme))S.theme=THEMES_ON[0];}
 
@@ -1254,11 +1332,12 @@ function renderChar(){
    <p class="tiny" style="margin:6px 0 0">AP: tanítási naponként +${apDay()}, legfeljebb ${apMax()}. Kiváltságokra költheted.</p>
    <p style="margin:8px 0 0;display:flex;gap:6px;flex-wrap:wrap">${ACC?`<button class="btn ghost" data-act="logout" style="padding:4px 10px;font-size:.78rem">Kilépés (${esc(ACC.nick)})</button>`:'<button class="btn ghost" data-act="reset-all" style="padding:4px 10px;font-size:.78rem">Újrakezdés</button>'}</p>`;
 }
+const SHOPFOOT=()=>{const th=T();return ACC?'':`<p class="rules" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn ghost" data-act="demo-gold" style="padding:4px 10px;font-size:.8rem">Tesztgomb: +200 ${th.cur}</button><button class="btn ghost" data-act="demo-xp" style="padding:4px 10px;font-size:.8rem">Tesztgomb: +200 XP</button><button class="btn ghost" data-act="demo-day" style="padding:4px 10px;font-size:.8rem">Tesztgomb: +1 tanítási nap (AP)</button></p>`};
 function renderMode(){
   const th=T(),v=$('modeView'),f=$('modeFoot');
   if(S.mode==='falu'){v.innerHTML=faluHTML();if(f)f.innerHTML='';requestAnimationFrame(faluAfter);return}
   if(S.mode==='map'&&islandOK()){v.innerHTML=islandHTML();if(f)f.innerHTML='';requestAnimationFrame(islandAfter);return}
-  if(S.mode==='map'){v.innerHTML=`${evCardHTML()}<div class="lvl story-l">${th.mapTitle}</div><p class="introbox">${th.mapIntro}</p><div class="mapwrap">${mapSVG()}</div><p class="maphint">← Húzd oldalra a térképet →</p>`;f.innerHTML=`<p class="rules" id="mapMsg">Kattints a nyitott helyszínre az induláshoz!</p><p class="rules" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn ghost" data-act="ev-next" style="padding:4px 10px;font-size:.8rem">Tesztgomb: másik napi esemény</button>${TEACHER_DEMO?'<button class="btn ghost" data-act="cev" style="padding:4px 10px;font-size:.8rem">Tanári: napi esemény az órán (kivetítéshez)</button>':''}</p>`;return}
+  if(S.mode==='map'){v.innerHTML=`${evCardHTML()}<div class="lvl story-l">${th.mapTitle}</div><p class="introbox">${th.mapIntro}</p><div class="mapwrap">${mapSVG()}</div><p class="maphint">← Húzd oldalra a térképet →</p>`;f.innerHTML=`<p class="rules" id="mapMsg">Kattints a nyitott helyszínre az induláshoz!</p><p class="rules" style="display:flex;gap:6px;flex-wrap:wrap">${ACC?'':'<button class="btn ghost" data-act="ev-next" style="padding:4px 10px;font-size:.8rem">Tesztgomb: másik napi esemény</button>'}</p>`;return}
   if(S.mode==='practice'){
     const zk=S.topic==='zk',chips=[['betus','','Összevonás'],...(zkOpen()?[['zk','fel','Zárójelbontás'],['zk','ki','Kiemelés'],['zk','mix','Oda-vissza']]:[])];
     v.innerHTML=`${evCardHTML()}${chips.length>1?`<div class="topics">${chips.map(([tp,d,n])=>`<button type="button" class="tchip ${S.topic===tp&&(!d||S.dir===d)?'on':''}" data-act="topic-${tp}${d?'-'+d:''}">${n}</button>`).join('')}</div>`:''}
@@ -1280,24 +1359,28 @@ function renderMode(){
     return;
   }
   if(S.mode==='shop'){
-    v.innerHTML=`<div class="scene">${shopSceneSVG(S.theme)}</div><div class="lvl story-l" style="margin-top:10px">${th.shopTitle}</div><p class="introbox">Itt költheted az aranyat (GP) a karaktered kinézetére és felszerelésére. A próbán semmi sem ad előnyt.</p>
+    v.innerHTML=`<div class="scene">${shopSceneSVG(S.theme)}</div><div class="lvl story-l" style="margin-top:10px">${th.shopTitle}</div><p class="introbox">Itt költheted az aranyat (GP) a karaktered kinézetére és felszerelésére. A próbán semmi sem ad előnyt. A valódi órai kiváltságokat ${th.guildIn} találod.</p>
      ${['weapon','hat','pet','potion'].map(k=>{const [n,d]=th.items[k];const own=k!=='potion'&&S.owned[k];
        return `<div class="shopitem">${itemIcon(S.theme,k)}<div class="grow"><h4>${n}${own?'<span class="badge">megvan</span>':''}</h4><div class="tiny">${d}</div></div>
-       <button class="btn" data-act="buy-${k}" ${own||S.gold<PRICES[k]?'disabled':''}>${PRICES[k]} ${th.cur}</button></div>`}).join('')}
-     <div class="scene" id="privAnchor">${privSceneSVG(S.theme)}</div>
+       <button class="btn" data-act="buy-${k}" ${own||S.gold<shopPrice(k)?'disabled':''}>${shopPrice(k)<PRICES[k]?`<s style="opacity:.6">${PRICES[k]}</s> `:''}${shopPrice(k)} ${th.cur}</button></div>`}).join('')}`;
+    f.innerHTML=SHOPFOOT();
+    return;
+  }
+  if(S.mode==='guild'){
+    v.innerHTML=`<div class="scene" id="privAnchor">${privSceneSVG(S.theme)}</div>
      <div class="lvl story-l" style="margin-top:10px">${th.privTitle} <span class="apchip">${S.ap} / ${apMax()} AP</span></div>
      <p class="introbox">${S.cls?`A közös kiváltságok mellett a(z) <b>${clsName()}</b> saját kiváltságait látod.`:'Válassz karakterosztályt, és megnyílnak az osztályod saját kiváltságai is.'} Dolgozatonként legfeljebb <b>egy</b> dolgozat-kiváltság használható, a játék próbáján egy sem. Valódi kiváltságok az órán. A <b>karakterszinted</b> nyitja meg őket, felhasználni <b>AP</b>-ért lehet – az AP tanítási naponként töltődik. Vásárlás után kupont kapsz: mutasd meg a tanárnak, ő váltja be.</p>
      ${S.privs.filter(p=>p.on&&(!p.cls||p.cls===S.cls)).map(p=>{const locked=S.clvl<p.lvl,used=usedInPeriod(p),limitHit=p.limit!=='none'&&used>=1,testBlock=p.test&&pendingTest();
        return `<div class="shopitem priv ${locked?'locked':''}">${privIcon(S.theme,locked)}
          <div class="grow"><h4>${esc(p.name)}${p.cls?`<span class="badge">${clsName(p.cls)}</span>`:''}${p.test?'<span class="badge">dolgozat</span>':''}</h4><div class="tiny">${esc(p.desc)}</div>
          <div class="tiny">${locked?`🔒 <b>${p.lvl}. szinttől</b> nyílik`:`${p.lvl}. szinttől`}${p.limit!=='none'?` · ${LIMIT_TXT[p.limit]}${limitHit?' – <b>már felhasználtad</b>':''}`:''}${testBlock?' · <b>van még be nem váltott dolgozat-kuponod</b>':''}</div></div>
-         <button class="btn apbtn" data-act="priv-${p.id}" ${locked||S.ap<p.ap||limitHit||testBlock?'disabled':''}>${p.ap} AP</button></div>`}).join('')||'<p class="tiny">A tanár még nem adott meg kiváltságot.</p>'}
+         <button class="btn apbtn" data-act="priv-${p.id}" ${locked||S.ap<privCost(p)||limitHit||testBlock?'disabled':''}>${privCost(p)<p.ap?`<s style="opacity:.6">${p.ap}</s> `:''}${privCost(p)} AP</button></div>`}).join('')||'<p class="tiny">A tanár még nem adott meg kiváltságot.</p>'}
      <div class="lvl story-l" style="margin-top:22px">Kuponjaim</div>
      ${S.coupons.length?S.coupons.slice().reverse().map(c=>`<div class="shopitem coupon ${c.done?'used':''}"><div class="code">${c.code}</div>
         <div class="grow"><h4>${esc(c.name)}</h4><div class="tiny">${c.date} · ${c.done?'<b>beváltva</b> ('+c.done+')':'<b>beváltásra vár</b> – mutasd meg a tanárnak'}</div></div>
         ${c.done||ACC?'':`<button class="btn ghost" data-act="redeem-${c.id}" style="font-size:.8rem;padding:6px 10px">Tanár: beváltva</button>`}</div>`).join(''):'<p class="tiny">Még nincs kuponod.</p>'}
      ${TEACHER_DEMO?teacherPrivEditor():''}`;
-    f.innerHTML=ACC?'':`<p class="rules" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn ghost" data-act="demo-gold" style="padding:4px 10px;font-size:.8rem">Tesztgomb: +200 ${th.cur}</button><button class="btn ghost" data-act="demo-xp" style="padding:4px 10px;font-size:.8rem">Tesztgomb: +200 XP</button><button class="btn ghost" data-act="demo-day" style="padding:4px 10px;font-size:.8rem">Tesztgomb: +1 tanítási nap (AP)</button></p>`;
+    f.innerHTML=SHOPFOOT();
     return;
   }
   const isTrial=S.mode==='trial';
@@ -1363,7 +1446,8 @@ function renderTask(){
   if(!t){fb.className='fb';return}
   const zk=t.topic==='zk';
   $('qlabel').textContent=zk?(t.kind==='ki'?'Emeld ki a közös tényezőt!':t.combine?'Bontsd fel a zárójelet, aztán vond össze!':'Bontsd fel a zárójelet!'):t.level===3?th.q3:th.q1;
-  $('expr').innerHTML=zk&&t.kind==='fel'?partsHTML(t.parts):exprHTML(t.terms);
+  $('expr').innerHTML=zk&&t.kind==='fel'?partsHTML(t.parts):zk?exprHTML(t.terms):markExprHTML(t);
+  $('pens').innerHTML=zk?'':pensHTML(t);
   $('subst').innerHTML=!zk&&t.level===3?t.vars.map(v=>`<i>${v}</i> = ${numHTML(t.vals[v],t.preferFrac)}`).join(',&nbsp;&nbsp;'):'';
   const a=$('ans');a.value=t.input;a.disabled=t.done;
   $('lab1').textContent=zk?'1. lépés – a felbontott alak (összevonás nélkül):':'1. lépés – az összevont alak:';
@@ -1455,7 +1539,7 @@ function battleResult(t,r,entry){
   }else{
     b.cstreak=0;const shield=!isTrial&&S.cls==='harcos'&&!b.shieldUsed;if(shield)b.shieldUsed=true;
     b.php-=shield?0:b.hit;S.anim={who:'p',txt:shield?'🛡️':`−${b.hit}`};entry.gain=shield?'pajzs':`−${b.hit} neked`;
-    t.fb={cls:'bad',html:`${isTwo(t)?stepReport(r):`<b>${r.err}.</b> ${r.explain}`}<br>${solutionHTML(t)}<br><b>${shield?`${b.name} visszaütne, de a pajzsod felfogta! (Harconként egyszer.)`:`${b.name} visszaüt: −${b.hit} életerő.`}</b>`};
+    t.fb={cls:'bad',html:`${isTwo(t)?stepReport(r):`<b>${r.err}.</b> ${r.explain}`}<br>${solutionHTML(t)}<br><b>${shield?`${b.name} visszaütne, de a pajzsod felfogta! (Harconként egyszer.)`:`${b.name} visszaüt: −${b.hit} életerő.${fxSum('bocs')?' „Jaj, bocsánat!” – mondja udvariasan.':''}`}</b>`};
   }
   if(r.status!=='correct'){b.errs=b.errs||{};const k=r.err||'Hiba';b.errs[k]=(b.errs[k]||0)+1;b.errTiers=b.errTiers||{};b.errTiers[t.level]=(b.errTiers[t.level]||0)+1}
   if(b.kind!=='trial')S.hp=Math.max(0,b.php);
@@ -1512,9 +1596,9 @@ function endBattle(win){
 }
 function startBattle(kind,i,trialId){
   const th=T();
-  if(kind==='gate'){if(exhausted()||!gateReady())return;const g=guardFor(S.clvl+1),hp=Math.round(g.hp*gateMercy(g.lvl));
+  if(kind==='gate'){if(exhausted()||!gateReady())return;const g=guardFor(S.clvl+1),hp=Math.round(g.hp*gateMercy(g.lvl)*fxMul('hp'));
     S.battle={kind,idx:g.lvl%3,lvl:g.lvl,req:g.req,img:g.img,name:g.name,col:g.col,emax:hp,ehp:hp,hit:g.hit,gold:Math.round(g.gold*goldMul()),xp:0,pmax:hpMax(),php:S.hp,task:null,over:false};}
-  else if(kind==='arena'){const e=ARENA[i],ev=dayEvent().id,hp=Math.round(e.hp*(ev==='strong'?1.2:1)),rm=(ev==='strong'?1.5:1)*(ev==='weak'&&i===0?2:1);
+  else if(kind==='arena'){const e=ARENA[i],hp=Math.round(e.hp*fxMul('strong')*fxMul('hp')),rm=fxMul('rew')*(i===0?fxMul('weak'):1);
     if(exhausted())return;
     S.battle={kind,idx:i,name:th.arena[i].n,col:th.arena[i].c,emax:hp,ehp:hp,hit:e.hit,gold:Math.round(e.gold*rm*goldMul()),xp:Math.round(e.xp*rm*xpMul(0)),pmax:hpMax(),php:S.hp,task:null,over:false};}
   else{const e=TRIALS[i],tp=S.trialTopic||'betus';if(triesLeft(tp,e.key)<=0)return;
@@ -1596,33 +1680,50 @@ document.addEventListener('click',e=>{
   else if(a.startsWith('cls-pick-')){const k=a.slice(9);if(!CLASSES[k]||k===S.cls)return;const first=!S.cls;if(!first){if(S.gold<CLASS_CHANGE_COST)return;S.gold-=CLASS_CHANGE_COST}
     const hpFrac=S.hp!=null?S.hp/hpMax():1;S.cls=k;S.hp=Math.round(hpMax()*hpFrac);S.ap=Math.min(S.ap,apMax());
     const o=document.getElementById('ov');if(o)o.remove();banner(`Mostantól ${clsName()} vagy!`);render()}
-  else if(a==='ev-next'){S.evOverride=(dayEvent().i+1)%DAY_EVENTS.length;applyDayBonus();render()}
-  else if(a==='cev'||a==='cev-next'){classEventOverlay()}
+  else if(a==='ev-next'){S.evOverride=S.evOverride==null?0:(S.evOverride+1)%MK_EVENTS.length;applyDayBonus();render()}
+  else if(a==='wand'){if(!fxSum('palca')||S.wandDay===isoDay())return;S.wandDay=isoDay();const g=fxSum('palca');S.gold+=g;banner(`Megtaláltad a Mester varázspálcáját! +${g} ${T().cur}`);if(typeof save==='function')save();render()}
   else if(a==='cev-close'){const o=document.getElementById('ov');if(o)o.remove()}
   else if(a==='reset-tries'){S.tries={};render()}
   else if(a.startsWith('ttopic-')){S.trialTopic=a.slice(7);render()}
   else if(a==='trial-here'){S.trialTopic=S.topic;S.battle=null;S.mode='trial';render();window.scrollTo({top:0,behavior:'smooth'})}
   else if(a==='priv-add'){const id='p'+Date.now();S.privs.push({id,name:'Új kiváltság',desc:'Leírás…',lvl:2,ap:10,limit:'none',cls:'',test:false,on:true});render();const d=document.querySelector('details.teacher');if(d)d.open=true}
-  else if(a.startsWith('priv-')){const p=S.privs.find(x=>x.id===a.slice(5));if(!p||S.clvl<p.lvl||S.ap<p.ap||(p.limit!=='none'&&usedInPeriod(p)>=1)||(p.test&&pendingTest())||(p.cls&&p.cls!==S.cls))return;
-    S.ap-=p.ap;const now=new Date();S.coupons.push({id:'c'+now.getTime(),pid:p.id,name:p.name,code:couponCode(),date:now.toLocaleDateString('hu-HU'),week:weekKey(now),month:monthKey(now),test:!!p.test,done:null});
-    banner(`Kiváltság: ${p.name}. A kuponod a Bolt alján van – mutasd meg a tanárnak!`);render()}
+  else if(a.startsWith('priv-')){const p=S.privs.find(x=>x.id===a.slice(5));if(!p||S.clvl<p.lvl||S.ap<privCost(p)||(p.limit!=='none'&&usedInPeriod(p)>=1)||(p.test&&pendingTest())||(p.cls&&p.cls!==S.cls))return;
+    S.ap-=privCost(p);const now=new Date();S.coupons.push({id:'c'+now.getTime(),pid:p.id,name:p.name,code:couponCode(),date:now.toLocaleDateString('hu-HU'),week:weekKey(now),month:monthKey(now),test:!!p.test,done:null});
+    banner(`Kiváltság: ${p.name}. A kuponod ${T().guildIn} van, a Kuponjaim között – mutasd meg a tanárnak!`);render()}
   else if(a.startsWith('redeem-')){const c=S.coupons.find(x=>x.id===a.slice(7));if(!c||c.done)return;
     if(!el.dataset.sure){el.dataset.sure='1';el.textContent='Biztos? Kattints újra';return}
     c.done=new Date().toLocaleDateString('hu-HU');render()}
-  else if(a.startsWith('buy-')){const k=a.slice(4);if(S.gold<PRICES[k])return;S.gold-=PRICES[k];if(k==='potion')S.potions++;else S.owned[k]=true;render()}
+  else if(a.startsWith('buy-')){const k=a.slice(4);if(S.gold<shopPrice(k))return;S.gold-=shopPrice(k);if(k==='potion')S.potions++;else S.owned[k]=true;render()}
 });
 document.addEventListener('change',e=>{const el=e.target.closest('[data-pf]');if(!el)return;const [id,f]=el.dataset.pf.split(':');const p=S.privs.find(x=>x.id===id);if(!p)return;
   p[f]=(f==='on'||f==='test')?el.checked:(f==='lvl'||f==='ap')?Math.max(1,parseInt(el.value)||1):el.value;
   render();const d=document.querySelector('details.teacher');if(d)d.open=true});
-$('kpToggle').addEventListener('click',()=>{const k=$('kp');k.classList.toggle('show');$('ans').setAttribute('inputmode',k.classList.contains('show')?'none':'text')});
+$('kpToggle').addEventListener('click',()=>{const k=$('kp');k.classList.toggle('show');['ans','ans2'].forEach(id=>$(id).setAttribute('inputmode',k.classList.contains('show')?'none':'text'))});
 let activeField='ans';['ans','ans2'].forEach(id=>$(id).addEventListener('focus',()=>activeField=id));
 $('ans').addEventListener('keydown',e=>{const t=cur();if(e.key==='Enter'&&t&&isTwo(t)&&!t.done&&!$('ans2').value.trim()){e.preventDefault();$('ans2').focus()}});
 $('ans2').addEventListener('input',e=>{const t=cur();if(t)t.input2=e.target.value});
+/* v1.4: a virtuális billentyűzet a kurzor helyére ír és onnan töröl – bárhol lehet javítani a beírt válaszban */
+const kpCaret={ans:null,ans2:null};
+['ans','ans2'].forEach(id=>{const el=$(id);['keyup','click','select','input','focus'].forEach(ev=>el.addEventListener(ev,()=>{kpCaret[id]=[el.selectionStart,el.selectionEnd]}))});
+$('expr').addEventListener('click',e=>{const el=e.target.closest('.tm');const t=cur();if(!el||!t||t.topic==='zk')return;
+  const i=+el.dataset.ti;t.marks=t.marks||{};if(t.marks[i]===penSel)delete t.marks[i];else t.marks[i]=penSel;
+  $('expr').innerHTML=markExprHTML(t);$('pens').innerHTML=pensHTML(t)});
+$('pens').addEventListener('click',e=>{const b=e.target.closest('[data-pen]');const t=cur();if(!b||!t)return;
+  if(b.dataset.pen==='clr')t.marks={};else penSel=+b.dataset.pen;
+  $('expr').innerHTML=markExprHTML(t);$('pens').innerHTML=pensHTML(t)});
+$('kp').addEventListener('pointerdown',e=>{if(e.target.closest('button'))e.preventDefault()});   // a gomb ne vegye el a fókuszt (és a kurzort)
 $('kp').addEventListener('click',e=>{const b=e.target.closest('button');const t=cur();if(!b||!t||t.done)return;const k=b.dataset.k;const a=$(isTwo(t)?activeField:'ans');
-  if(k==='⌫')a.value=a.value.slice(0,-1);else if(k==='C')a.value='';
-  else if(k==='+'||k==='−')a.value=a.value.replace(/\s+$/,'')+(a.value.trim()?' '+k+' ':k);
-  else a.value+=k;if(a.id==='ans2')t.input2=a.value;else t.input=a.value;});
-if(window.matchMedia('(pointer:coarse)').matches){$('kp').classList.add('show');$('ans').setAttribute('inputmode','none')}
+  const v=a.value,c=kpCaret[a.id];let s0=c?Math.min(c[0],v.length):v.length,s1=c?Math.min(c[1],v.length):v.length;
+  let L=v.slice(0,s0),R=v.slice(s1);
+  if(k==='C'){L='';R=''}
+  else if(k==='⌫'){if(s1===s0){const m=L.match(/ [+−] $/);L=m?L.slice(0,-3):L.slice(0,-1)}}
+  else if(k==='+'||k==='−'){L=L.replace(/\s+$/,'');R=R.replace(/^\s+/,'');L+=(L.trim()&&!/\($/.test(L))?' '+k+' ':k}
+  else L+=k;
+  a.value=L+R;const pos=L.length;kpCaret[a.id]=[pos,pos];
+  if(document.activeElement===a||a.dataset.kpf){try{a.setSelectionRange(pos,pos)}catch(_){}}
+  if(a.id==='ans2')t.input2=a.value;else t.input=a.value;});
+['ans','ans2'].forEach(id=>$(id).addEventListener('focus',()=>{$(id).dataset.kpf='1'}));
+if(window.matchMedia('(pointer:coarse)').matches){$('kp').classList.add('show');$('ans').setAttribute('inputmode','none');$('ans2').setAttribute('inputmode','none')}
 /* ================= GRAFIKA 1: karakterek, tárgyak ================= */
 function shade(hex,p){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const t=p<0?0:255,a=Math.abs(p);
   r=Math.round((t-r)*a+r);g=Math.round((t-g)*a+g);b=Math.round((t-b)*a+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1)}
@@ -2006,14 +2107,16 @@ const BG_IMG={
 'fantasy_arena':'Képek/img-6786e9fadd.webp',
 'fantasy_kezdo':'Képek/img-17a5775f20.webp',
 'fantasy_bolt':'Képek/img-6a1d02971e.webp',
+'fantasy_torony':'Képek/varazslotorony.webp',
 };
 (function(){
   const pick=(t,k)=>BG_IMG[t+'_'+k];
   const img=(src,vb,par)=>`<image href="${src}" x="0" y="0" width="1600" height="893" preserveAspectRatio="${par||'xMidYMid slice'}"/>`;
-  const _st=stageBgSVG,_ar=arenaBgSVG,_sh=shopSceneSVG;
+  const _st=stageBgSVG,_ar=arenaBgSVG,_sh=shopSceneSVG,_pr=privSceneSVG;
   stageBgSVG=t=>{const s=pick(t,'kezdo');return s?`<svg class="bg" viewBox="0 0 1600 893" preserveAspectRatio="xMidYMax slice">${img(s)}</svg>`:_st(t)};
   arenaBgSVG=t=>{const s=pick(t,'arena');return s?`<svg class="bg" viewBox="0 0 1600 893" preserveAspectRatio="xMidYMid slice">${img(s)}</svg>`:_ar(t)};
   shopSceneSVG=t=>{const s=pick(t,'bolt');return s?`<svg class="scenesvg" viewBox="0 165 1600 600">${img(s)}</svg>`:_sh(t)};
+  privSceneSVG=t=>{const s=pick(t,'torony');return s?`<svg class="scenesvg" viewBox="0 165 1600 600">${img(s)}</svg>`:_pr(t)};
 })();
 
 const HERO_IMG={
@@ -2287,7 +2390,7 @@ const FALU=[
  {k:'proba',m:'trial',ic:'🗝️',name:'Sötét torony',fn:'Próba',key:'3',rect:[1700,0,2060,610],lbl:FP(1880,50),door:FP(1820,610),path:[FP(1450,700),FP(1640,640)]},
  {k:'terkep',m:'map',ic:'🧭',name:'Városkapu',fn:'Térkép',key:'4',rect:[2180,330,2576,830],lbl:FP(2360,360),door:FP(2330,760),path:[FP(1500,780),FP(1900,770)]},
  {k:'bolt',m:'shop',ic:'🧪',name:'Alkimista bolt',fn:'Bolt',key:'5',rect:[280,720,960,1300],lbl:FP(560,760),door:FP(820,1215),path:[FP(1000,960),FP(930,1150)]},
- {k:'cehaz',m:'shop',priv:true,ic:'📜',name:'Céhház',fn:'Kiváltságok',key:'6',rect:[1550,690,2160,1330],lbl:FP(1880,720),door:FP(1650,1270),path:[FP(1290,1060),FP(1430,1250)]},
+ {k:'cehaz',m:'guild',ic:'📜',name:'Varázslótorony',fn:'Kiváltságok',key:'6',rect:[1550,690,2160,1330],lbl:FP(1880,720),door:FP(1650,1270),path:[FP(1290,1060),FP(1430,1250)]},
 ];
 let fPos=null,fBusy=false,fClsAsked=false;
 function faluBadge(k){
@@ -2296,10 +2399,10 @@ function faluBadge(k){
   return '';
 }
 function faluHTML(){
-  return `<div class="fwrap" id="fwrap"><div class="falu" id="falu"><img class="fmap" src="${BG_IMG.fantasy_falu}" alt="A falu" draggable="false">
+  return `<div class="fev">${evCardHTML()}</div><div class="fwrap" id="fwrap"><div class="falu" id="falu"><img class="fmap" src="${BG_IMG.fantasy_falu}" alt="A falu" draggable="false">
    ${FALU.map(b=>{const [x0,y0,x1,y1]=b.rect,bd=faluBadge(b.k);return `<button class="fbld" data-fb="${b.k}" aria-label="${b.fn}: ${b.name}" style="left:${x0/FW*100}%;top:${y0/FH*100}%;width:${(x1-x0)/FW*100}%;height:${(y1-y0)/FH*100}%"></button>
    <div class="flbl ${bd?'badge':''}" data-bd="${bd}" id="fl-${b.k}" style="left:${b.lbl[0]}%;top:${b.lbl[1]}%"><i>${b.ic}</i><span>${b.fn}<small>${b.name}</small></span></div>`}).join('')}
-   <div class="fwalker" id="fhero" title="A hősöd – kattints rá!"><span class="fme">${CL()?clsName():T().hero} · ${S.clvl}. szint</span><div class="finner" id="fheroIn">${avatarSVG(S.theme,{...EQ(),cls:S.cls})}</div></div>
+   ${wandHTML()}<div class="fwalker" id="fhero" title="A hősöd – kattints rá!"><span class="fme">${CL()?clsName():T().hero} · ${S.clvl}. szint</span><div class="finner" id="fheroIn">${avatarSVG(S.theme,{...EQ(),cls:S.cls})}</div></div>
   </div></div>
   <div class="fquick"><button data-fq="hos"><b>🧝</b>Hős<kbd>H</kbd></button>${FALU.map(b=>`<button data-fq="${b.k}"><b>${b.ic}</b>${b.fn}<kbd>${b.key}</kbd></button>`).join('')}</div>`;
 }
@@ -2329,8 +2432,7 @@ function fWalk(pts,done){
 function fEnter(b){
   S.fLast=b.k;S.battle=null;S.mode=b.m;$('banner').className='banner';render();
   if(b.m==='practice'){focusAns();if(!S.cls&&typeof classChooser==='function')classChooser()}
-  if(b.priv){const a=$('privAnchor');if(a)a.scrollIntoView({behavior:'smooth',block:'start'})}
-  else window.scrollTo({top:0,behavior:'smooth'});
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 function fGo(k,quick){
   if(fBusy)return;if(k==='hos'){heroPanel();return}
@@ -2345,7 +2447,7 @@ function heroPanel(){
   const th=T(),c=CL(),eq=EQ();
   const bar=(lab,cls,v,m,txt)=>`<div class="hstat ${cls}"><span class="k">${lab}</span><div class="hbar"><i style="width:${Math.max(0,Math.min(100,v/m*100))}%"></i></div><span>${txt}</span></div>`;
   const slot=(k,label)=>{const [n]=th.items[k];
-    if(!S.owned[k])return `<div class="hslot empty">${itemIcon(S.theme,k)}<div>${n}</div><div class="lb">${label} · ${PRICES[k]} ${th.cur}</div></div>`;
+    if(!S.owned[k])return `<div class="hslot empty">${itemIcon(S.theme,k)}<div>${n}</div><div class="lb">${label} · ${shopPrice(k)} ${th.cur}</div></div>`;
     return `<button class="hslot ${eq[k]?'on':''}" data-feq="${k}">${eq[k]?'<span class="tag">rajtad</span>':''}${itemIcon(S.theme,k)}<div>${n}</div><div class="lb">${label}</div></button>`};
   const open=S.coupons.filter(x=>!x.done);
   const tro=[...(S.beaten||[]).map(n=>`<span class="tro"><i>★</i>${n}</span>`),...S.grades.map(g=>`<span class="tro"><i>${g.grade}</i>${g.name}${g.topic?` · ${g.topic}`:''}</span>`)];
@@ -2370,7 +2472,7 @@ function heroPanel(){
      <div class="hcard"><h3>Felszerelés</h3><div class="hslots">${slot('weapon','Fegyver')}${slot('hat','Fejfedő')}${slot('pet','Társ')}</div>
       <div class="hnote" style="margin:6px 0 0">Kattints egy tárgyra: felveszed vagy leveszed. A fegyver csak felvéve sebez többet. A próbán egyik sem számít.</div></div>
      <div class="hcard"><h3>Táska</h3><div class="hbag"><div class="hcell" title="${th.items.potion[0]}">${itemIcon(S.theme,'potion')}<span class="n">×${S.potions}</span></div>${'<div class="hcell"></div>'.repeat(3)}</div></div>
-     <div class="hcard"><h3>Kuponjaim</h3>${open.length?open.map(x=>`<div class="hcoupon">${privIcon(S.theme)}<div><b>${x.name}</b><span>${x.date} · a tanár váltja be</span></div><code>${x.code}</code></div>`).join(''):'<div class="hnote" style="margin:0">Még nincs beváltatlan kuponod. A Céhházban veheted meg AP-ért.</div>'}</div>
+     <div class="hcard"><h3>Kuponjaim</h3>${open.length?open.map(x=>`<div class="hcoupon">${privIcon(S.theme)}<div><b>${x.name}</b><span>${x.date} · a tanár váltja be</span></div><code>${x.code}</code></div>`).join(''):'<div class="hnote" style="margin:0">Még nincs beváltatlan kuponod. A Varázslótoronyban veheted meg AP-ért.</div>'}</div>
      <div class="hcard"><h3>Trófeák</h3><div class="htro">${tro.length?tro.join(''):'<span class="hnote" style="margin:0">Győzz le egy ellenfelet az Arénában!</span>'}</div></div>
     </div>
    </div></div>`;
@@ -2442,7 +2544,7 @@ function islandHTML(){
   const chips=ISLANDS.map(i=>`<button class="ichip ${i.id===CUR_ISLAND?'on':''} ${i.id===CUR_ISLAND?'':'lk'}" data-isl="${i.id}" title="${i.ch} ${i.title}"><b>${i.ch}</b> ${i.name}${i.id===CUR_ISLAND?'':' 🔒'}</button>`).join('');
   const spots=Object.entries(ISPOT).map(([k,s])=>{
     let title,sub,st,cls='';
-    if(k==='home'){title='Alkimisták völgye';sub='a falu: bolt, aréna, céhház';st='home'}
+    if(k==='home'){title='Alkimisták völgye';sub='a falu: bolt, aréna, varázslótorony';st='home'}
     else if(k==='castle'){title=`👑 ${isl.boss}`;sub='a sziget bossa · jegyes próba';st='boss'}
     else{const l=iLessonAt(k);if(!l)return '';title=`${l.n}. ${l.t}`;sub=l.st==='open'?'▶ nyitva':'🔒 hamarosan';st=l.st}
     return `<button class="ispot st-${st}" data-ispot="${k}" style="left:${s.p[0]}%;top:${s.p[1]}%" aria-label="${title}"></button>
@@ -2524,7 +2626,8 @@ function logEvent(t,r,raw,raw2){
 function applyConfig(cfg){
   if(!cfg)return;
   if(cfg.lessons)ISLANDS.forEach(i=>Array.isArray(i.lessons)&&i.lessons.forEach(l=>{if(typeof l==='object'&&l.play&&cfg.lessons[l.play])l.st=cfg.lessons[l.play]}));
-  if(Array.isArray(cfg.privs)&&cfg.privs.length)S.privs=cfg.privs.map(p=>({...p}));
+  if(Array.isArray(cfg.privs)&&cfg.privs.length){S.privs=cfg.privs.map(p=>({...p}));
+    for(const d of PRIVILEGES)if(/^k\d$/.test(d.id)&&!S.privs.some(p=>p.id===d.id))S.privs.push({...d})}   // v1.3: az új alapkiváltságok a mentett listához is
 }
 function applyServer(d){
   if(!d)return;
@@ -2549,7 +2652,7 @@ async function sync(opt={}){
     NET.status=e.server?'err':'offline';
     if(/bad_session|inactive/.test(e.message)){NET.status='';localStorage.removeItem('mk-session');ACC=null;showLogin('A belépésed lejárt vagy a tanár letiltotta. Lépj be újra!')}
   }finally{NET.busy=false}
-  if(!opt.keepalive){const k=document.activeElement&&document.activeElement.id;renderNotice();renderChar();if(S.mode==='trial'||S.mode==='shop'||S.mode==='map'||S.mode==='practice'){if(!(cur()&&!cur().done&&(k==='ans'||k==='ans2')))renderMode()}}
+  if(!opt.keepalive){const k=document.activeElement&&document.activeElement.id;renderNotice();renderChar();if(S.mode==='trial'||S.mode==='shop'||S.mode==='guild'||S.mode==='map'||S.mode==='practice'){if(!(cur()&&!cur().done&&(k==='ans'||k==='ans2')))renderMode()}}
 }
 async function startTrialOnline(i,tp,key){
   if(!navigator.onLine){banner('A próbához internetkapcsolat kell – a jegyet a szerver rögzíti.');return}
@@ -2598,13 +2701,14 @@ let started=false;
 function start(){
   started=true;load();
   if(ACC){try{applyConfig(JSON.parse(localStorage.getItem('mk-config-'+ACC.id)||'null'))}catch(e){}netLoad()}
-  regenAP();applyDayBonus();regenHP();S.ptask=gen(S.level);render();focusAns();
+  dayLoad();regenAP();applyDayBonus();regenHP();S.ptask=gen(S.level);render();focusAns();
   if(ACC){
     let localAt=0;try{localAt=(JSON.parse(localStorage.getItem(saveKey())||'{}')._at)||0}catch(e){}
     sync({pull:true,localAt}).then(()=>{regenHP();render()});
     NET.timer=setInterval(()=>{if(NET.dirty)sync()},20000);
     document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&NET.dirty)sync({keepalive:true})});
     window.addEventListener('online',()=>sync());
+    dayFetch();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&(!DAY||DAY.day!==isoDay()||!DAY.opened))dayFetch()});
   }
 }
 function boot(){
@@ -2641,10 +2745,23 @@ boot();
 </script>
 <script>
 /* ================= VERZIÓ, SÚGÓ, VISSZAJELZÉS (v1.0) ================= */
-const APP_VERSION='1.1';
+const APP_VERSION='1.4';
 /* Új kiadásnál: APP_VERSION + a sw.js VERSION-je + egy új bejegyzés a lista ELEJÉRE.
    by: a diák beceneve, ha az ő ötlete volt (a Súgóban és az Újdonságok ablakban megjelenik). */
 const CHANGELOG=[
+  {v:'1.4',date:'2026. november 25.',title:'Varázslótorony és Kiemelő',items:[
+    {t:'🏰 A kiváltságok új helyre költöztek: a Varázslótoronyba. A faluban a toronyra koppintva vagy a Kiváltságok menüponttal éred el, a kuponjaid is ott vannak. A Bolt mostantól csak aranyért árul.'},
+    {t:'🖍️ Új Kiemelő az összevonásnál: koppints a tagokra, és jelöld meg egy színnel az egyneműeket. A megjelölt tagok elhalványulnak, így látod, mi maradt még.'},
+    {t:'⌫ A válaszodat most már bárhol javíthatod: koppints oda, ahol a hiba van, és a billentyűzet ott töröl és ír. Nem kell az egész sort kitörölni.'},
+    {t:'📚 Hamarosan: a Bölcsességek Könyvtára! A faluba új épület költözik, ahol a májusi szóbelire készülhetsz. Egy bölcs öreg Könyvtáros (és a baglya) már várja, hogy kikérdezzen…'}]},
+  {v:'1.3',date:'2026. november 26.',title:'Óranyitó láda',items:[
+    {t:'🧰 Minden matekórát egy lepecsételt láda nyit: benne a nap eseménye. Amíg nincs kinyitva, az appban is zárva van.'},
+    {t:'🎟️ Hogy ki nyitja ki? A gép sorsol, és a gyakorlásért sorsjegyet kapsz: minden megkezdett 20 XP egy jegy, legfeljebb 5. Aki gyakorol, az esélyes!'},
+    {t:'✨ Új események, köztük ritkák és legendásak. Hogy mik? Majd meglátjátok… A legendások nagyon ritkák, és általában a Mesterről szólnak.'},
+    {t:'🎅 Ünnepnapokon két esemény van a ládában.'},
+    {t:'🎫 Új kiváltságok a Boltban: Passz-kártya, DJ, Táblaművész, Viccrendelés, Személyes kérdés, Telefonos 5 perc, Varázslósüveges óra, Hősmatrica és 3D-s társ.'}]},
+  {v:'1.2',date:'2026. november 25.',title:'Javítások a tanári felületen',items:[
+    {t:'🔧 A tanári kimutatások pontosabbak lettek. Nálatok ebből semmi nem változott.'}]},
   {v:'1.1',date:'2026. november 25.',title:'Megérkeztek a Küszöbőrök',items:[
     {t:'🚪 Minden szintlépés előtt egy Küszöbőr áll az Arénában. Ha összegyűlt az XP, le kell győznöd – csak utána lépsz szintet. Az első: Kétbalkezes Kelemen.'},
     {t:'💪 A magasabb szintek őreit csak nehezebb feladattal lehet sebezni. Így a szint azt mutatja, mit tudsz – nem azt, hányszor ismételtél egy könnyű feladatot.'},
@@ -2687,7 +2804,7 @@ function changelogHTML(n){return CHANGELOG.slice(0,n||CHANGELOG.length).map(r=>`
   <ul>${r.items.map(i=>`<li>${hlpEsc(i.t)}${i.by?` <span class="by">– ${hlpEsc(i.by)} ötlete alapján</span>`:''}</li>`).join('')}</ul></div>`).join('')}
 
 function helpPanel(open){
-  const th=T(),cur=th.cur,e=dayEvent();
+  const th=T(),cur=th.cur,ev=activeEvents();
   const cls=Object.entries(CLASSES).map(([k,c])=>`<li><b>${S.theme==='fantasy'?c.f:c.s}</b>: ${hlpEsc(c.perk)} <i>Hátrány:</i> ${hlpEsc(c.minus)}</li>`).join('');
   const sec=(id,title,body)=>`<details ${open===id?'open':''} data-hs="${id}"><summary>${title}</summary>${body}</details>`;
   hlpOpen(`<div class="hx"><h2>❓ Súgó</h2><button class="btn ghost" data-hlp="close">Bezár</button></div>
@@ -2719,14 +2836,19 @@ function helpPanel(open){
      <li><b>XP</b>: ezzel gyűjtöd a következő szintet. Ha megvan, győzd le az Arénában a szint Küszöbőrét, és szintet lépsz. Magasabb szinten több az életerőd, erősebb az ütésed, és új kiváltságok nyílnak.</li>
      <li><b>AP</b>: minden tanítási napon töltődik (az osztályodtól függ, mennyi). Ezzel váltasz ki valódi, órai kiváltságokat.</li></ul>`)}
    ${sec('priv','🎟️ Kiváltságok és kuponok',`<ul>
-     <li>A Boltban találod őket. A szinted <b>nyitja</b> a kiváltságot, az AP-d <b>fizeti</b>.</li>
+     <li>A Varázslótoronyban találod őket (a faluban vagy a Kiváltságok menüpontban). A szinted <b>nyitja</b> a kiváltságot, az AP-d <b>fizeti</b>.</li>
      <li>Vásárlás után kupont kapsz – mutasd meg a tanárnak, ő váltja be.</li>
      <li>Van, amit csak hetente vagy havonta egyszer kérhetsz. Dolgozatos kuponból egyszerre csak egy lehet nálad.</li>
      <li>Néhány kiváltság csak egy karakterosztályé.</li></ul>`)}
    ${sec('cls','🧝 Karakterosztályok',`<ul>${cls}</ul><p class="tiny">Az osztályt a hősöd lapján váltod (${CLASS_CHANGE_COST} ${cur}). A Próbán az osztály nem számít.</p>`)}
-   ${sec('event','✨ Napi esemény',`<p style="margin:4px 0">Minden nap más esemény van, és aznap mindenkinek ugyanaz.</p>
-     <p style="margin:4px 0"><b>Ma: ${hlpEsc(e.name)}</b> – ${hlpEsc(e.desc)}</p>
-     <p class="tiny">Hamarosan: minden matekórát egy lepecsételt láda nyit. A gyakorlásért sorsjegyet kapsz – aki gyakorol, az esélyes, hogy ő nyithassa ki!</p>`)}
+   ${sec('event','🧰 Napi esemény és ládanyitás',`<p style="margin:4px 0">Minden nap egy esemény van, és aznap az egész osztálynak ugyanaz. Egy lepecsételt ládában várja, hogy valaki kinyissa.</p>
+     <ul><li><b>Matekórás napon</b> a láda az óra elején nyílik ki, a kivetítőn. Amíg nincs kinyitva, az esemény hatása sem él.</li>
+     <li><b>Ki nyitja?</b> A gép sorsol. A gyakorlásért sorsjegyet kapsz: minden megkezdett 20 XP egy sorsjegy, legfeljebb 5. Az számít, amit az előző ládanyitás óta gyakoroltál. Aki többet gyakorolt, nagyobb eséllyel nyit, de aki csak egy kicsit, az is nyerhet. <b>Aki gyakorol, az esélyes!</b></li>
+     <li>Aki legutóbb nyitott, az a következő sorsolásból kimarad – így többen sorra kerülnek.</li>
+     <li><b>Matek nélküli napon</b> a láda magától kinyílik, amikor az első kalandor belép. (Ha órán valamiért nem nyílt ki, délután 3-kor magától kinyílik.)</li>
+     <li>Az események lehetnek közönségesek, <b style="color:#3b6fd1">ritkák</b> és <b style="color:#c9971a">legendásak</b>. A legendásak nagyon ritkák, és általában a Mesterről szólnak…</li>
+     <li><b>Ünnepnapokon</b> (pl. Mikulás) a ládában két esemény van.</li></ul>
+     ${ev.length?`<p style="margin:4px 0"><b>Ma: ${ev.map(e=>hlpEsc(e.n)).join(' + ')}</b> – ${ev.map(e=>hlpEsc(evDesc(e))).join(' ')}</p>`:'<p style="margin:4px 0"><b>Ma:</b> a láda még lepecsételt.</p>'}`)}
    ${sec('news','🆕 Mi frissült legutóbb?',changelogHTML())}
    ${sec('fb','🐞 Hiba vagy ötlet bejelentése',`<p style="margin:4px 0">Valami nem működik? Van egy jó ötleted? Tetszik valami? Írd meg!</p><p><button class="btn" data-hlp="fb">🐞 Bejelentés küldése</button></p>`)}`);
   if(open){const d=document.querySelector(`[data-hs="${open}"]`);if(d)d.scrollIntoView({block:'start'})}
