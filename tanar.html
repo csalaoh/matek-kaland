@@ -121,7 +121,10 @@ const V={tab:'overview',classes:[],cls:null,period:30,stats:null,sort:'nick',sor
 const curClass=()=>V.classes.find(c=>c.id===V.cls);
 const since=()=>new Date(Date.now()-V.period*864e5).toISOString();
 async function loadClasses(){V.classes=await api('classes?select=id,name,config,created_at&order=created_at');if(!V.classes.find(c=>c.id===V.cls))V.cls=(V.classes[0]||{}).id||null;localStorage.setItem('mk-t-cls',V.cls||'')}
-async function loadStats(){V.stats=V.cls?await rpc('teacher_class_stats',{p_class:V.cls,p_since:since()}):null;await loadFeedback()}
+async function loadStats(){V.stats=V.cls?await rpc('teacher_class_stats',{p_class:V.cls,p_since:since()}):null;
+  /* all: minden fiók (Kezelés, Tanulói részletek); students: csak akik beszámítanak a kimutatásokba (teszt-/vendégfiók nélkül) */
+  if(V.stats){V.stats.all=V.stats.students;V.stats.students=V.stats.all.filter(s=>s.in_stats!==false)}
+  await loadFeedback()}
 async function loadFeedback(){V.fb=null;if(!V.cls)return;try{V.fb=await api('feedback?class_id=eq.'+V.cls+'&select=id,nick,kind,body,app_version,screen,device,status,created_at&order=created_at.desc&limit=500')}catch(e){V.fb=null;V.fbErr=e.message}}
 async function refresh(){try{await loadStats()}catch(e){toast('Hiba: '+e.message)}render()}
 
@@ -246,9 +249,9 @@ async function openStudent(id){
   if(V.openTrial)setTimeout(()=>{const r=document.getElementById('tr-'+V.openTrial);if(r)r.scrollIntoView({behavior:'smooth',block:'center'})},60);
 }
 function studentHTML(){
-  const st=V.stats;if(!st||!st.students.length)return '<p class="muted">Még nincs diák.</p>';
-  const s=st.students.find(x=>x.id===V.student);
-  const sel=`<select id="selStu"><option value="">– válassz diákot –</option>${st.students.map(x=>`<option value="${x.id}" ${x.id===V.student?'selected':''}>${esc(x.nick)}</option>`).join('')}</select>`;
+  const st=V.stats;if(!st||!st.all.length)return '<p class="muted">Még nincs diák.</p>';
+  const s=st.all.find(x=>x.id===V.student);
+  const sel=`<select id="selStu"><option value="">– válassz diákot –</option>${st.all.map(x=>`<option value="${x.id}" ${x.id===V.student?'selected':''}>${esc(x.nick)}${x.in_stats===false?' (statisztikán kívül)':''}</option>`).join('')}</select>`;
   if(!s)return `<h2>Tanulói részletek</h2>${sel}`;
   const d=V.detail||{};
   if(d.loading)return `<h2>${esc(s.nick)}</h2>${sel}<p class="muted">Betöltés…</p>`;
@@ -285,7 +288,7 @@ function manageHTML(){
   const classBox=`<div class="box"><b>Osztályok:</b> ${V.classes.map(x=>esc(x.name)).join(', ')||'még nincs'}
     <form id="fcls" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><input id="clsName" placeholder="Új osztály neve, pl. 7.a" required><button class="btn">Létrehozás</button></form></div>`;
   if(!c)return `<h2>Kezelés</h2>${classBox}<p>Először hozz létre egy osztályt.</p>`;
-  const S=st?st.students:[];
+  const S=st?st.all:[];
   const privs=V.privDraft||(c.config&&Array.isArray(c.config.privs)&&c.config.privs.length?c.config.privs:DEFAULT_PRIVS).map(p=>({...p}));V.privDraft=privs;
   return `<h2>Kezelés – ${esc(c.name)}</h2>
    ${st&&st.coupons.length?`<h3>Beváltásra váró kuponok (${st.coupons.length})</h3><table><thead><tr><th>Diák</th><th>Kiváltság</th><th>Kód</th><th>Mikor</th><th></th></tr></thead><tbody>
@@ -301,8 +304,8 @@ function manageHTML(){
       <td style="white-space:nowrap"><button class="chip ${s==='open'?'on':''}" data-lesson="${l.key}:open" ${l.ready?'':'disabled'}>Nyitva</button> <button class="chip ${s!=='open'?'on':''}" data-lesson="${l.key}:soon">Zárva</button></td></tr>`}).join('')}</table>
      ${classBox}</div></div>
    <h3>Diákok (${S.length})</h3>${S.length?`<table><thead><tr><th>Becenév</th><th>Utoljára</th><th>Állapot</th><th></th></tr></thead><tbody>
-    ${S.map(s=>`<tr><td><b>${esc(s.nick)}</b></td><td class="small">${ago(s.last_seen)}</td><td>${s.active?'<span class="pill g">aktív</span>':'<span class="pill r">letiltva</span>'}${s.locked?' <span class="pill y">zárolva (sok hibás PIN)</span>':''}</td>
-     <td style="white-space:nowrap"><button class="btn sm ghost" data-pin="${s.id}">Új PIN</button> <button class="btn sm ghost" data-act2="${s.id}:${s.active?0:1}">${s.active?'Letiltás':'Engedélyezés'}</button> <button class="btn sm danger" data-del="${s.id}">Törlés</button></td></tr>`).join('')}</tbody></table>`:'<p class="muted">Még nincs diák.</p>'}
+    ${S.map(s=>`<tr><td><b>${esc(s.nick)}</b></td><td class="small">${ago(s.last_seen)}</td><td>${s.active?'<span class="pill g">aktív</span>':'<span class="pill r">letiltva</span>'}${s.locked?' <span class="pill y">zárolva (sok hibás PIN)</span>':''}${s.in_stats===false?' <span class="pill">statisztikán kívül</span>':''}</td>
+     <td style="white-space:nowrap"><button class="btn sm ghost" data-pin="${s.id}">Új PIN</button> <button class="btn sm ghost" data-stats="${s.id}:${s.in_stats===false?1:0}" title="Teszt- vagy vendégfiók kizárása az áttekintésből, hibatérképből és a kuponlistából">${s.in_stats===false?'Statisztikába vissza':'Statisztikán kívül'}</button> <button class="btn sm ghost" data-act2="${s.id}:${s.active?0:1}">${s.active?'Letiltás':'Engedélyezés'}</button> <button class="btn sm danger" data-del="${s.id}">Törlés</button></td></tr>`).join('')}</tbody></table>`:'<p class="muted">Még nincs diák.</p>'}
    <h3>Kiváltságok (AP-ért)</h3><p class="small muted">A szint nyitja meg, az AP-ért lehet felhasználni. Az „Osztály” a karakterosztály (üres = mindenkinek). A „Dolg.” a dolgozathoz kapcsolódó kiváltság: egyszerre csak egy lehet beváltatlan.</p>
    <div class="tw"><table class="ped"><thead><tr><th>Aktív</th><th>Név</th><th>Leírás</th><th>Szint</th><th>AP</th><th>Gyakoriság</th><th>Osztály</th><th>Dolg.</th><th></th></tr></thead><tbody>
     ${privs.map((p,i)=>`<tr><td><input type="checkbox" data-pv="${i}:on" ${p.on?'checked':''}></td><td><input type="text" data-pv="${i}:name" value="${esc(p.name)}"></td><td><textarea data-pv="${i}:desc">${esc(p.desc)}</textarea></td>
@@ -341,12 +344,13 @@ document.addEventListener('click',async e=>{
     if(t.id==='btnCreate'){const nicks=$('nicks').value.split('\n').map(x=>x.trim()).filter(Boolean);if(!nicks.length)return;t.disabled=true;
       V.newPins=await rpc('teacher_create_students',{p_class:V.cls,p_nicks:nicks});await refresh();toast(`${V.newPins.filter(r=>r.ok).length} diák felvéve`);return}
     if(t.id==='btnPrint'){printCards(V.newPins.filter(r=>r.ok));return}
-    if(t.dataset.pin){const s=V.stats.students.find(x=>x.id===t.dataset.pin);if(!confirm(`Új PIN-t generálsz ${s.nick} számára? A régi azonnal érvényét veszti, és minden eszközről kilépteti.`))return;
+    if(t.dataset.pin){const s=V.stats.all.find(x=>x.id===t.dataset.pin);if(!confirm(`Új PIN-t generálsz ${s.nick} számára? A régi azonnal érvényét veszti, és minden eszközről kilépteti.`))return;
       const pin=await rpc('teacher_reset_pin',{p_student:s.id});V.newPins=[{nick:s.nick,pin,ok:true}];await refresh();showPin(s.nick,pin);return}
     if(t.id==='pinClose'||t.classList.contains('modal')){$('pinModal').remove();return}
     if(t.id==='pinPrint'){printCards(V.newPins);return}
+    if(t.dataset.stats){const [id,v]=t.dataset.stats.split(':');await api(`students?id=eq.${id}`,{method:'PATCH',body:{in_stats:v==='1'}});await refresh();toast(v==='1'?'Újra beszámít a statisztikába':'Kivéve a statisztikából');return}
     if(t.dataset.act2){const [id,v]=t.dataset.act2.split(':');await api(`students?id=eq.${id}`,{method:'PATCH',body:{active:v==='1'}});await refresh();return}
-    if(t.dataset.del){const s=V.stats.students.find(x=>x.id===t.dataset.del);const a=prompt(`A törléssel ${s.nick} minden adata (haladás, napló, jegyek) végleg elvész. Ha biztos vagy benne, írd be a becenevét:`);
+    if(t.dataset.del){const s=V.stats.all.find(x=>x.id===t.dataset.del);const a=prompt(`A törléssel ${s.nick} minden adata (haladás, napló, jegyek) végleg elvész. Ha biztos vagy benne, írd be a becenevét:`);
       if(a===null)return;if(a.trim()!==s.nick){toast('A becenév nem egyezik, nem töröltem.');return}
       await api(`students?id=eq.${s.id}`,{method:'DELETE'});await refresh();toast('Törölve: '+s.nick);return}
     if(t.dataset.redeem){const [sid,cid]=t.dataset.redeem.split('|');await api(`coupons?student_id=eq.${sid}&cid=eq.${encodeURIComponent(cid)}`,{method:'PATCH',body:{redeemed_at:new Date().toISOString()}});await refresh();toast('Kupon beváltva');return}
