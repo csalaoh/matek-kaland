@@ -64,12 +64,45 @@ details.tlog summary{cursor:pointer;color:var(--acc2);font-weight:700}
 @media print{body{background:#fff}body>*:not(#print){display:none!important}#print{display:grid!important;grid-template-columns:1fr 1fr;gap:8mm}
  .card{border:1.5px dashed #555;border-radius:4mm;padding:6mm;break-inside:avoid;font:12pt system-ui;color:#000}
  .card h4{margin:0 0 3mm;font:700 14pt Georgia,serif}.card .big{font:700 20pt ui-monospace,monospace;letter-spacing:2px}.card .u{font-size:9pt;color:#333}}
+
+/* ---------- v1.3 óranyitó láda (kivetítő) ---------- */
+.chov{position:fixed;inset:0;z-index:200;background:radial-gradient(ellipse at center,#2b2540 0%,#120f1d 75%);color:#f4ecd8;display:flex;flex-direction:column;align-items:center;overflow:auto;font-family:Georgia,'Times New Roman',serif}
+.chov .chtop{width:100%;display:flex;gap:8px;align-items:center;padding:10px 16px;font-family:system-ui,sans-serif;font-size:.85rem;color:#b9b0d0}
+.chov .chtop .sp{flex:1}.chov .chtop button,.chov .chtop select{background:#ffffff14;color:#f4ecd8;border:1px solid #ffffff30;border-radius:8px;padding:5px 10px;cursor:pointer;font:inherit}
+.chov .chtop select option{color:#000}
+.chstage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10px 20px 40px;width:100%;max-width:1100px}
+.chtitle{font-size:clamp(1.4rem,3.2vw,2.6rem);letter-spacing:.06em;margin:0 0 6px}
+.chsub{font-size:clamp(1rem,2vw,1.5rem);color:#d9cfae;margin:0 0 18px}
+.chbox{font-size:clamp(7rem,20vw,15rem);line-height:1;cursor:pointer;user-select:none;filter:drop-shadow(0 10px 30px #000a);transition:transform .2s;background:none;border:0;padding:0}
+.chbox:hover{transform:scale(1.05)}
+.chbox.shake{animation:chshake .12s linear infinite}
+@keyframes chshake{0%{transform:rotate(-6deg) scale(1.05)}50%{transform:rotate(6deg) scale(1.1)}100%{transform:rotate(-6deg) scale(1.05)}}
+.chname{font-size:clamp(2.4rem,7vw,5.5rem);font-weight:bold;color:#ffe08a;text-shadow:0 0 24px #f2c94c88;min-height:1.2em;margin:10px 0}
+.chname.spin{color:#fff;text-shadow:none;opacity:.85}
+.chbtn{font-family:system-ui,sans-serif;font-size:1.15rem;padding:12px 26px;border-radius:12px;border:0;background:#c9971a;color:#1b1406;font-weight:700;cursor:pointer;margin:6px}
+.chbtn.g{background:#ffffff1c;color:#f4ecd8;border:1px solid #ffffff40;font-weight:500;font-size:.95rem;padding:8px 16px}
+.chev{border-radius:18px;padding:22px 30px;margin:12px auto;max-width:820px;background:#ffffff10;border:2px solid #9a93ad;animation:chpop .6s cubic-bezier(.2,1.6,.4,1)}
+.chev .ic{font-size:clamp(3rem,8vw,5.5rem)}
+.chev h2{font-size:clamp(1.8rem,4.4vw,3.4rem);margin:6px 0}
+.chev p{font-size:clamp(1.05rem,2.2vw,1.6rem);margin:0;color:#efe6cc}
+.chev .rar{font-family:system-ui,sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#cfc8e0}
+.chev.r-r{border-color:#4f86ff;box-shadow:0 0 40px #4f86ff66}.chev.r-r .rar{color:#8fb1ff}
+.chev.r-l{border-color:#f2c94c;box-shadow:0 0 70px #f2c94caa;background:linear-gradient(135deg,#f2c94c2a,#ffffff08)}.chev.r-l .rar{color:#ffe08a}.chev.r-l h2{color:#ffe08a}
+.chev.r-u{border-color:#ff6b6b;box-shadow:0 0 40px #ff6b6b66}.chev.r-u .rar{color:#ffb0b0}
+@keyframes chpop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
+.chconf{position:fixed;top:-20px;font-size:26px;pointer-events:none;animation:chfall linear forwards;z-index:210}
+@keyframes chfall{to{transform:translateY(110vh) rotate(720deg)}}
+.chpanel{font-family:system-ui,sans-serif;font-size:.88rem;background:#00000055;border:1px solid #ffffff22;border-radius:10px;padding:10px 14px;margin:10px auto;max-width:820px;text-align:left;color:#ddd5ee}
+.chpanel summary{cursor:pointer;color:#f4ecd8}
+.chpanel table{border-collapse:collapse;width:100%;margin-top:6px}.chpanel td{padding:2px 6px;border-bottom:1px solid #ffffff14}
+.chpanel label{margin-right:10px}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <div id="print"></div>
 <div class="toast" id="toast"></div>
+<script src="esemenyek.js"></script>
 <script>
 const SB={url:'https://mqckkudxqxyskvxwtunr.supabase.co',key:'sb_publishable_sQockj8mHy7ncdp1F4H70w_Wf6RrxKe'};   // ← ugyanaz a Supabase Project URL és publishable key, mint az index.html-ben
 const APP_URL=new URL('./',location.href).href;
@@ -85,7 +118,16 @@ const DEFAULT_PRIVS=[
   {id:'m1',name:'Teleport',desc:'Egy órára helyet cserélhetsz egy osztálytársaddal (ha ő is beleegyezik).',lvl:2,ap:5,limit:'none',cls:'magus',test:false,on:true},
   {id:'m2',name:'Időalagút',desc:'Egy dolgozatnál +5 perc jár neked.',lvl:6,ap:35,limit:'week',cls:'magus',test:true,on:true},
   {id:'g1',name:'Szabadság',desc:'Erre az órára bárhova ülhetsz a teremben.',lvl:2,ap:5,limit:'none',cls:'gyogyito',test:false,on:true},
-  {id:'g2',name:'Lelkesedő hit',desc:'Egy röpdolgozatnál egyszer megkérdezheted a tanártól, hogy egy válaszod jó-e.',lvl:5,ap:20,limit:'week',cls:'gyogyito',test:true,on:true}];
+  {id:'g2',name:'Lelkesedő hit',desc:'Egy röpdolgozatnál egyszer megkérdezheted a tanártól, hogy egy válaszod jó-e.',lvl:5,ap:20,limit:'week',cls:'gyogyito',test:true,on:true},
+  {id:'k1',name:'Passz-kártya',desc:'Ha felszólítanak, egyszer passzolhatsz. (Feleletre és dolgozatra nem vonatkozik.)',lvl:2,ap:8,limit:'week',cls:'',test:false,on:true},
+  {id:'k2',name:'DJ',desc:'Az óra utolsó 3 percében te választod a zenét az egész osztálynak (tisztességes szöveggel).',lvl:2,ap:12,limit:'week',cls:'',test:false,on:true},
+  {id:'k3',name:'Táblaművész',desc:'Az óra elején rajzolhatsz valamit a tábla sarkába, és ott maradhat az óra végéig.',lvl:2,ap:6,limit:'none',cls:'',test:false,on:true},
+  {id:'k4',name:'Viccrendelés',desc:'A Mester elmond egy általad választott (tisztességes) viccet az óra elején.',lvl:3,ap:10,limit:'week',cls:'',test:false,on:true},
+  {id:'k5',name:'Személyes kérdés',desc:'Feltehetsz a Mesternek egy személyes kérdést, és ő őszintén felel rá.',lvl:3,ap:12,limit:'week',cls:'',test:false,on:true},
+  {id:'k6',name:'Telefonos 5 perc',desc:'Az óra utolsó 5 percében csendben telefonozhatsz.',lvl:3,ap:15,limit:'week',cls:'',test:false,on:true},
+  {id:'k7',name:'Varázslósüveges óra',desc:'A Mester egy egész órán varázslósüvegben tanít.',lvl:4,ap:25,limit:'month',cls:'',test:false,on:true},
+  {id:'k8',name:'Hősmatrica',desc:'Matricát kapsz a saját hősöd képéből.',lvl:5,ap:25,limit:'month',cls:'',test:false,on:true},
+  {id:'k9',name:'3D-s társ',desc:'3D nyomtatott kulcstartót kapsz a társadból (a petedből).',lvl:7,ap:25,limit:'month',cls:'',test:false,on:true}];
 const CLS_NAME={harcos:'Harcos',magus:'Mágus',gyogyito:'Gyógyító'};
 
 const $=id=>document.getElementById(id);
@@ -121,7 +163,10 @@ const V={tab:'overview',classes:[],cls:null,period:30,stats:null,sort:'nick',sor
 const curClass=()=>V.classes.find(c=>c.id===V.cls);
 const since=()=>new Date(Date.now()-V.period*864e5).toISOString();
 async function loadClasses(){V.classes=await api('classes?select=id,name,config,created_at&order=created_at');if(!V.classes.find(c=>c.id===V.cls))V.cls=(V.classes[0]||{}).id||null;localStorage.setItem('mk-t-cls',V.cls||'')}
-async function loadStats(){V.stats=V.cls?await rpc('teacher_class_stats',{p_class:V.cls,p_since:since()}):null;await loadFeedback()}
+async function loadStats(){V.stats=V.cls?await rpc('teacher_class_stats',{p_class:V.cls,p_since:since()}):null;
+  /* all: minden fiók (Kezelés, Tanulói részletek); students: csak akik beszámítanak a kimutatásokba (teszt-/vendégfiók nélkül) */
+  if(V.stats){V.stats.all=V.stats.students;V.stats.students=V.stats.all.filter(s=>s.in_stats!==false)}
+  await loadFeedback()}
 async function loadFeedback(){V.fb=null;if(!V.cls)return;try{V.fb=await api('feedback?class_id=eq.'+V.cls+'&select=id,nick,kind,body,app_version,screen,device,status,created_at&order=created_at.desc&limit=500')}catch(e){V.fb=null;V.fbErr=e.message}}
 async function refresh(){try{await loadStats()}catch(e){toast('Hiba: '+e.message)}render()}
 
@@ -151,7 +196,7 @@ function render(){
   $('app').innerHTML=`<header><h1>Matek-kaland<small>Tanári felület · ${esc(SESS.email||'')}</small></h1><div class="sp"></div>
     ${V.classes.length?`<select class="hsel" id="selCls">${V.classes.map(c=>`<option value="${c.id}" ${c.id===V.cls?'selected':''}>${esc(c.name)}</option>`).join('')}</select>
     <select class="hsel" id="selPer">${[[7,'Utolsó 7 nap'],[30,'Utolsó 30 nap'],[120,'Utolsó 4 hónap'],[365,'Egész tanév']].map(([d,n])=>`<option value="${d}" ${+d===V.period?'selected':''}>${n}</option>`).join('')}</select>`:''}
-    <button class="hbtn" id="btnRef" title="Frissítés">⟳</button><button class="hbtn" id="btnOut">Kilépés</button></header>
+    ${V.cls?'<button class="hbtn" id="btnChest" title="Óranyitó láda a kivetítőre">🧰 Napi láda</button>':''}<button class="hbtn" id="btnRef" title="Frissítés">⟳</button><button class="hbtn" id="btnOut">Kilépés</button></header>
    <nav>${tabs.map(([k,n])=>`<button data-tab="${k}" class="${V.tab===k?'on':''}">${n}${k==='manage'&&V.stats&&V.stats.coupons.length?` <span class="pill y">${V.stats.coupons.length}</span>`:''}${k==='feedback'&&fbNew()?` <span class="pill r">${fbNew()}</span>`:''}</button>`).join('')}</nav>
    <main id="main"></main>`;
   const m=$('main');
@@ -161,6 +206,7 @@ function render(){
   if($('selPer'))$('selPer').onchange=async e=>{V.period=+e.target.value;V.detail=null;await refresh();if(V.tab==='student'&&V.student)openStudent(V.student)};
   $('btnRef').onclick=async()=>{await loadClasses();await refresh();if(V.tab==='student'&&V.student)openStudent(V.student)};
   $('btnOut').onclick=logout;
+  if($('btnChest'))$('btnChest').onclick=chestOpen;
 }
 document.addEventListener('click',e=>{const t=e.target.closest('[data-tab]');if(t){V.tab=t.dataset.tab;render();if(V.tab==='student'&&V.student&&!V.detail)openStudent(V.student)}});
 
@@ -246,9 +292,9 @@ async function openStudent(id){
   if(V.openTrial)setTimeout(()=>{const r=document.getElementById('tr-'+V.openTrial);if(r)r.scrollIntoView({behavior:'smooth',block:'center'})},60);
 }
 function studentHTML(){
-  const st=V.stats;if(!st||!st.students.length)return '<p class="muted">Még nincs diák.</p>';
-  const s=st.students.find(x=>x.id===V.student);
-  const sel=`<select id="selStu"><option value="">– válassz diákot –</option>${st.students.map(x=>`<option value="${x.id}" ${x.id===V.student?'selected':''}>${esc(x.nick)}</option>`).join('')}</select>`;
+  const st=V.stats;if(!st||!st.all.length)return '<p class="muted">Még nincs diák.</p>';
+  const s=st.all.find(x=>x.id===V.student);
+  const sel=`<select id="selStu"><option value="">– válassz diákot –</option>${st.all.map(x=>`<option value="${x.id}" ${x.id===V.student?'selected':''}>${esc(x.nick)}${x.in_stats===false?' (statisztikán kívül)':''}</option>`).join('')}</select>`;
   if(!s)return `<h2>Tanulói részletek</h2>${sel}`;
   const d=V.detail||{};
   if(d.loading)return `<h2>${esc(s.nick)}</h2>${sel}<p class="muted">Betöltés…</p>`;
@@ -285,8 +331,10 @@ function manageHTML(){
   const classBox=`<div class="box"><b>Osztályok:</b> ${V.classes.map(x=>esc(x.name)).join(', ')||'még nincs'}
     <form id="fcls" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><input id="clsName" placeholder="Új osztály neve, pl. 7.a" required><button class="btn">Létrehozás</button></form></div>`;
   if(!c)return `<h2>Kezelés</h2>${classBox}<p>Először hozz létre egy osztályt.</p>`;
-  const S=st?st.students:[];
-  const privs=V.privDraft||(c.config&&Array.isArray(c.config.privs)&&c.config.privs.length?c.config.privs:DEFAULT_PRIVS).map(p=>({...p}));V.privDraft=privs;
+  const S=st?st.all:[];
+  const privs=V.privDraft||(c.config&&Array.isArray(c.config.privs)&&c.config.privs.length?c.config.privs:DEFAULT_PRIVS).map(p=>({...p}));
+  if(!V.privDraft)for(const d of DEFAULT_PRIVS)if(/^k\d$/.test(d.id)&&!privs.some(p=>p.id===d.id))privs.push({...d});   // v1.3: új alapkiváltságok
+  V.privDraft=privs;
   return `<h2>Kezelés – ${esc(c.name)}</h2>
    ${st&&st.coupons.length?`<h3>Beváltásra váró kuponok (${st.coupons.length})</h3><table><thead><tr><th>Diák</th><th>Kiváltság</th><th>Kód</th><th>Mikor</th><th></th></tr></thead><tbody>
     ${st.coupons.map(k=>`<tr><td>${esc(k.nick)}</td><td>${esc(k.name)}${k.is_test?' <span class="pill y">dolgozat</span>':''}</td><td><code><b>${esc(k.code)}</b></code></td><td class="small">${fmtDT(k.created_at)}</td>
@@ -301,8 +349,8 @@ function manageHTML(){
       <td style="white-space:nowrap"><button class="chip ${s==='open'?'on':''}" data-lesson="${l.key}:open" ${l.ready?'':'disabled'}>Nyitva</button> <button class="chip ${s!=='open'?'on':''}" data-lesson="${l.key}:soon">Zárva</button></td></tr>`}).join('')}</table>
      ${classBox}</div></div>
    <h3>Diákok (${S.length})</h3>${S.length?`<table><thead><tr><th>Becenév</th><th>Utoljára</th><th>Állapot</th><th></th></tr></thead><tbody>
-    ${S.map(s=>`<tr><td><b>${esc(s.nick)}</b></td><td class="small">${ago(s.last_seen)}</td><td>${s.active?'<span class="pill g">aktív</span>':'<span class="pill r">letiltva</span>'}${s.locked?' <span class="pill y">zárolva (sok hibás PIN)</span>':''}</td>
-     <td style="white-space:nowrap"><button class="btn sm ghost" data-pin="${s.id}">Új PIN</button> <button class="btn sm ghost" data-act2="${s.id}:${s.active?0:1}">${s.active?'Letiltás':'Engedélyezés'}</button> <button class="btn sm danger" data-del="${s.id}">Törlés</button></td></tr>`).join('')}</tbody></table>`:'<p class="muted">Még nincs diák.</p>'}
+    ${S.map(s=>`<tr><td><b>${esc(s.nick)}</b></td><td class="small">${ago(s.last_seen)}</td><td>${s.active?'<span class="pill g">aktív</span>':'<span class="pill r">letiltva</span>'}${s.locked?' <span class="pill y">zárolva (sok hibás PIN)</span>':''}${s.in_stats===false?' <span class="pill">statisztikán kívül</span>':''}</td>
+     <td style="white-space:nowrap"><button class="btn sm ghost" data-pin="${s.id}">Új PIN</button> <button class="btn sm ghost" data-stats="${s.id}:${s.in_stats===false?1:0}" title="Teszt- vagy vendégfiók kizárása az áttekintésből, hibatérképből és a kuponlistából">${s.in_stats===false?'Statisztikába vissza':'Statisztikán kívül'}</button> <button class="btn sm ghost" data-act2="${s.id}:${s.active?0:1}">${s.active?'Letiltás':'Engedélyezés'}</button> <button class="btn sm danger" data-del="${s.id}">Törlés</button></td></tr>`).join('')}</tbody></table>`:'<p class="muted">Még nincs diák.</p>'}
    <h3>Kiváltságok (AP-ért)</h3><p class="small muted">A szint nyitja meg, az AP-ért lehet felhasználni. Az „Osztály” a karakterosztály (üres = mindenkinek). A „Dolg.” a dolgozathoz kapcsolódó kiváltság: egyszerre csak egy lehet beváltatlan.</p>
    <div class="tw"><table class="ped"><thead><tr><th>Aktív</th><th>Név</th><th>Leírás</th><th>Szint</th><th>AP</th><th>Gyakoriság</th><th>Osztály</th><th>Dolg.</th><th></th></tr></thead><tbody>
     ${privs.map((p,i)=>`<tr><td><input type="checkbox" data-pv="${i}:on" ${p.on?'checked':''}></td><td><input type="text" data-pv="${i}:name" value="${esc(p.name)}"></td><td><textarea data-pv="${i}:desc">${esc(p.desc)}</textarea></td>
@@ -341,12 +389,13 @@ document.addEventListener('click',async e=>{
     if(t.id==='btnCreate'){const nicks=$('nicks').value.split('\n').map(x=>x.trim()).filter(Boolean);if(!nicks.length)return;t.disabled=true;
       V.newPins=await rpc('teacher_create_students',{p_class:V.cls,p_nicks:nicks});await refresh();toast(`${V.newPins.filter(r=>r.ok).length} diák felvéve`);return}
     if(t.id==='btnPrint'){printCards(V.newPins.filter(r=>r.ok));return}
-    if(t.dataset.pin){const s=V.stats.students.find(x=>x.id===t.dataset.pin);if(!confirm(`Új PIN-t generálsz ${s.nick} számára? A régi azonnal érvényét veszti, és minden eszközről kilépteti.`))return;
+    if(t.dataset.pin){const s=V.stats.all.find(x=>x.id===t.dataset.pin);if(!confirm(`Új PIN-t generálsz ${s.nick} számára? A régi azonnal érvényét veszti, és minden eszközről kilépteti.`))return;
       const pin=await rpc('teacher_reset_pin',{p_student:s.id});V.newPins=[{nick:s.nick,pin,ok:true}];await refresh();showPin(s.nick,pin);return}
     if(t.id==='pinClose'||t.classList.contains('modal')){$('pinModal').remove();return}
     if(t.id==='pinPrint'){printCards(V.newPins);return}
+    if(t.dataset.stats){const [id,v]=t.dataset.stats.split(':');await api(`students?id=eq.${id}`,{method:'PATCH',body:{in_stats:v==='1'}});await refresh();toast(v==='1'?'Újra beszámít a statisztikába':'Kivéve a statisztikából');return}
     if(t.dataset.act2){const [id,v]=t.dataset.act2.split(':');await api(`students?id=eq.${id}`,{method:'PATCH',body:{active:v==='1'}});await refresh();return}
-    if(t.dataset.del){const s=V.stats.students.find(x=>x.id===t.dataset.del);const a=prompt(`A törléssel ${s.nick} minden adata (haladás, napló, jegyek) végleg elvész. Ha biztos vagy benne, írd be a becenevét:`);
+    if(t.dataset.del){const s=V.stats.all.find(x=>x.id===t.dataset.del);const a=prompt(`A törléssel ${s.nick} minden adata (haladás, napló, jegyek) végleg elvész. Ha biztos vagy benne, írd be a becenevét:`);
       if(a===null)return;if(a.trim()!==s.nick){toast('A becenév nem egyezik, nem töröltem.');return}
       await api(`students?id=eq.${s.id}`,{method:'DELETE'});await refresh();toast('Törölve: '+s.nick);return}
     if(t.dataset.redeem){const [sid,cid]=t.dataset.redeem.split('|');await api(`coupons?student_id=eq.${sid}&cid=eq.${encodeURIComponent(cid)}`,{method:'PATCH',body:{redeemed_at:new Date().toISOString()}});await refresh();toast('Kupon beváltva');return}
@@ -392,6 +441,118 @@ document.addEventListener('click',async e=>{
     try{await navigator.clipboard.writeText(txt);toast('Vágólapra másolva – illeszd be a Claude-os beszélgetésbe.')}catch(x){prompt('Másold ki:',txt)}
   }
 });
+/* ---------- v1.3 ÓRANYITÓ LÁDA (kivetítő) ----------
+   1. Sorsolás: a gép a sorsjegyek arányában választ nyitót (a szerveren, súlyozva).
+   2. A kisorsolt diák a kivetítőn a ládára kattint → rázkódik → kinyílik.
+   A tanár előre kiválaszthatja, mi legyen benne (pl. a csak kézzel indítható, rólad szóló események). */
+const CHEST_SVG=`<svg viewBox="0 0 220 180" width="1em" height="0.82em" aria-hidden="true">
+ <defs><linearGradient id="cw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a5a2b"/><stop offset="1" stop-color="#5e3416"/></linearGradient>
+ <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a3"/><stop offset=".5" stop-color="#e0a92e"/><stop offset="1" stop-color="#9c6b12"/></linearGradient></defs>
+ <path d="M18 78 Q18 22 110 22 Q202 22 202 78 Z" fill="url(#cw)" stroke="#3a1f0c" stroke-width="4"/>
+ <path d="M40 76 Q40 34 70 28 M180 76 Q180 34 150 28" fill="none" stroke="url(#cg)" stroke-width="10"/>
+ <rect x="18" y="76" width="184" height="88" rx="6" fill="url(#cw)" stroke="#3a1f0c" stroke-width="4"/>
+ <path d="M30 96 H190 M30 124 H190 M30 150 H190" stroke="#4a2810" stroke-width="2" opacity=".5"/>
+ <rect x="35" y="76" width="16" height="88" fill="url(#cg)" stroke="#6b4508" stroke-width="2"/><rect x="169" y="76" width="16" height="88" fill="url(#cg)" stroke="#6b4508" stroke-width="2"/>
+ <rect x="14" y="70" width="192" height="14" rx="4" fill="url(#cg)" stroke="#6b4508" stroke-width="2"/>
+ <rect x="92" y="66" width="36" height="44" rx="6" fill="url(#cg)" stroke="#6b4508" stroke-width="3"/>
+ <circle cx="110" cy="84" r="6" fill="#3a1f0c"/><path d="M107 86 L105 100 H115 L113 86 Z" fill="#3a1f0c"/>
+ <circle cx="110" cy="128" r="17" fill="#b3241f" stroke="#7a1410" stroke-width="3"/><text x="110" y="134" text-anchor="middle" font-family="Georgia,serif" font-size="16" font-weight="bold" fill="#ffd9a0">x²</text>
+</svg>`;
+const CH={st:null,pick:'',exclude:[],busy:false};
+function chestOpen(){
+  let o=$('chov');if(!o){o=document.createElement('div');o.id='chov';o.className='chov';document.body.appendChild(o)}
+  CH.exclude=[];CH.pick='';chestLoad();
+}
+function chestClose(){const o=$('chov');if(o)o.remove();if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}
+async function chestLoad(){try{CH.st=await rpc('teacher_day_state',{p_class:V.cls})}catch(e){CH.st=null;CH.err=e.message}chestRender()}
+const evOf=id=>mkEvById(id);
+function chEvHTML(e){if(!e)return '';const rn={c:'Napi esemény',r:'Ritka esemény',l:'✦ Legendás esemény ✦',u:'Ünnepi esemény'}[e.r]||'';
+  return `<div class="chev r-${e.r}"><div class="ic">${e.ic||'✨'}</div><div class="rar">${rn}</div><h2>${esc(e.n)}</h2><p>${esc((e.d||'').replace('{e0}','Az első aréna-ellenfél'))}</p>${e.ora?'<p style="font-size:1rem;opacity:.75;margin-top:8px">(az órán történik)</p>':''}</div>`}
+function chestRender(){
+  const o=$('chov');if(!o)return;const st=CH.st,c=curClass();
+  if(!st){o.innerHTML=`<div class="chtop"><b>🧰 Napi láda</b><span class="sp"></span><button data-ch="close">✕ Bezár</button></div><div class="chstage"><p class="chsub">Nem sikerült betölteni.${CH.err&&/teacher_day_state|function/.test(CH.err)?' Lefuttattad a <b>v1.3-napi-esemeny.sql</b> fájlt a Supabase-ben?':''}</p><p class="small">${esc(CH.err||'')}</p></div>`;return}
+  const hol=mkHoliday(st.day),day=new Date(st.day).toLocaleDateString('hu-HU',{month:'long',day:'numeric',weekday:'long'});
+  const opts=MK_EVENTS.map(e=>`<option value="${e.id}" ${CH.pick===e.id?'selected':''}>${e.kezi?'✋ ':''}${({c:'',r:'[ritka] ',l:'[legendás] '})[e.r]}${esc(e.n)}</option>`).join('');
+  const top=`<div class="chtop"><b>🧰 Napi láda · ${esc(c?c.name:'')}</b><span>${day}${st.mathDay?' · matekóra':' · nincs matekóra'}${hol?' · 🎉 ünnepnap':''}</span><span class="sp"></span>
+    <button data-ch="fs">⛶ Teljes képernyő</button><button data-ch="close">✕ Bezár</button></div>`;
+  let body;
+  if(st.opened){
+    body=`<p class="chtitle">A mai esemény${st.ev2?'ek':''}</p>${st.opener_nick&&st.how==='class'?`<p class="chsub">Kinyitotta: <b>${esc(st.opener_nick)}</b></p>`:st.how==='auto'?'<p class="chsub">A láda magától nyílt ki.</p>':''}
+      ${chEvHTML(evOf(st.ev))}${chEvHTML(evOf(st.ev2))}
+      <details class="chpanel"><summary>Tanári: esemény cseréje / visszazárás</summary>
+       <p><select id="chSwap">${opts}</select> <button class="chbtn g" data-ch="swap">Csere erre</button></p>
+       <p><button class="chbtn g" data-ch="reset">🔒 Visszazárás (a mai nap újraindul, sorsolással együtt)</button></p></details>`;
+  }else if(!st.opener_nick){
+    const n=(st.tickets||[]).filter(t=>t.tickets>0&&!t.blocked).length;
+    body=`<div class="chbox" style="cursor:default">${CHEST_SVG}</div><p class="chtitle">Ki nyitja ki ma a ládát?</p>
+      <p class="chsub">${n?`${n} kalandor van a kalapban. Aki többet gyakorolt, több sorsjeggyel.`:'Az előző nyitás óta senki nem gyakorolt, így most mindenki egy jeggyel indul.'}${hol?'<br>Ma ünnepnap van: <b>két</b> esemény rejtőzik a ládában!':''}</p>
+      <div class="chname" id="chName">&nbsp;</div>
+      <button class="chbtn" data-ch="draw">🎲 Sorsolás</button>
+      ${chTicketPanel(st)}`;
+  }else{
+    body=`<p class="chsub">A mai ládanyitó:</p><div class="chname">${esc(st.opener_nick)}</div>
+      <button class="chbox" id="chBox" data-ch="open" title="Kattints a ládára!">${CHEST_SVG}</button>
+      <p class="chsub" style="margin-top:14px">${esc(st.opener_nick)}, kattints a ládára!</p>
+      <p><button class="chbtn g" data-ch="redraw">Nincs itt – újrasorsolás</button></p>${chTicketPanel(st)}`;
+  }
+  o.innerHTML=top+`<div class="chstage">${body}</div>`;
+}
+function chTicketPanel(st){
+  const rows=(st.tickets||[]).map(t=>`<tr><td>${esc(t.nick)}</td><td>${t.blocked?'<i>legutóbb nyitott, most kimarad</i>':t.tickets?'🎟️'.repeat(t.tickets):'–'}</td><td class="small">${t.xp} XP</td></tr>`).join('');
+  const md=st.mathDays||[1,3,4],dn=['','H','K','Sze','Cs','P'];
+  return `<details class="chpanel"><summary>Csak neked: mi legyen a ládában, sorsjegyek, beállítások (ne vetítsd ki)</summary>
+    <p><b>Mi legyen a ládában?</b> <select data-ch="pick" style="color:#000"><option value="">🎲 Véletlen esemény (ajánlott)</option>${MK_EVENTS.map(e=>`<option value="${e.id}" ${CH.pick===e.id?'selected':''}>${e.kezi?'✋ ':''}${({c:'',r:'[ritka] ',l:'[legendás] '})[e.r]}${esc(e.n)}</option>`).join('')}</select>
+     <br><span class="small">✋ = csak kézzel választható. A választást a diákok nem látják, de vetítés előtt csukd be ezt a panelt!</span></p>
+    <table>${rows||'<tr><td>Nincs diák.</td></tr>'}</table>
+    <p class="small">Minden megkezdett 20 XP egy sorsjegy (legfeljebb 5), az előző ládanyitás óta. A statisztikán kívüli fiókok nem vesznek részt.</p>
+    <p><b>Matekórás napok:</b> ${[1,2,3,4,5].map(d=>`<label><input type="checkbox" data-chday="${d}" ${md.includes(d)?'checked':''}> ${dn[d]}</label>`).join('')}
+    <br><span class="small">A többi napon a láda magától kinyílik az első belépőnél. Matekórás napon, ha nem nyitod ki, 15:00-kor nyílik ki magától.</span></p></details>`;
+}
+function chConfetti(n,ch){for(let i=0;i<n;i++){const e=document.createElement('div');e.className='chconf';e.textContent=ch[i%ch.length];e.style.left=Math.random()*100+'vw';e.style.animationDuration=2+Math.random()*2.5+'s';e.style.animationDelay=Math.random()*.8+'s';document.body.appendChild(e);setTimeout(()=>e.remove(),5000)}}
+async function chDraw(){
+  if(CH.busy)return;CH.busy=true;const db=document.querySelector('[data-ch=draw]');if(db)db.style.visibility='hidden';
+  try{
+    const w=await rpc('teacher_day_draw',{p_class:V.cls,p_exclude:CH.exclude});
+    const names=[];(w.pool||[]).forEach(p=>{for(let i=0;i<p.tickets;i++)names.push(p.nick)});
+    const el=$('chName');if(el&&names.length>1){el.classList.add('spin');let d=60,t=0;
+      await new Promise(res=>{const step=()=>{el.textContent=names[Math.floor(Math.random()*names.length)];t+=d;d*=1.09;if(t<3200)setTimeout(step,d);else res()};step()});
+      el.classList.remove('spin')}
+    if(el)el.textContent=w.nick;chConfetti(30,['🎟️','✨','⭐']);
+    await new Promise(r=>setTimeout(r,1400));
+    await chestLoad();
+  }catch(e){toast(/no_students/.test(e.message)?'Nincs kit sorsolni.':'Hiba: '+e.message)}
+  CH.busy=false;
+}
+async function chOpenBox(){
+  if(CH.busy)return;CH.busy=true;const st=CH.st,b=$('chBox');
+  try{
+    const e=CH.pick?mkEvById(CH.pick):mkPickEvent({ora:!!st.mathDay,recent:st.recent||[]}),h=mkHoliday(st.day);
+    if(b)b.classList.add('shake');
+    await new Promise(r=>setTimeout(r,2600));
+    CH.st=await rpc('teacher_day_open',{p_class:V.cls,p_ev:e.id,p_ev2:h?h.id:null,p_how:'class'});
+    chestRender();
+    const top=[e,h].filter(Boolean).some(x=>x.r==='l')?'l':e.r;
+    chConfetti(top==='l'?90:top==='r'?45:20,top==='l'?['✨','⭐','🌟','💛']:top==='r'?['✨','💙','⭐']:['✨','🎉']);
+  }catch(x){toast('Hiba: '+x.message);chestRender()}
+  CH.busy=false;
+}
+document.addEventListener('change',async e=>{
+  if(e.target.dataset.ch==='pick'){CH.pick=e.target.value;return}
+  if(e.target.dataset.chday){const md=[...document.querySelectorAll('[data-chday]')].filter(x=>x.checked).map(x=>+x.dataset.chday);
+    try{await saveConfig({mathDays:md});toast('Matekórás napok mentve');await chestLoad()}catch(x){toast('Hiba: '+x.message)}}
+});
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-ch]');if(!t||t.tagName==='SELECT')return;const a=t.dataset.ch;
+  if(a==='close')chestClose();
+  else if(a==='fs'){const o=$('chov');if(document.fullscreenElement)document.exitFullscreen();else if(o&&o.requestFullscreen)o.requestFullscreen().catch(()=>{})}
+  else if(a==='draw')chDraw();
+  else if(a==='redraw'){const st=CH.st,id=(st.tickets||[]).find(x=>x.nick===st.opener_nick);if(id)CH.exclude.push(id.id);
+    st.opener_nick=null;chestRender();setTimeout(chDraw,50)}
+  else if(a==='open')chOpenBox();
+  else if(a==='swap'){const id=$('chSwap').value,h=mkHoliday(CH.st.day);try{CH.st=await rpc('teacher_day_open',{p_class:V.cls,p_ev:id,p_ev2:h?h.id:null,p_how:CH.st.how==='class'?'class':'teacher'});chestRender();toast('Esemény cserélve – a diákoknál pár percen belül frissül')}catch(x){toast('Hiba: '+x.message)}}
+  else if(a==='reset'){if(!confirm('Visszazárod a mai ládát? A sorsolás is újraindul.'))return;try{CH.st=await rpc('teacher_day_reset',{p_class:V.cls});CH.exclude=[];chestRender()}catch(x){toast('Hiba: '+x.message)}}
+});
+
 </script>
 </body>
 </html>
