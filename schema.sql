@@ -276,7 +276,7 @@ begin
   return jsonb_build_object(
     'students', coalesce((select jsonb_agg(jsonb_build_object(
         'id', st.id, 'nick', st.nick, 'active', st.active, 'in_stats', st.in_stats, 'last_seen', st.last_seen, 'locked', st.locked_until > now(),
-        'clvl', st.state->'clvl', 'xp', st.state->'xp', 'gold', st.state->'gold', 'cls', st.state->'cls', 'prog', st.state->'prog',
+        'clvl', st.state->'clvl', 'xp', st.state->'xp', 'gold', st.state->'gold', 'cls', st.state->'cls', 'prog', st.state->'prog', 'pets', st.state->'pets', 'pet_on', st.state->'petOn',
         'topic', st.state->'topic', 'level', st.state->'level', 'max', st.state->'max',
         'n', (select count(*) from public.events e where e.student_id = st.id and e.ts >= p_since),
         'ok', (select count(*) from public.events e where e.student_id = st.id and e.ts >= p_since and e.status = 'correct'),

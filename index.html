@@ -389,6 +389,29 @@ button.step{font-family:inherit;cursor:pointer;background:transparent}
 @keyframes evwob{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-8deg)}90%{transform:rotate(8deg)}95%{transform:rotate(-4deg)}}
 .fwand{position:absolute;z-index:40;font-size:22px;line-height:1;background:none;border:0;padding:4px;cursor:pointer;opacity:.9;animation:fwand 1.8s ease-in-out infinite;transform:translate(-50%,-50%)}
 @keyframes fwand{0%,100%{filter:drop-shadow(0 0 3px #fff6a0)}50%{filter:drop-shadow(0 0 10px #ffe14d)}}
+/* --- Társak (v1.5) --- */
+.btn.sm{padding:4px 10px;font-size:.8rem}
+.ovcard.petpanel{max-width:760px}
+.petbody{padding:0 18px 18px;display:grid;gap:12px}
+.petart{width:64px;height:72px;flex:none}
+.hslot .petart.ic{width:44px;height:48px}
+.petrow{display:flex;gap:10px;align-items:center;padding:8px;border-radius:12px;border:2px solid transparent}
+.petrow+.petrow{margin-top:6px}
+.petrow.on{border-color:var(--accent);background:rgba(255,215,120,.12)}
+.petrow .grow{flex:1;min-width:0}
+.petbar{height:8px;margin:4px 0 2px}
+.petbar i{background:linear-gradient(90deg,#d9922e,#f3c75f)}
+.petbtns{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.petbtns .badge{margin-left:0}
+.petpick{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.petopt{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 8px;border-radius:14px;border:2px solid rgba(120,90,50,.25);background:rgba(255,255,255,.45);font:inherit;color:inherit;cursor:pointer;text-align:center;font-size:.82rem}
+.petopt .petart{width:72px;height:80px}
+.petopt.on{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,200,80,.35);background:rgba(255,230,160,.35)}
+.petname{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.petname input,.petren input{font:inherit;padding:6px 10px;border-radius:10px;border:1px solid rgba(120,90,50,.4);max-width:190px}
+.petren{display:inline-flex;gap:6px;align-items:center}
+.petnew{border:2px solid var(--accent)}
+@media (max-width:560px){.petbody{padding:0 10px 12px}.petart{width:52px;height:60px}}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#1c2a22">
@@ -1158,7 +1181,7 @@ const fxMul=k=>activeEvents().reduce((m,e)=>m*((e.fx||{})[k]||1),1);
 const fxSum=k=>activeEvents().reduce((m,e)=>m+((e.fx||{})[k]||0),0);
 const goldMul=()=>fxMul('gold');
 const xpMul=l=>fxMul('xp')*(l===3?fxMul('brave'):1);
-const critChance=()=>Math.max(.15,...activeEvents().map(e=>(e.fx||{}).crit||0));
+const critChance=()=>Math.max(.15,...activeEvents().map(e=>(e.fx||{}).crit||0))+petFx('crit');
 const shopPrice=k=>Math.round(PRICES[k]*fxMul('shop'));
 const privCost=p=>Math.max(1,Math.round(p.ap*fxMul('kupon')));
 function evDesc(e){return (e.d||'').replace('{e0}',T().arena[0].n)}
@@ -1239,7 +1262,7 @@ function couponCode(){const a='ABCDEFGHJKLMNPRSTUVXYZ23456789';return Array.from
 const THEMES_ON=['fantasy'];
 const S={theme:'fantasy',mode:'falu',topic:'betus',dir:'fel',prog:{},level:1,max:1,streak:0,miss:0,
   gold:0,xp:0,clvl:1,owned:{weapon:false,hat:false,pet:false},potions:0,
-  ptask:null,battle:null,trialTopic:'betus',tries:{},grades:[],log:[],anim:null,coupons:[],privs:PRIVILEGES.map(p=>({...p})),ap:AP_DAY_BASE,apDate:null,cls:null,gender:'f',hp:null,hpDay:null,eq:{weapon:true,hat:true,pet:true},beaten:[],fLast:null,iLast:null,gateFails:{},gateNote:null};
+  ptask:null,battle:null,trialTopic:'betus',tries:{},grades:[],log:[],anim:null,coupons:[],privs:PRIVILEGES.map(p=>({...p})),ap:AP_DAY_BASE,apDate:null,cls:null,gender:'f',hp:null,hpDay:null,eq:{weapon:true,hat:true,pet:true},beaten:[],fLast:null,iLast:null,gateFails:{},gateNote:null,pets:[],petOn:null,petAcc:{own:[],on:[]}};
 const $=id=>document.getElementById(id);
 const T=()=>THEMES[S.theme];
 const decay=l=>DECAY[Math.max(0,S.max-l)];
@@ -1247,7 +1270,7 @@ const reward=l=>Math.round(BASE[l]*decay(l));
 const upNeed=()=>S.level<S.max?UP_BACK:UP;
 const hpMax=()=>Math.round((100+10*(S.clvl-1))*(CL()?CL().hp:1));
 const lvlBonus=()=>Math.min(.2,.04*(S.clvl-1));
-const arenaBonus=()=>lvlBonus()+(EQ().weapon?.1:0);
+const arenaBonus=()=>lvlBonus()+(EQ().weapon?.1:0)+petFx('dmg');   // a társ (pet) csak az Arénában/Küszöbőrnél számít
 /* SZINTGÖRBE (v1.1) – becslés: egy gyakorlás kb. 150 XP, heti 3 gyakorlás.
    Az első szintek gyorsak (1–2 alkalom), utána egy szint kb. 4–5 alkalom (≈1,5 hét), később kb. 2 hét. Valódi adatok alapján újrahangolandó. */
 const xpNeedAt=l=>l===1?200:l===2?300:l===3?400:Math.min(1000,600+50*(l-4));
@@ -1289,11 +1312,12 @@ const saveKey=()=>ACC?'matek7-kaland-u-'+ACC.id:'matek7-kaland-v1';
 const today=()=>new Date().toISOString().slice(0,10);
 const tKey=(tp,k)=>(tp==='betus'?'':tp+'_')+k;
 const triesLeft=(tp,k)=>{const kk=tKey(tp,k);if(S.tries[kk]==null)S.tries[kk]=DAILY_TRIES;return S.tries[kk]};
-function snapshot(){S.prog[S.topic]={level:S.level,max:S.max,streak:S.streak,miss:S.miss};return {_at:Date.now(),theme:S.theme,topic:S.topic,dir:S.dir,prog:S.prog,trialTopic:S.trialTopic,level:S.level,max:S.max,streak:S.streak,miss:S.miss,gold:S.gold,xp:S.xp,clvl:S.clvl,owned:S.owned,potions:S.potions,tries:S.tries,triesDay:today(),grades:S.grades,coupons:S.coupons,ap:S.ap,apDate:S.apDate,evApDay:S.evApDay,evGifts:S.evGifts,wandDay:S.wandDay,hp:S.hp,hpDay:S.hpDay,cls:S.cls,gender:S.gender,eq:S.eq,beaten:S.beaten,fLast:S.fLast,iLast:S.iLast,gateFails:S.gateFails,gateNote:S.gateNote}}
+function snapshot(){S.prog[S.topic]={level:S.level,max:S.max,streak:S.streak,miss:S.miss};return {_at:Date.now(),theme:S.theme,topic:S.topic,dir:S.dir,prog:S.prog,trialTopic:S.trialTopic,level:S.level,max:S.max,streak:S.streak,miss:S.miss,gold:S.gold,xp:S.xp,clvl:S.clvl,owned:S.owned,potions:S.potions,tries:S.tries,triesDay:today(),grades:S.grades,coupons:S.coupons,ap:S.ap,apDate:S.apDate,evApDay:S.evApDay,evGifts:S.evGifts,wandDay:S.wandDay,hp:S.hp,hpDay:S.hpDay,cls:S.cls,gender:S.gender,eq:S.eq,beaten:S.beaten,fLast:S.fLast,iLast:S.iLast,gateFails:S.gateFails,gateNote:S.gateNote,pets:S.pets,petOn:S.petOn,petAcc:S.petAcc}}
 function save(){try{localStorage.setItem(saveKey(),JSON.stringify(snapshot()))}catch(e){}if(ACC)NET.dirty=true}
 function load(){try{applyState(JSON.parse(localStorage.getItem(saveKey())||'null'))}catch(e){}}
 function applyState(d){if(!d)return;
-  for(const k of ['theme','topic','dir','prog','trialTopic','level','max','streak','miss','gold','xp','clvl','owned','potions','grades','coupons','ap','apDate','evApDay','evGifts','wandDay','hp','hpDay','cls','gender','eq','beaten','fLast','iLast','gateFails','gateNote'])if(d[k]!==undefined)S[k]=d[k];
+  for(const k of ['theme','topic','dir','prog','trialTopic','level','max','streak','miss','gold','xp','clvl','owned','potions','grades','coupons','ap','apDate','evApDay','evGifts','wandDay','hp','hpDay','cls','gender','eq','beaten','fLast','iLast','gateFails','gateNote','pets','petOn','petAcc'])if(d[k]!==undefined)S[k]=d[k];
+  petMigrate();
   if(d.triesDay===today()&&d.tries)S.tries=d.tries;
   if(!THEMES_ON.includes(S.theme))S.theme=THEMES_ON[0];}
 
@@ -1362,9 +1386,9 @@ function renderMode(){
   }
   if(S.mode==='shop'){
     v.innerHTML=`<div class="scene">${shopSceneSVG(S.theme)}</div><div class="lvl story-l" style="margin-top:10px">${th.shopTitle}</div><p class="introbox">Itt költheted az aranyat (GP) a karaktered kinézetére és felszerelésére. A próbán semmi sem ad előnyt. A valódi órai kiváltságokat ${th.guildIn} találod.</p>
-     ${['weapon','hat','pet','potion'].map(k=>{const [n,d]=th.items[k];const own=k!=='potion'&&S.owned[k];
+     ${['weapon','hat','potion'].map(k=>{const [n,d]=th.items[k];const own=k!=='potion'&&S.owned[k];
        return `<div class="shopitem">${itemIcon(S.theme,k)}<div class="grow"><h4>${n}${own?'<span class="badge">megvan</span>':''}</h4><div class="tiny">${d}</div></div>
-       <button class="btn" data-act="buy-${k}" ${own||S.gold<shopPrice(k)?'disabled':''}>${shopPrice(k)<PRICES[k]?`<s style="opacity:.6">${PRICES[k]}</s> `:''}${shopPrice(k)} ${th.cur}</button></div>`}).join('')}`;
+       <button class="btn" data-act="buy-${k}" ${own||S.gold<shopPrice(k)?'disabled':''}>${shopPrice(k)<PRICES[k]?`<s style="opacity:.6">${PRICES[k]}</s> `:''}${shopPrice(k)} ${th.cur}</button></div>`}).join('')}${petShopHTML()}`;
     f.innerHTML=SHOPFOOT();
     return;
   }
@@ -1504,7 +1528,7 @@ function practiceResult(t,r,entry){
     const f=decay(t.level)*HINT_F[t.hint]*(t.half?.5:1);
     const g=Math.round(BASE[t.level]*f*goldMul()),x=Math.round(XPB[t.level]*f*xpMul(t.level));
     S.gold+=g;S.miss=0;entry.gain=`+${g}`;const healed=healHP(HEAL_OK*(S.cls==='gyogyito'?2:1));
-    t.fb={cls:'ok',html:`<b class="big">${pick(th.ok)}</b> +${g} ${th.cur}, +${x} XP${t.hint?` (${t.hint===1?'fél':'negyed'} jutalom a segítség miatt)`:''}${t.half?' (fél jutalom: elsőre félúton akadtál)':''}${r.note?`<br><span class="tiny">💡 ${r.note}</span>`:''}${healed?` · <b>+${healed} HP</b>${S.hp>=hpMax()?' (teljesen felgyógyultál)':''}`:''}`};
+    t.fb={cls:'ok',html:`<b class="big">${pick(th.ok)}</b> +${g} ${th.cur}, +${x} XP${t.hint?` (${t.hint===1?'fél':'negyed'} jutalom a segítség miatt)`:''}${t.half?' (fél jutalom: elsőre félúton akadtál)':''}${r.note?`<br><span class="tiny">💡 ${r.note}</span>`:''}${healed?` · <b>+${healed} HP</b>${S.hp>=hpMax()?' (teljesen felgyógyultál)':''}`:''}${petFeed()}`};
     if(!t.hint&&!t.half)S.streak++;
     if(S.streak>=upNeed()){S.streak=0;
       if(S.level<3){S.level++;if(S.level>S.max){S.max=S.level;banner(th.up(th.tiers[S.level-1]))}else banner(th.back(th.tiers[S.level-1]))}
@@ -1515,7 +1539,7 @@ function practiceResult(t,r,entry){
     const g=Math.round(BASE[t.level]*f*goldMul()),x=Math.round(XPB[t.level]*f*xpMul(t.level));
     S.gold+=g;addXP(x);S.streak=0;entry.gain=`+${g}`;
     const healed=healHP(HEAL_PART*(S.cls==='gyogyito'?2:1));
-    t.fb={cls:'info',html:`<b class="big">Részben jó – fél jutalom.</b> +${g} ${th.cur}, +${x} XP${healed?`, +${healed} HP`:''}<br>${stepReport(r)}<br>${solutionHTML(t)}`};
+    t.fb={cls:'info',html:`<b class="big">Részben jó – fél jutalom.</b> +${g} ${th.cur}, +${x} XP${healed?`, +${healed} HP`:''}${petFeed()}<br>${stepReport(r)}<br>${solutionHTML(t)}`};
   }else{
     S.streak=0;S.miss++;entry.gain='';
     t.fb={cls:'bad',html:isTwo(t)?`${stepReport(r)}<br>${solutionHTML(t)}`:`<b>${r.err}.</b> ${r.explain}<br>${solutionHTML(t)}`};
@@ -1533,6 +1557,7 @@ function battleResult(t,r,entry){
     b.ehp-=dmg;S.anim={who:'e',txt:`−${dmg}${crit?'!':''}`};entry.gain=`−${dmg} HP${crit?' (krit.)':''}`;
     const x=Math.round(XPB[t.level]*xpMul(t.level));addXP(x);
     b.cstreak=(b.cstreak||0)+1;let healMsg='';if(!isTrial&&S.cls==='gyogyito'&&b.cstreak%3===0&&b.php<b.pmax){const h=Math.min(15,b.pmax-b.php);b.php+=h;healMsg=`<br><b>Gyógyító erő: +${h} életerő (3 jó egymás után)!</b>`}
+    if(!isTrial){const ph=petFx('heal');if(ph&&b.php<b.pmax){const h=Math.min(ph,b.pmax-b.php);b.php+=h;healMsg+=`<br>🔥 ${esc(petActive().name)} gyógyít: +${h} életerő.`}}
     t.fb={cls:'ok',html:`${crit?'<b class="big crit">⚡ KRITIKUS TALÁLAT – dupla sebzés!</b><br>':''}<b class="big">${pick(th.ok)}</b> ${th.attacks[t.level-1]}: −${dmg} életerő az ellenfélnek · +${x} XP${b.kind==='arena'&&t.level===1&&b.ehp<=armorLine(b)?`<br><b>${th.armor}</b>`:''}${healMsg}${r.note?`<br><span class="tiny">💡 ${r.note}</span>`:''}`};
   }else if(r.status==='partial'){
     const dmg=Math.round((isTrial?ATK[t.level]:ATK[t.level]*(1+arenaBonus())*(S.cls==='magus'&&t.level===3?1.3:1))/2);
@@ -1563,7 +1588,7 @@ function victorySummary(b){
   const main=isTrial
     ?(b.trialId?`Megszerezted a(z) <b>${b.grade===5?'5-öst (jeles)':'4-est (jó)'}</b>! A tanárod már látja.`
                :`Élesben ezért <b>${b.grade===5?'5-ös (jeles)':'4-es (jó)'}</b> járna – vendég módban ez csak próba, jegyet nem ad.`)
-    :b.kind==='gate'?`Kinyílt a kapu: <b>${b.lvl}. szintre léptél!</b> Nőtt az életerőd és az aréna-sebzésed. Jutalom: <b>+${b.gold} ${th.cur}</b>.${gateReady()?`<br>Már a következő szinthez is megvan az XP-d – a következő Küszöbőr: <b>${guardFor(S.clvl+1).name}</b>.`:''}`
+    :b.kind==='gate'?`Kinyílt a kapu: <b>${b.lvl}. szintre léptél!</b> Nőtt az életerőd és az aréna-sebzésed. Jutalom: <b>+${b.gold} ${th.cur}</b>.${petPending()?'<br>🐾 <b>Új társat választhatsz!</b> Kattints a hősödre a faluban, és válaszd ki.':''}${gateReady()?`<br>Már a következő szinthez is megvan az XP-d – a következő Küszöbőr: <b>${guardFor(S.clvl+1).name}</b>.`:''}`
     :`Jutalom: <b>+${b.gold} ${th.cur}</b> és <b>+${b.xp} XP</b>.`;
   return `<div class="fb show ok victory" style="margin-top:12px;text-align:center"><div style="font-size:2.2rem;line-height:1">🏆</div>
     <b class="big">Győzelem! Legyőzted: ${b.name}</b><br>${main}<br><span class="tiny">${stat}</span>
@@ -1583,7 +1608,7 @@ function endBattle(win){
   if(b.kind==='gate'){
     if(win){const need=xpNeed();S.clvl++;S.xp=Math.max(0,S.xp-need);S.gold+=b.gold;S.hp=Math.min(hpMax(),(S.hp??hpMax())+10);
       S.gateFails=S.gateFails||{};delete S.gateFails[b.lvl];S.beaten=S.beaten||[];if(!S.beaten.includes(b.name))S.beaten.push(b.name);
-      S.log.push({where:'Küszöbőr',ans:'',ok:true,err:'',gain:`<b>${S.clvl}. szint</b>`});banner(th.lvlUp(S.clvl));
+      S.log.push({where:'Küszöbőr',ans:'',ok:true,err:'',gain:`<b>${S.clvl}. szint</b>`});banner(th.lvlUp(S.clvl)+(petPending()?' 🐾 Új társat választhatsz – kattints a hősödre!':''));
       if(gateReady())S.gateNote=S.clvl}
     else{if((b.nAns||0)>=3){S.gateFails=S.gateFails||{};S.gateFails[b.lvl]=Math.min(3,(S.gateFails[b.lvl]||0)+1);b.mercy=true}
       banner(S.hp<=0?'Kimerültél! Gyakorolj, hogy visszanyerd az életerőd – az XP-d megmaradt.':`${b.name} most nem engedett át. Az XP-d megmaradt, bármikor újrapróbálhatod.`)}
@@ -1600,10 +1625,10 @@ function endBattle(win){
 function startBattle(kind,i,trialId){
   const th=T();
   if(kind==='gate'){if(exhausted()||!gateReady())return;const g=guardFor(S.clvl+1),hp=Math.round(g.hp*gateMercy(g.lvl)*fxMul('hp'));
-    S.battle={kind,idx:g.lvl%3,lvl:g.lvl,req:g.req,img:g.img,name:g.name,col:g.col,emax:hp,ehp:hp,hit:g.hit,gold:Math.round(g.gold*goldMul()),xp:0,pmax:hpMax(),php:S.hp,task:null,over:false};}
+    S.battle={kind,idx:g.lvl%3,lvl:g.lvl,req:g.req,img:g.img,name:g.name,col:g.col,emax:hp,ehp:hp,hit:g.hit,gold:Math.round(g.gold*goldMul()*(1+petFx('gold'))),xp:0,pmax:hpMax(),php:S.hp,task:null,over:false};}
   else if(kind==='arena'){const e=ARENA[i],hp=Math.round(e.hp*fxMul('strong')*fxMul('hp')),rm=fxMul('rew')*(i===0?fxMul('weak'):1);
     if(exhausted())return;
-    S.battle={kind,idx:i,name:th.arena[i].n,col:th.arena[i].c,emax:hp,ehp:hp,hit:e.hit,gold:Math.round(e.gold*rm*goldMul()),xp:Math.round(e.xp*rm*xpMul(0)),pmax:hpMax(),php:S.hp,task:null,over:false};}
+    S.battle={kind,idx:i,name:th.arena[i].n,col:th.arena[i].c,emax:hp,ehp:hp,hit:e.hit,gold:Math.round(e.gold*rm*goldMul()*(1+petFx('gold'))),xp:Math.round(e.xp*rm*xpMul(0)),pmax:hpMax(),php:S.hp,task:null,over:false};}
   else{const e=TRIALS[i],tp=S.trialTopic||'betus';if(triesLeft(tp,e.key)<=0)return;
     if(ACC&&!trialId){startTrialOnline(i,tp,e.key);return}
     S.tries[tKey(tp,e.key)]--;
@@ -1696,6 +1721,7 @@ document.addEventListener('click',e=>{
   else if(a.startsWith('redeem-')){const c=S.coupons.find(x=>x.id===a.slice(7));if(!c||c.done)return;
     if(!el.dataset.sure){el.dataset.sure='1';el.textContent='Biztos? Kattints újra';return}
     c.done=new Date().toLocaleDateString('hu-HU');render()}
+  else if(a.startsWith('buyacc-')){const id=a.slice(7);if(!PET_ACC[id]||S.petAcc.own.includes(id)||S.gold<petAccPrice(id))return;S.gold-=petAccPrice(id);S.petAcc.own.push(id);if(!S.petAcc.on.includes(id))S.petAcc.on.push(id);banner(`Megvetted: ${PET_ACC[id].n}. A társadon már rajta is van – a hősöd lapján leveheted.`);render()}
   else if(a.startsWith('buy-')){const k=a.slice(4);if(S.gold<shopPrice(k))return;S.gold-=shopPrice(k);if(k==='potion')S.potions++;else S.owned[k]=true;render()}
 });
 document.addEventListener('change',e=>{const el=e.target.closest('[data-pf]');if(!el)return;const [id,f]=el.dataset.pf.split(':');const p=S.privs.find(x=>x.id===id);if(!p)return;
@@ -1817,7 +1843,7 @@ function avatarSVG(theme,o={}){
   if(o.cls&&typeof heroSVG==='function')return heroSVG(theme,o);
   const x={harcos:'H',gyogyito:'G'}[o.cls]||'';
   if(theme==='fantasy')return `<svg viewBox="0 0 120 160" class="av">${F_DEFS}<ellipse cx="60" cy="153" rx="36" ry="6" fill="#000" opacity=".22"/>
-    ${fBody(x)}${o.weapon?fStaff():''}${fArmR(x)}${fEmblem(o.cls)}${fHead()}${fHatP(o.hat)}${o.pet?fDragon():''}</svg>`;
+    ${fBody(x)}${o.weapon?fStaff():''}${fArmR(x)}${fEmblem(o.cls)}${fHead()}${fHatP(o.hat)}${o.pet?petSmall():''}</svg>`;
   const acc={harcos:'#ff8a3d',magus:'#8a6bff',gyogyito:'#3fe0d0'}[o.cls]||'#3fe0d0';
   return `<svg viewBox="0 0 122 160" class="av">${S_DEFS}<ellipse cx="60" cy="153" rx="36" ry="6" fill="#000" opacity=".25"/>
     ${o.cls==='harcos'?'<path d="M30 76 h16 v10 h-16z M74 76 h16 v10 h-16z" fill="#ff8a3d" stroke="#8a4a1f"/>':''}${sBody(acc)}${sArmR()}${o.weapon?sGun():''}${sHead(o.hat)}${o.pet?sDrone():''}${o.cls==='gyogyito'?'<g transform="translate(55,100)"><rect width="11" height="11" rx="2" fill="#fff"/><path d="M5.5 2 v7 M2 5.5 h7" stroke="#2f9a5c" stroke-width="2.4"/></g>':''}</svg>`;
@@ -2152,8 +2178,188 @@ function heroFace(cx,cy,o={}){ // fiatal hős arca: határozott tekintet
   <path d="M${cx-4} ${cy+9} Q${cx+1} ${cy+11.5} ${cx+5} ${cy+8}" fill="none" stroke="#8a3b2a" stroke-width="1.5" stroke-linecap="round"/>`;
 }
 const sparkle=(x,y,s,c,dur)=>`<path d="M${x} ${y-s} L${x+s*.25} ${y-s*.25} L${x+s} ${y} L${x+s*.25} ${y+s*.25} L${x} ${y+s} L${x-s*.25} ${y+s*.25} L${x-s} ${y} L${x-s*.25} ${y-s*.25}Z" fill="${c}">${dur?`<animate attributeName="opacity" values="1;.2;1" dur="${dur}s" repeatCount="indefinite"/>`:''}</path>`;
-const heroPet=(f)=>f?`<g transform="translate(150 198) scale(1.35)">${fDragon().replace('<g transform="translate(2,114)">','<g>')}</g>`
+const heroPet=(f)=>f?petHero()
   :`<g transform="translate(150 196) scale(1.3)">${sDrone().replace('<g transform="translate(2,110)">','<g>')}</g>`;
+
+/* ================= TÁRSAK (petek) – v1.5 =================
+   Választás: a 2., 5., 10., 15. szinten, utána minden 5. szinten egy új társ (fajtánként egy).
+   Fejlődés: tanítási naponként az első gyakorlás „megeteti” a veled lévő társat. 10 etetés: felnőtt, 25: legendás.
+   Hatás: csak az Arénában és a Küszöbőrök ellen, a Próbán soha. 7 nap gyakorlás nélkül álmos (nincs hatása), az első gyakorlásra felébred.
+   Képek (ha elkészülnek): Képek/pet-<fajta>-<1|2|3>.webp  (1 = kölyök, 2 = felnőtt, 3 = legendás). Amíg nincs kép, rajzolt helyettesítő látszik. */
+const PET_TYPES={
+  sarkany:{n:'Sárkányfióka',fx:'dmg', v:[.05,.10,.15],d:v=>`+${Math.round(v*100)}% sebzés az Arénában`},
+  bagoly: {n:'Bagoly',      fx:'crit',v:[.05,.10,.15],d:v=>`+${Math.round(v*100)}% esély kritikus találatra (3. fokozatú támadásnál)`},
+  fonix:  {n:'Főnix',       fx:'heal',v:[3,5,8],      d:v=>`minden jó válasznál +${v} életerő harc közben`},
+  roka:   {n:'Rókakölyök',  fx:'gold',v:[.10,.15,.25],d:v=>`+${Math.round(v*100)}% arany az aréna-győzelmekért`}};
+const PET_STAGES=[{n:'kölyök',need:0},{n:'felnőtt',need:10},{n:'legendás',need:25}];
+const PET_SLEEP=7;
+/* kiegészítők a Boltban – csak kinézet; a veled lévő társon látszanak */
+const PET_ACC={
+  nyakorv:{n:'Díszes nyakörv',p:60,d:'Piros nyakörv aranycsengővel'},
+  suveg:  {n:'Pici varázslósüveg',p:90,d:'Csillagos süveg a társad fejére'},
+  csillag:{n:'Csillagpor',p:140,d:'Csillogó szikrák a társad körül'}};
+/* hová kerül a süveg (fejtető) és a nyakörv (nyak) a 40×40-es rajzon – a Gemini-képeknél lehet, hogy igazítani kell */
+const PET_ANCHOR={sarkany:{h:[16,8],n:[16,24]},bagoly:{h:[20,7],n:[20,26]},fonix:{h:[28,8],n:[25,21]},roka:{h:[18,6],n:[18,24]}};
+const PET_IMG=(sp,st)=>`Képek/pet-${sp}-${st+1}.webp`;
+const PET_OK=new Set();
+Object.keys(PET_TYPES).forEach(sp=>[0,1,2].forEach(st=>{const src=PET_IMG(sp,st),im=new Image();im.onload=()=>PET_OK.add(src);im.src=src}));
+
+const petStage=p=>p.feed>=PET_STAGES[2].need?2:p.feed>=PET_STAGES[1].need?1:0;
+const petDays=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5);
+const petSleepy=p=>!!p.seen&&petDays(p.seen,isoDay())>=PET_SLEEP;
+const petActive=()=>(S.pets||[]).find(p=>p.id===S.petOn)||null;
+function petFx(k){const p=petActive();if(!p||petSleepy(p))return 0;const t=PET_TYPES[p.sp];return t&&t.fx===k?t.v[petStage(p)]:0}
+const PET_LVLS=[2,5,10,15];
+const petEarned=()=>PET_LVLS.filter(x=>x<=S.clvl).length+(S.clvl>=20?Math.floor((S.clvl-15)/5):0);
+const petNextLvl=()=>PET_LVLS.find(x=>x>S.clvl)||(Math.floor(S.clvl/5)*5+5);
+const petSpeciesLeft=()=>Object.keys(PET_TYPES).filter(sp=>!(S.pets||[]).some(p=>p.sp===sp));
+const petPending=()=>Math.min(Math.max(0,petEarned()-(S.pets||[]).filter(p=>!p.gift).length),petSpeciesLeft().length);
+const isSchoolDay=()=>{const w=new Date().getDay();return w>=1&&w<=5};
+function petMigrate(){
+  if(!Array.isArray(S.pets))S.pets=[];
+  if(!S.petAcc||!Array.isArray(S.petAcc.own))S.petAcc={own:[],on:[]};
+  if(!Array.isArray(S.petAcc.on))S.petAcc.on=[];
+  // aki a v1.5 előtt megvette a Boltban a Sárkányfiókát, ajándékba megtartja (nem számít bele a választásaiba)
+  if(S.owned&&S.owned.pet&&!S.pets.some(p=>p.gift)){const id='pg'+Date.now();S.pets.push({id,sp:'sarkany',name:'Sárkányfióka',feed:0,last:null,seen:isoDay(),gift:true});if(!S.petOn)S.petOn=id}
+}
+/* gyakorlásnál hívjuk: visszaadja a visszajelzésbe fűzendő szöveget */
+function petFeed(){
+  const p=petActive();if(!p)return '';const d=isoDay(),woke=petSleepy(p);p.seen=d;
+  let msg=woke?`<br>🌅 <b>${esc(p.name)}</b> felébredt, és újra veled harcol!`:'';
+  if(p.last===d||!isSchoolDay())return msg;
+  const st=petStage(p);p.feed++;p.last=d;const ns=petStage(p),nx=PET_STAGES[ns+1];
+  if(ns>st)return msg+`<br>⭐ <b>${esc(p.name)}</b> fejlődött – mostantól <b>${PET_STAGES[ns].n}</b>! ${PET_TYPES[p.sp].d(PET_TYPES[p.sp].v[ns])}.`;
+  return msg+`<br>🍖 <b>${esc(p.name)}</b> jóllakott a mai gyakorlástól${nx?` (${p.feed} / ${nx.need} etetés a következő fokozatig)`:''}.`;
+}
+
+/* ---- rajzok: 40×40-es dobozban, a talp y=40-nél ---- */
+const PET_ART={
+  sarkany:()=>`<g transform="translate(3,3)">${fDragon().replace('<g transform="translate(2,114)">','<g>')}</g>`,
+  bagoly:()=>`<path d="M9 13 L7 3 L15 10Z M31 13 L33 3 L25 10Z" fill="#6e4d30"/>
+    <ellipse cx="20" cy="23" rx="13" ry="15" fill="#8a6440" stroke="#5a3e26" stroke-width=".8"/>
+    <path d="M7 24 Q4 32 10 36 Q10 28 12 24Z M33 24 Q36 32 30 36 Q30 28 28 24Z" fill="#6e4d30"/>
+    <ellipse cx="20" cy="29" rx="8" ry="8.5" fill="#e9d3a8"/>
+    <path d="M15 27 q2 2 4 0 M21 30 q2 2 4 0 M16 33 q2 2 4 0" stroke="#b89a6a" stroke-width=".8" fill="none"/>
+    <circle cx="14.5" cy="17" r="5.6" fill="#fff" stroke="#5a3e26" stroke-width=".8"/><circle cx="25.5" cy="17" r="5.6" fill="#fff" stroke="#5a3e26" stroke-width=".8"/>
+    <circle cx="14.5" cy="17.5" r="2.7" fill="#222"/><circle cx="25.5" cy="17.5" r="2.7" fill="#222"/>
+    <circle cx="15.4" cy="16.4" r=".9" fill="#fff"/><circle cx="26.4" cy="16.4" r=".9" fill="#fff"/>
+    <path d="M18 21 L20 25 L22 21Z" fill="#f0a030"/>
+    <path d="M14 37 l2 2.5 l2 -2.5 M22 37 l2 2.5 l2 -2.5" stroke="#f0a030" stroke-width="1.4" fill="none" stroke-linecap="round"/>`,
+  fonix:()=>`<path d="M10 29 Q-1 22 2 10 Q7 21 13 25Z" fill="#ff5a2a"/><path d="M10 32 Q0 31 -1 19 Q6 28 14 29Z" fill="#ffb02a"/><path d="M11 34 Q3 37 1 29 Q7 33 14 32Z" fill="#ff7a2a"/>
+    <ellipse cx="21" cy="28" rx="11" ry="9" fill="#ff7a2a" stroke="#b8401a" stroke-width=".8"/>
+    <ellipse cx="22" cy="31" rx="6" ry="4.5" fill="#ffd27a" opacity=".85"/>
+    <path d="M14 26 Q21 17 30 23 Q23 30 14 26Z" fill="#ffd04a" stroke="#d98a1a" stroke-width=".6"/>
+    <circle cx="28" cy="15" r="7" fill="#ff8a3a" stroke="#b8401a" stroke-width=".8"/>
+    <path d="M25 9 Q25 2 29 5 Q30 0 33 5 Q36 3 34 10Z" fill="#ffd04a"/>
+    <circle cx="30" cy="14" r="1.9" fill="#222"/><circle cx="30.6" cy="13.3" r=".6" fill="#fff"/>
+    <path d="M34.5 14.5 L39.5 16.5 L34.5 18Z" fill="#ffcf3a" stroke="#c98a1a" stroke-width=".5"/>
+    <path d="M19 36 v3.5 M24 36 v3.5" stroke="#b8401a" stroke-width="1.5" stroke-linecap="round"/>`,
+  roka:()=>`<path d="M29 35 Q42 31 38 15 Q34 26 26 28Z" fill="#e8742a" stroke="#a54a17" stroke-width=".8"/><path d="M38 15 Q41 22 36.5 24 Q35 19 38 15Z" fill="#fff"/>
+    <ellipse cx="20" cy="30" rx="11" ry="8.5" fill="#e8742a" stroke="#a54a17" stroke-width=".8"/>
+    <ellipse cx="18" cy="31" rx="5" ry="6" fill="#fff3e4"/>
+    <path d="M13 37 v3 M23 37 v3" stroke="#5a2c10" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M8 12 L6 2 L14 8 Q18 6 22 8 L30 2 L28 12 Q30 22 18 24 Q6 22 8 12Z" fill="#ee8236" stroke="#a54a17" stroke-width=".8"/>
+    <path d="M8.6 9 L7.6 4.5 L12 8Z M27.4 9 L28.4 4.5 L24 8Z" fill="#5a2c10"/>
+    <path d="M9.5 15 Q18 27 26.5 15 Q23 22 18 22.5 Q13 22 9.5 15Z" fill="#fff3e4"/>
+    <circle cx="14" cy="14" r="1.9" fill="#222"/><circle cx="22" cy="14" r="1.9" fill="#222"/><circle cx="14.6" cy="13.4" r=".6" fill="#fff"/><circle cx="22.6" cy="13.4" r=".6" fill="#fff"/>
+    <circle cx="18" cy="19.5" r="1.6" fill="#222"/>`};
+function petAccSVG(sp,on){
+  const a=PET_ANCHOR[sp]||PET_ANCHOR.sarkany,[hx,hy]=a.h,[nx,ny]=a.n;let s='';
+  if(on.includes('csillag'))s+=sparkle(2,6,3.5,'#fff3a0',1.4)+sparkle(38,10,3,'#fff3a0',1.9)+sparkle(36,34,2.6,'#ffe27a',1.1)+sparkle(1,30,2.4,'#ffe27a',2.3);
+  if(on.includes('nyakorv'))s+=`<path d="M${nx-6} ${ny} Q${nx} ${ny+3.4} ${nx+6} ${ny}" stroke="#c0392b" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="${nx}" cy="${ny+2.8}" r="1.7" fill="#ffd84a" stroke="#a8801a" stroke-width=".5"/>`;
+  if(on.includes('suveg'))s+=`<ellipse cx="${hx}" cy="${hy}" rx="6.5" ry="1.6" fill="#4a2a8a"/><path d="M${hx-4.5} ${hy} L${hx+1} ${hy-11} L${hx+4.5} ${hy}Z" fill="#6b3fb8" stroke="#3b2070" stroke-width=".5"/><circle cx="${hx+1}" cy="${hy-11}" r="1.4" fill="#ffd84a"/><circle cx="${hx}" cy="${hy-4}" r=".8" fill="#ffd84a"/>`;
+  return s;
+}
+/* egy társ rajza (40×40) – acc: a rajta lévő kiegészítők (csak a veled lévő társon) */
+function petArt(p,acc){
+  const st=petStage(p),src=PET_IMG(p.sp,st);
+  const body=PET_OK.has(src)?`<image href="${src}" x="-2" y="-2" width="44" height="42" preserveAspectRatio="xMidYMax meet"/>`:(PET_ART[p.sp]||PET_ART.sarkany)();
+  const aura=st===2?`<ellipse cx="20" cy="24" rx="21" ry="18" fill="#ffd84a" opacity=".28"><animate attributeName="opacity" values=".15;.4;.15" dur="2.6s" repeatCount="indefinite"/></ellipse>`:'';
+  const zz=petSleepy(p)?`<text x="31" y="4" font-size="9" font-weight="800" fill="#6f95d6" font-family="sans-serif">z<tspan font-size="6.5" dy="-4">z</tspan></text>`:'';
+  return `${aura}<g ${petSleepy(p)?'opacity=".75"':''}>${body}</g>${petAccSVG(p.sp,acc||[])}${zz}`;
+}
+const petArtBox=(p,acc,cls='petart')=>`<svg viewBox="-4 -13 48 55" class="${cls}">${petArt(p,acc)}</svg>`;
+/* a hős mellett (200×260-as hősképen, jobb alul); a nagyobb fokozat nagyobb */
+function petHero(){const p=petActive();if(!p)return '';const k=1.35*[.82,1,1.15][petStage(p)];
+  return `<g transform="translate(${(198-40*k).toFixed(1)} ${(252-40*k).toFixed(1)}) scale(${k.toFixed(3)})">${petArt(p,S.petAcc.on)}</g>`}
+/* a régi, rajzolt hősön (120×160) */
+function petSmall(){const p=petActive();if(!p)return '';const k=[.82,1,1.12][petStage(p)];
+  return `<g transform="translate(2 ${(154-40*k).toFixed(1)}) scale(${k})">${petArt(p,S.petAcc.on)}</g>`}
+
+/* ---- a hős lapján: a Társ-hely ---- */
+function petSlotHTML(){
+  const p=petActive(),pend=petPending();
+  if(!p&&!S.pets.length)return `<button class="hslot ${pend?'':'empty'}" data-petopen>${pend?'<span class="tag">új!</span>':''}<div style="font-size:1.9rem;line-height:44px">🐾</div><div>${pend?'Válassz társat!':'Még nincs társad'}</div><div class="lb">Társ · ${pend?'kattints':`${petNextLvl()}. szinten`}</div></button>`;
+  return `<button class="hslot on" data-petopen>${pend?'<span class="tag">új!</span>':p?'<span class="tag">veled</span>':''}${p?petArtBox(p,S.petAcc.on,'petart ic'):'<div style="font-size:1.9rem;line-height:44px">🏡</div>'}<div>${p?esc(p.name):'Otthon pihen'}</div><div class="lb">Társ · ${S.pets.length} db</div></button>`;
+}
+const petAbilityHTML=()=>{const p=petActive();if(!p)return '';const t=PET_TYPES[p.sp];
+  return `<div class="hkv"><span>Társ: ${esc(p.name)}</span><b>${petSleepy(p)?'álmos 😴':t.d(t.v[petStage(p)])}</b></div>`};
+
+/* ---- Társak ablak ---- */
+let petPickSel=null,petRenId=null;
+function petPanel(){
+  const th=T(),pend=petPending(),left=petSpeciesLeft(),cur=petActive();
+  const choose=pend?`<div class="hcard petnew"><h3>🎉 Új társat választhatsz!</h3>
+    <p class="hnote" style="margin:0 0 8px">Mindegyik mást tud az Arénában – és ahogy fejlődik, egyre erősebb. Gondold át, melyik illik hozzád!</p>
+    <div class="petpick">${left.map(sp=>{const t=PET_TYPES[sp];return `<button class="petopt ${petPickSel===sp?'on':''}" data-petpick="${sp}">${petArtBox({sp,feed:0},[])}<b>${t.n}</b><span>${t.d(t.v[0])}</span><span class="tiny">Legendásként: ${t.d(t.v[2])}</span></button>`}).join('')}</div>
+    <div class="petname"><label>Nevezd el: <input id="petNameIn" maxlength="16" autocomplete="off" placeholder="pl. ${petPickSel?PET_TYPES[petPickSel].n:'Pamacs'}"></label>
+     <button class="btn" data-petadopt ${petPickSel?'':'disabled'}>Ő lesz a társam</button></div></div>`:'';
+  const row=p=>{const t=PET_TYPES[p.sp]||PET_TYPES.sarkany,st=petStage(p),nx=PET_STAGES[st+1],on=p.id===S.petOn,sl=petSleepy(p),base=PET_STAGES[st].need;
+    const name=petRenId===p.id?`<span class="petren"><input id="petRenIn" maxlength="16" value="${esc(p.name)}" autocomplete="off"><button class="btn sm" data-petsave="${p.id}">Mentés</button></span>`:`<b>${esc(p.name)}</b>`;
+    return `<div class="petrow ${on?'on':''}">${petArtBox(p,on?S.petAcc.on:[])}
+     <div class="grow">${name} <span class="tiny">${t.n} · ${PET_STAGES[st].n}${p.gift?' · ajándék':''}</span>
+      <div class="tiny" style="margin:2px 0">${sl?'😴 Álmos – most nem segít. Gyakorolj, és felébred!':'✨ '+t.d(t.v[st])}</div>
+      ${nx?`<div class="hbar petbar"><i style="width:${Math.min(100,(p.feed-base)/(nx.need-base)*100)}%"></i></div><div class="tiny">Etetés: ${p.feed} / ${nx.need} → ${nx.n}</div>`:'<div class="tiny">⭐ Elérte a legmagasabb fokozatot!</div>'}
+      <div class="petbtns">${on?'<span class="badge">veled van</span><button class="btn ghost sm" data-petoff>Pihenjen otthon</button>':`<button class="btn sm" data-peton="${p.id}">Ez kísérjen</button>`}${petRenId===p.id?'':`<button class="btn ghost sm" data-petren="${p.id}">Átnevezés</button>`}</div>
+     </div></div>`};
+  const own=S.petAcc.own;
+  const acc=`<div class="hcard"><h3>Kiegészítők</h3>${own.length?`<div class="petbtns">${own.map(id=>{const a=PET_ACC[id];if(!a)return '';const on=S.petAcc.on.includes(id);return `<button class="btn ${on?'':'ghost'} sm" data-petacc="${id}">${on?'✓ ':''}${a.n}</button>`}).join('')}</div><div class="hnote" style="margin:6px 0 0">A veled lévő társon látszanak. Kattints: felveszi vagy leveszi.</div>`
+    :`<div class="hnote" style="margin:0">Az Alkimista boltban vehetsz kiegészítőt a társadnak (nyakörv, süveg, csillagpor).</div>`}</div>`;
+  const html=`<div class="ovcard hpanel petpanel"><div class="hph"><h2>🐾 Társaid</h2><button class="btn ghost" data-petclose>Vissza ✕</button></div>
+   <div class="petbody">${choose}
+    <div class="hcard"><h3>${S.pets.length?'A társaid':'Még nincs társad'}</h3>${S.pets.length?S.pets.map(row).join(''):`<div class="hnote" style="margin:0">Az első társadat a <b>2. szinten</b> választhatod ki. Ehhez győzd le az Arénában az első Küszöbőrt!</div>`}</div>
+    ${acc}
+    <div class="hcard"><h3>Hogy működik?</h3><ul class="rules" style="margin:0">
+     <li>Minden tanítási napon az <b>első gyakorlásod megeteti</b> a veled lévő társat (naponta egyszer). <b>${PET_STAGES[1].need}</b> etetéstől felnőtt, <b>${PET_STAGES[2].need}</b>-től legendás lesz – és egyre erősebb.</li>
+     <li>Csak az <b>Arénában</b> és a Küszöbőrök ellen segít. A Próbán nem számít: ott mindenki egyforma.</li>
+     <li>Ha ${PET_SLEEP} napig nem gyakorolsz, elálmosodik, és addig nem segít. Az első gyakorlásodra felébred – nem tűnik el, nem lesz baja.</li>
+     <li>Új társat a 2., 5., 10. és 15. szinten, utána minden 5. szinten választhatsz. ${pend?'<b>Most is választhatsz!</b>':left.length?`A következőt a <b>${petNextLvl()}. szinten</b>.`:'Minden fajta megvan – hamarosan jönnek újak (talán a ti ötletetek alapján)!'}</li></ul>
+     ${ACC?'':'<p style="margin:8px 0 0"><button class="btn ghost sm" data-petdemo>Tesztgomb: +1 etetés</button></p>'}</div>
+   </div></div>`;
+  closePetPanel();document.body.insertAdjacentHTML('beforeend',`<div class="overlay show" id="petov">${html}</div>`);
+}
+function closePetPanel(){const o=$('petov');if(o)o.remove()}
+document.addEventListener('input',e=>{if(e.target.id==='petNameIn'||e.target.id==='petRenIn')e.target.value=e.target.value.replace(/[<>"]/g,'')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('petov')){closePetPanel();heroPanel()}
+  if(e.key==='Enter'&&e.target.id==='petRenIn'){const b=document.querySelector('[data-petsave]');if(b)b.click()}});
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-petopen],[data-petclose],[data-petpick],[data-petadopt],[data-peton],[data-petoff],[data-petren],[data-petsave],[data-petacc],[data-petdemo],#petov');if(!t)return;
+  const d=t.dataset,clean=v=>String(v||'').replace(/[<>"]/g,'').trim().slice(0,16);
+  if(t.id==='petov'){if(e.target===t){closePetPanel();heroPanel()}return}
+  if(d.petopen!==undefined){closeHeroPanel();petPickSel=null;petRenId=null;petPanel();return}
+  if(d.petclose!==undefined){closePetPanel();heroPanel();return}
+  if(d.petpick){petPickSel=d.petpick;document.querySelectorAll('.petopt').forEach(b=>b.classList.toggle('on',b.dataset.petpick===petPickSel));
+    const a=document.querySelector('[data-petadopt]');if(a)a.disabled=false;const n=$('petNameIn');if(n){n.placeholder='pl. '+PET_TYPES[petPickSel].n;n.focus()}return}
+  if(d.petadopt!==undefined){const sp=petPickSel;if(!sp||!petPending()||!petSpeciesLeft().includes(sp))return;
+    const name=clean(($('petNameIn')||{}).value)||PET_TYPES[sp].n,id='p'+Date.now();
+    S.pets.push({id,sp,name,feed:0,last:null,seen:isoDay()});S.petOn=id;petPickSel=null;render();petPanel();banner(`${name} mostantól a társad! Gyakorolj, hogy fejlődjön.`);return}
+  if(d.peton){S.petOn=d.peton;render();petPanel();return}
+  if(d.petoff!==undefined){S.petOn=null;render();petPanel();return}
+  if(d.petren){petRenId=d.petren;petPanel();const i=$('petRenIn');if(i){i.focus();i.select()}return}
+  if(d.petsave){const p=S.pets.find(x=>x.id===d.petsave),v=clean(($('petRenIn')||{}).value);if(p&&v)p.name=v;petRenId=null;render();petPanel();return}
+  if(d.petacc){const on=S.petAcc.on,i=on.indexOf(d.petacc);if(i>=0)on.splice(i,1);else on.push(d.petacc);render();petPanel();return}
+  if(d.petdemo!==undefined){if(ACC)return;const p=petActive();if(p){p.last=null;p.seen=isoDay();const w=new Date().getDay();if(w<1||w>5){p.feed++}else petFeed()}render();petPanel();return}
+});
+/* Bolt: kiegészítők a társnak */
+const petAccPrice=id=>Math.round(PET_ACC[id].p*fxMul('shop'));
+function petShopHTML(){const th=T();
+  return `<div class="lvl story-l" style="margin-top:16px;font-size:1.05rem">🐾 Kiegészítők a társadnak</div>
+   ${S.pets.length?'':'<p class="tiny" style="margin:0 0 6px">Társat a 2. szinten kapsz – addig is megveheted, ami tetszik.</p>'}
+   ${Object.entries(PET_ACC).map(([id,a])=>{const own=S.petAcc.own.includes(id),pr=petAccPrice(id);
+    const demo=petActive()||{sp:'roka',feed:0};
+    return `<div class="shopitem"><svg viewBox="-4 -13 48 55" class="ic" style="width:56px;height:56px">${petArt({...demo,seen:isoDay()},[id])}</svg><div class="grow"><h4>${a.n}${own?'<span class="badge">megvan</span>':''}</h4><div class="tiny">${a.d}. Csak a szépség kedvéért.</div></div>
+     <button class="btn" data-act="buyacc-${id}" ${own||S.gold<pr?'disabled':''}>${pr<a.p?`<s style="opacity:.6">${a.p}</s> `:''}${pr} ${th.cur}</button></div>`}).join('')}`;
+}
 
 /* ---------- FANTASY ---------- */
 function heroHarcos(o){
@@ -2383,7 +2589,7 @@ BG_IMG.fantasy_falu='Képek/img-5b29cc0e90.webp';
 BG_IMG.fantasy_sziget2='Képek/img-e078c8c07b.webp';
 
 /* ================= FALU: kezdőképernyő, ahol a hős épületről épületre sétál ================= */
-function EQ(){const e=S.eq||{};return{weapon:!!S.owned.weapon&&e.weapon!==false,hat:!!S.owned.hat&&e.hat!==false,pet:!!S.owned.pet&&e.pet!==false}}
+function EQ(){const e=S.eq||{};return{weapon:!!S.owned.weapon&&e.weapon!==false,hat:!!S.owned.hat&&e.hat!==false,pet:!!petActive()}}
 const faluOK=()=>S.theme==='fantasy'&&typeof BG_IMG!=='undefined'&&!!BG_IMG.fantasy_falu;
 const FW=2576,FH=1438,FP=(x,y)=>[x/FW*100,y/FH*100];
 const FPLAZA=FP(1210,1000);
@@ -2405,7 +2611,7 @@ function faluHTML(){
   return `<div class="fev">${evCardHTML()}</div><div class="fwrap" id="fwrap"><div class="falu" id="falu"><img class="fmap" src="${BG_IMG.fantasy_falu}" alt="A falu" draggable="false">
    ${FALU.map(b=>{const [x0,y0,x1,y1]=b.rect,bd=faluBadge(b.k);return `<button class="fbld" data-fb="${b.k}" aria-label="${b.fn}: ${b.name}" style="left:${x0/FW*100}%;top:${y0/FH*100}%;width:${(x1-x0)/FW*100}%;height:${(y1-y0)/FH*100}%"></button>
    <div class="flbl ${bd?'badge':''}" data-bd="${bd}" id="fl-${b.k}" style="left:${b.lbl[0]}%;top:${b.lbl[1]}%"><i>${b.ic}</i><span>${b.fn}<small>${b.name}</small></span></div>`}).join('')}
-   ${wandHTML()}<div class="fwalker" id="fhero" title="A hősöd – kattints rá!"><span class="fme">${CL()?clsName():T().hero} · ${S.clvl}. szint</span><div class="finner" id="fheroIn">${avatarSVG(S.theme,{...EQ(),cls:S.cls})}</div></div>
+   ${wandHTML()}<div class="fwalker" id="fhero" title="A hősöd – kattints rá!"><span class="fme">${CL()?clsName():T().hero} · ${S.clvl}. szint${petPending()?' · 🐾 új társ!':''}</span><div class="finner" id="fheroIn">${avatarSVG(S.theme,{...EQ(),cls:S.cls})}</div></div>
   </div></div>
   <div class="fquick"><button data-fq="hos"><b>🧝</b>Hős<kbd>H</kbd></button>${FALU.map(b=>`<button data-fq="${b.k}"><b>${b.ic}</b>${b.fn}<kbd>${b.key}</kbd></button>`).join('')}</div>`;
 }
@@ -2464,6 +2670,7 @@ function heroPanel(){
       <div class="hstat gp"><span class="k">GP</span><div></div><span>${S.gold} ${th.cur}</span></div></div>
      <div class="hcard"><h3>Képességek</h3>
       <div class="hkv"><span>Aréna-sebzés</span><b>+${Math.round(arenaBonus()*100)}%</b></div>
+      ${petAbilityHTML()}
       <div class="hkv"><span>Legmagasabb fokozat</span><b>${S.max}. fokozat</b></div>
       <div class="hkv"><span>Jó válaszok sorozata</span><b>${S.streak}</b></div>
       ${c?`<div class="hperk">${c.perk}</div>`:''}
@@ -2472,8 +2679,8 @@ function heroPanel(){
     </div>
     <div class="hbig">${avatarSVG(S.theme,{...eq,cls:S.cls})}</div>
     <div>
-     <div class="hcard"><h3>Felszerelés</h3><div class="hslots">${slot('weapon','Fegyver')}${slot('hat','Fejfedő')}${slot('pet','Társ')}</div>
-      <div class="hnote" style="margin:6px 0 0">Kattints egy tárgyra: felveszed vagy leveszed. A fegyver csak felvéve sebez többet. A próbán egyik sem számít.</div></div>
+     <div class="hcard"><h3>Felszerelés</h3><div class="hslots">${slot('weapon','Fegyver')}${slot('hat','Fejfedő')}${petSlotHTML()}</div>
+      <div class="hnote" style="margin:6px 0 0">Kattints egy tárgyra: felveszed vagy leveszed. A fegyver csak felvéve sebez többet. A Társra kattintva a társaidat kezeled. A próbán egyik sem számít.</div></div>
      <div class="hcard"><h3>Táska</h3><div class="hbag"><div class="hcell" title="${th.items.potion[0]}">${itemIcon(S.theme,'potion')}<span class="n">×${S.potions}</span></div>${'<div class="hcell"></div>'.repeat(3)}</div></div>
      <div class="hcard"><h3>Kuponjaim</h3>${open.length?open.map(x=>`<div class="hcoupon">${privIcon(S.theme)}<div><b>${x.name}</b><span>${x.date} · a tanár váltja be</span></div><code>${x.code}</code></div>`).join(''):'<div class="hnote" style="margin:0">Még nincs beváltatlan kuponod. A Varázslótoronyban veheted meg AP-ért.</div>'}</div>
      <div class="hcard"><h3>Trófeák</h3><div class="htro">${tro.length?tro.join(''):'<span class="hnote" style="margin:0">Győzz le egy ellenfelet az Arénában!</span>'}</div></div>
@@ -2748,10 +2955,16 @@ boot();
 </script>
 <script>
 /* ================= VERZIÓ, SÚGÓ, VISSZAJELZÉS (v1.0) ================= */
-const APP_VERSION='1.4.2';
+const APP_VERSION='1.5';
 /* Új kiadásnál: APP_VERSION + a sw.js VERSION-je + egy új bejegyzés a lista ELEJÉRE.
    by: a diák beceneve, ha az ő ötlete volt (a Súgóban és az Újdonságok ablakban megjelenik). */
 const CHANGELOG=[
+  {v:'1.5',date:'2026. november 26.',title:'Társak',items:[
+    {t:'🐾 Megjöttek a társak! A 2. szinten választhatod ki az elsőt (sárkányfióka, bagoly, főnix vagy rókakölyök), és te nevezed el. Új társ az 5., 10. és 15. szinten, utána minden 5. szinten jár.'},
+    {t:'✨ Mindegyik mást tud az Arénában: a sárkány erősebben üt, a bagoly gyakrabban talál kritikusat, a főnix gyógyít, a róka több aranyat hoz. A Próbán nem számít – ott továbbra is mindenki egyforma.'},
+    {t:'🍖 A társ a gyakorlástól fejlődik: minden tanítási napon az első gyakorlásod megeteti. 10 etetéstől felnőtt, 25-től legendás. Ha egy hétig nem gyakorolsz, elálmosodik, de nem tűnik el.'},
+    {t:'🎀 Az Alkimista boltban kiegészítőket vehetsz a társadnak: nyakörvet, varázslósüveget és csillagport.'},
+    {t:'🐉 Aki a Boltban már megvette a Sárkányfiókát, ajándékba megtartja – ez nem számít bele a választásaiba.'}]},
   {v:'1.4.2',date:'2026. november 26.',title:'Hosszú feladatok telefonon',items:[
     {t:'📱 A hosszú kifejezések telefonon már nem lógnak ki a képernyőről: ha nem férnek ki egy sorba, szépen két sorba törnek. Nem kell fektetni a telefont.',by:'Eszter és Retekharcos'},
     {t:'🐞 Javítottam: egy bejelentés néha kétszer érkezett meg. Most már egyszer jön meg, akkor is, ha akadozik a net.'}]},
@@ -2840,9 +3053,15 @@ function helpPanel(open){
      <li>Témánként és Főgonoszonként <b>naponta ${DAILY_TRIES} próbálkozásod</b> van.</li>
      <li>A jegyet a tanár látja és ellenőrzi.</li></ul>`)}
    ${sec('res',`💰 ${cur[0].toUpperCase()+cur.slice(1)}, XP, AP – mire jó?`,`<ul>
-     <li><b>${cur}</b>: a Boltban fegyvert, sapkát, háziállatot és bájitalt vehetsz. Csak a kinézetre és az Arénára hat, jegyre nem.</li>
+     <li><b>${cur}</b>: a Boltban fegyvert, sapkát, bájitalt és kiegészítőt vehetsz a társadnak. Csak a kinézetre és az Arénára hat, jegyre nem.</li>
      <li><b>XP</b>: ezzel gyűjtöd a következő szintet. Ha megvan, győzd le az Arénában a szint Küszöbőrét, és szintet lépsz. Magasabb szinten több az életerőd, erősebb az ütésed, és új kiváltságok nyílnak.</li>
      <li><b>AP</b>: minden tanítási napon töltődik (az osztályodtól függ, mennyi). Ezzel váltasz ki valódi, órai kiváltságokat.</li></ul>`)}
+   ${sec('pet','🐾 Társak',`<ul>
+     <li>Az első társadat a <b>2. szinten</b> választod ki, utána az 5., 10., 15. szinten és onnan minden 5. szinten jöhet új. Négyféle van: sárkányfióka, bagoly, főnix és rókakölyök.</li>
+     <li>Mindegyik mást tud: a sárkány erősebben üt, a bagoly gyakrabban talál kritikusat, a főnix gyógyít harc közben, a róka több aranyat hoz. <b>Csak az Arénában</b> és a Küszöbőröknél számít, a Próbán nem.</li>
+     <li>Minden tanítási napon az első gyakorlásod <b>megeteti</b> a veled lévő társat. 10 etetéstől felnőtt, 25-től legendás – és egyre erősebb.</li>
+     <li>Ha 7 napig nem gyakorolsz, elálmosodik és nem segít, de az első gyakorlásodra felébred. Nem tűnik el.</li>
+     <li>A társaidat a hősöd lapján kezeled: ott választasz, nevezed el, és ott döntöd el, melyik kísérjen.</li></ul>`)}
    ${sec('priv','🎟️ Kiváltságok és kuponok',`<ul>
      <li>A Varázslótoronyban találod őket (a faluban vagy a Kiváltságok menüpontban). A szinted <b>nyitja</b> a kiváltságot, az AP-d <b>fizeti</b>.</li>
      <li>Vásárlás után kupont kapsz – mutasd meg a tanárnak, ő váltja be.</li>

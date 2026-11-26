@@ -129,6 +129,10 @@ const DEFAULT_PRIVS=[
   {id:'k8',name:'Hősmatrica',desc:'Matricát kapsz a saját hősöd képéből.',lvl:5,ap:25,limit:'month',cls:'',test:false,on:true},
   {id:'k9',name:'3D-s társ',desc:'3D nyomtatott kulcstartót kapsz a társadból (a petedből).',lvl:7,ap:25,limit:'month',cls:'',test:false,on:true}];
 const CLS_NAME={harcos:'Harcos',magus:'Mágus',gyogyito:'Gyógyító'};
+const PET_N={sarkany:'Sárkányfióka',bagoly:'Bagoly',fonix:'Főnix',roka:'Rókakölyök'};
+const petStageN=f=>f>=25?'legendás':f>=10?'felnőtt':'kölyök';
+const petList=s=>Array.isArray(s.pets)?s.pets:[];
+const petsHTML=s=>petList(s).length?petList(s).map(p=>`<span class="pill${p.id===s.pet_on?' g':''}" title="${p.id===s.pet_on?'Ez kíséri most':''}">🐾 <b>${esc(p.name)}</b> · ${PET_N[p.sp]||esc(p.sp)} · ${petStageN(p.feed||0)} (${p.feed||0} etetés)${p.gift?' · ajándék':''}</span>`).join(' '):'<span class="muted small">Még nincs társa.</span>';
 
 const $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -229,7 +233,7 @@ function overviewHTML(){
      <td>${ago(s.last_seen)}</td><td>${s.days}</td><td>${s.n}</td>
      <td>${s.n?`<div style="display:flex;gap:6px;align-items:center"><div class="bar ok" style="width:60px"><i style="width:${pct(s.ok,s.n)}%"></i></div>${pct(s.ok,s.n)}%</div>`:'–'}</td>
      <td class="stars">${stars(topicMax(s,'betus'))}</td><td class="stars">${stars(topicMax(s,'zk'))}</td>
-     <td>${s.clvl?`${s.clvl}. szint${s.cls?' · '+(CLS_NAME[s.cls]||''):''}`:'–'}</td>
+     <td>${s.clvl?`${s.clvl}. szint${s.cls?' · '+(CLS_NAME[s.cls]||''):''}`:'–'}${petList(s).length?` <span class="small" title="${petList(s).map(p=>esc(p.name)).join(', ')}">🐾${petList(s).length}</span>`:''}</td>
      <td>${s.grades.map(g=>{const fl=gradeFlags(g);return `<span class="grade gclick${fl.length?' sus':''}" data-trial="${g.id}" data-gstu="${s.id}" title="${esc(TOPICS[g.topic]||g.topic)} · ${fmtDT(g.at)}${fl.length?' · ⚠ '+esc(fl.join('; ')):''} – kattints a naplóért">${g.grade}${fl.length?'⚠':''}</span>`}).join('')||'–'}</td></tr>`).join('')}
    </tbody></table></div>
    <p class="small muted">A csillagok a témában elért legmagasabb fokozatot mutatják (★ alap · ★★ közepes · ★★★ haladó). A szürke sorok az időszakban nem gyakoroltak. Kattints egy diákra a részletekért, egy jegyre a próba naplójáért. A ⚠ jelű jegyeket érdemes átnézni (az okot a jegy fölé állva látod).</p>`
@@ -311,6 +315,7 @@ function studentHTML(){
    <div class="kpis" style="margin-top:14px"><div class="kpi"><b>${n}</b><span>feladat az időszakban</span></div><div class="kpi"><b>${pct(ok,n)}%</b><span>helyes</span></div>
     <div class="kpi"><b>${s.days}</b><span>aktív nap</span></div><div class="kpi"><b>${s.clvl||1}. szint</b><span>${s.xp??0} XP · ${s.gold??0} arany${s.cls?' · '+CLS_NAME[s.cls]:''}</span></div>
     <div class="kpi"><b class="stars" style="font-size:1.1rem">${stars(topicMax(s,'betus'))} / ${stars(topicMax(s,'zk'))}</b><span>Összevonás / Zárójel – legjobb fokozat</span></div></div>
+   <h3>Társai</h3><p style="display:flex;gap:6px;flex-wrap:wrap;margin:0">${petsHTML(s)}</p>
    <div class="grid2"><div><h3>Napi aktivitás (utolsó ${days} nap)</h3><div class="days">${arr.map(a=>`<div title="${a.k}: ${a.ok} jó, ${a.bad} hibás"><i style="height:${a.ok/mx*84}px"></i><i class="w" style="height:${a.bad/mx*84}px"></i></div>`).join('')}</div>
      <div class="dlbl"><span>${arr[0].dt.toLocaleDateString('hu-HU',{month:'short',day:'numeric'})}</span><span>ma</span></div><p class="small muted">Zöld: jó válasz, piros: rossz vagy részben jó.</p></div>
     <div><h3>Hibái</h3>${el.length?el.map(([k,v])=>`<div class="errrow" style="grid-template-columns:1fr 1fr 40px"><b class="small">${esc(k)}</b><div class="bar"><i style="width:${v/el[0][1]*100}%"></i></div><span class="small">${v}×</span></div>`).join(''):'<p class="muted small">Nincs hibája az időszakban.</p>'}</div></div>
