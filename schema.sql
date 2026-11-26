@@ -413,6 +413,12 @@ declare sid uuid := public.mk_student(p_token); st public.students; n int;
 begin
   if p_kind not in ('bug','idea','like') then return jsonb_build_object('error','bad_kind'); end if;
   if length(trim(coalesce(p_body,''))) < 2 then return jsonb_build_object('error','empty'); end if;
+  -- v1.4.2: ugyanaz a szöveg 30 percen belül → már megvan, nem mentjük újra
+  if exists (select 1 from public.feedback
+              where student_id = sid and kind = p_kind and body = left(trim(p_body),1000)
+                and created_at > now() - interval '30 minutes') then
+    return jsonb_build_object('ok', true, 'dup', true);
+  end if;
   select count(*) into n from public.feedback
    where student_id = sid and (created_at at time zone 'Europe/Budapest')::date = public.mk_today();
   if n >= 15 then return jsonb_build_object('error','too_many'); end if;

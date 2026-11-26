@@ -506,13 +506,15 @@ function letters(k){return k.split('').map(ch=>`<i>${ch}</i>`).join('')}
 function termHTML(t,first){
   const neg=t.c.n<0;const a=new Q(Math.abs(t.c.n),t.c.d);
   const coef=(t.k&&a.n===1&&a.d===1)?'':absHTML(a);
-  const sign=first?(neg?'−':''):(neg?' − ':' + ');
+  // v1.4.2: a jel nem-törő szóközzel tapad a taghoz, így a sor a műveleti jel ELŐTT törik (nem marad lógó + a sor végén)
+  const sign=first?(neg?'−':''):(neg?' −\u00a0':' +\u00a0');
   return sign+coef+letters(t.k);
 }
 /* v1.4: Kiemelő – az összevonandó feladatban a tagokra koppintva megjelölheted (és elhalványíthatod) az egynemű tagokat */
 const PEN_N=4;let penSel=0;
 function markExprHTML(t){t.marks=t.marks||{};
-  return t.terms.map((x,i)=>{const m=t.marks[i];return `<span class="tm${m!==undefined?' mk pc'+m:''}" data-ti="${i}">${termHTML(x,i===0)}</span>`}).join('')}
+  return t.terms.map((x,i)=>{const m=t.marks[i];const h=termHTML(x,i===0),lead=h.startsWith(' ')?' ':'';   // v1.4.2: a tagok közti szóköz a nem-törő tagon KÍVÜL van, így hosszú kifejezés is több sorba törhet
+    return `${lead}<span class="tm${m!==undefined?' mk pc'+m:''}" data-ti="${i}">${h.slice(lead.length)}</span>`}).join('')}
 function pensHTML(t){const n=Object.keys(t.marks||{}).length;
   return `<span class="pl">🖍 Kiemelő:</span>${Array.from({length:PEN_N},(_,i)=>`<button type="button" class="pen pc${i} ${i===penSel?'on':''}" data-pen="${i}" aria-label="${i+1}. szín"></button>`).join('')}
    ${n?`<button type="button" class="pen-clr" data-pen="clr">Törlés</button>`:''}<span class="ph">${n?'':'Koppints az egynemű tagokra, egy színnel egy csoportot!'}</span>`}
@@ -712,7 +714,7 @@ function partsHTML(parts){
   return parts.map((p,i)=>{
     if(p.t)return termHTML(p.t,i===0);
     const neg=p.f.c.n<0;
-    return (i===0?(neg?'−':''):(neg?' − ':' + '))+factorHTML(p.f)+'('+exprHTML(p.inner)+')';
+    return (i===0?(neg?'−':''):(neg?' −\u00a0':' +\u00a0'))+factorHTML(p.f)+'('+exprHTML(p.inner)+')';
   }).join('');
 }
 function factoredHTML(F,inner){return (F.c.n<0?'−':'')+factorHTML(F)+'('+exprHTML(inner)+')'}
@@ -2746,10 +2748,13 @@ boot();
 </script>
 <script>
 /* ================= VERZIÓ, SÚGÓ, VISSZAJELZÉS (v1.0) ================= */
-const APP_VERSION='1.4.1';
+const APP_VERSION='1.4.2';
 /* Új kiadásnál: APP_VERSION + a sw.js VERSION-je + egy új bejegyzés a lista ELEJÉRE.
    by: a diák beceneve, ha az ő ötlete volt (a Súgóban és az Újdonságok ablakban megjelenik). */
 const CHANGELOG=[
+  {v:'1.4.2',date:'2026. november 26.',title:'Hosszú feladatok telefonon',items:[
+    {t:'📱 A hosszú kifejezések telefonon már nem lógnak ki a képernyőről: ha nem férnek ki egy sorba, szépen két sorba törnek. Nem kell fektetni a telefont.',by:'Eszter és Retekharcos'},
+    {t:'🐞 Javítottam: egy bejelentés néha kétszer érkezett meg. Most már egyszer jön meg, akkor is, ha akadozik a net.'}]},
   {v:'1.4.1',date:'2026. november 25.',title:'Kiemelő csak gyakorláshoz',items:[
     {t:'🖍️ A Kiemelő mostantól csak a Gyakorlásban segít. Harcban (Aréna, Próba, szintőr) nincs, mert ott azt nézzük, megy-e már segítség nélkül – így mindenki ugyanolyan feltételekkel harcol a jegyért.'}]},
   {v:'1.4',date:'2026. november 25.',title:'Varázslótorony és Kiemelő',items:[
@@ -2881,9 +2886,11 @@ function fbPanel(kind){
 async function fbSendOne(it){const d=await rpc('student_feedback',{p_token:ACC.token,p_kind:it.kind,p_body:it.body,p_version:it.version,p_screen:it.screen,p_device:it.device});return d||{}}
 function fbQueue(){try{return JSON.parse(localStorage.getItem(fbQKey())||'[]')}catch(e){return []}}
 function fbQueueSave(q){try{localStorage.setItem(fbQKey(),JSON.stringify(q.slice(-30)))}catch(e){}}
-async function fbFlush(){if(!ACC||!SB_ON())return;const q=fbQueue();if(!q.length)return;const left=[];
-  for(const it of q){try{const d=await fbSendOne(it);if(d.error==='too_many')left.push(it)}catch(e){if(e.server&&/bad_session|inactive/.test(e.message))return;left.push(it)}}
-  fbQueueSave(left)}
+// v1.4.2: egyszerre csak egy ürítés futhat (betöltés + 'online' esemény ne küldje kétszer ugyanazt)
+let fbBusy=false;
+async function fbFlush(){if(fbBusy||!ACC||!SB_ON())return;const q=fbQueue();if(!q.length)return;fbBusy=true;const left=[];
+  try{for(const it of q){try{const d=await fbSendOne(it);if(d.error==='too_many')left.push(it)}catch(e){if(e.server&&/bad_session|inactive/.test(e.message))return;left.push(it)}}
+  fbQueueSave(left)}finally{fbBusy=false}}
 async function fbSend(btn){
   const ta=document.getElementById('fbText'),msg=document.getElementById('fbMsg');const body=(ta.value||'').trim();
   if(body.length<2){msg.textContent='Írj néhány szót!';return}
