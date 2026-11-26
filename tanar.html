@@ -103,10 +103,11 @@ details.tlog summary{cursor:pointer;color:var(--acc2);font-weight:700}
 <div id="print"></div>
 <div class="toast" id="toast"></div>
 <script src="esemenyek.js"></script>
+<script src="konyvtar.js"></script>
 <script>
 const SB={url:'https://mqckkudxqxyskvxwtunr.supabase.co',key:'sb_publishable_sQockj8mHy7ncdp1F4H70w_Wf6RrxKe'};   // ← ugyanaz a Supabase Project URL és publishable key, mint az index.html-ben
 const APP_URL=new URL('./',location.href).href;
-const TOPICS={betus:'Betűs kifejezések',zk:'Zárójelbontás és kiemelés'};
+const TOPICS={betus:'Betűs kifejezések',zk:'Zárójelbontás és kiemelés',lib:'Könyvtár'};
 const LESSONS=[{key:'betus',name:'Betűs kifejezések: összevonás, helyettesítés',ready:true,def:'open'},
                {key:'zk',name:'Zárójelbontás és kiemelés',ready:true,def:'open'},
                {key:'szoveges',name:'Szöveges feladatok',ready:false,def:'soon'}];
@@ -171,7 +172,9 @@ async function loadStats(){V.stats=V.cls?await rpc('teacher_class_stats',{p_clas
   /* all: minden fiók (Kezelés, Tanulói részletek); students: csak akik beszámítanak a kimutatásokba (teszt-/vendégfiók nélkül) */
   if(V.stats){V.stats.all=V.stats.students;V.stats.students=V.stats.all.filter(s=>s.in_stats!==false)}
   await loadFeedback()}
-async function loadFeedback(){V.fb=null;if(!V.cls)return;try{V.fb=await api('feedback?class_id=eq.'+V.cls+'&select=id,nick,kind,body,app_version,screen,device,status,created_at&order=created_at.desc&limit=500')}catch(e){V.fb=null;V.fbErr=e.message}}
+async function loadFeedback(){V.fb=null;if(!V.cls)return;const q=x=>api('feedback?class_id=eq.'+V.cls+'&select=id,nick,kind,body,app_version,screen,device,status,created_at'+x+'&order=created_at.desc&limit=500');
+  try{V.fb=await q(',read_at,reward_gold,reward_xp,note,notified_at,student_seen_at');V.fbV16=true}   // v1.6 oszlopok
+  catch(e){V.fbV16=false;try{V.fb=await q('')}catch(e2){V.fb=null;V.fbErr=e2.message}}}
 async function refresh(){try{await loadStats()}catch(e){toast('Hiba: '+e.message)}render()}
 
 /* ---------- belépés ---------- */
@@ -196,16 +199,16 @@ async function boot(){
 
 /* ---------- keret ---------- */
 function render(){
-  const tabs=[['overview','Áttekintés'],['errors','Hibatérkép'],['student','Tanulók'],['feedback','Visszajelzések'],['manage','Kezelés']];
+  const tabs=[['overview','Áttekintés'],['errors','Hibatérkép'],['student','Tanulók'],['feedback','Visszajelzések'],['library','Könyvtár'],['manage','Kezelés']];
   $('app').innerHTML=`<header><h1>Matek-kaland<small>Tanári felület · ${esc(SESS.email||'')}</small></h1><div class="sp"></div>
     ${V.classes.length?`<select class="hsel" id="selCls">${V.classes.map(c=>`<option value="${c.id}" ${c.id===V.cls?'selected':''}>${esc(c.name)}</option>`).join('')}</select>
     <select class="hsel" id="selPer">${[[7,'Utolsó 7 nap'],[30,'Utolsó 30 nap'],[120,'Utolsó 4 hónap'],[365,'Egész tanév']].map(([d,n])=>`<option value="${d}" ${+d===V.period?'selected':''}>${n}</option>`).join('')}</select>`:''}
     ${V.cls?'<button class="hbtn" id="btnChest" title="Óranyitó láda a kivetítőre">🧰 Napi láda</button>':''}<button class="hbtn" id="btnRef" title="Frissítés">⟳</button><button class="hbtn" id="btnOut">Kilépés</button></header>
-   <nav>${tabs.map(([k,n])=>`<button data-tab="${k}" class="${V.tab===k?'on':''}">${n}${k==='manage'&&V.stats&&V.stats.coupons.length?` <span class="pill y">${V.stats.coupons.length}</span>`:''}${k==='feedback'&&fbNew()?` <span class="pill r">${fbNew()}</span>`:''}</button>`).join('')}</nav>
+   <nav>${tabs.map(([k,n])=>`<button data-tab="${k}" class="${V.tab===k?'on':''}">${n}${k==='manage'&&V.stats&&V.stats.coupons.length?` <span class="pill y">${V.stats.coupons.length}</span>`:''}${k==='feedback'&&(fbUnread()||fbNew())?` <span class="pill r" title="${fbUnread()?'olvasatlan':'új'}">${fbUnread()||fbNew()}</span>`:''}</button>`).join('')}</nav>
    <main id="main"></main>`;
   const m=$('main');
   if(!V.classes.length&&V.tab!=='manage')V.tab='manage';
-  m.innerHTML=V.tab==='overview'?overviewHTML():V.tab==='errors'?errorsHTML():V.tab==='student'?studentHTML():V.tab==='feedback'?feedbackHTML():manageHTML();
+  m.innerHTML=V.tab==='overview'?overviewHTML():V.tab==='errors'?errorsHTML():V.tab==='student'?studentHTML():V.tab==='feedback'?feedbackHTML():V.tab==='library'?libraryHTML():manageHTML();
   if($('selCls'))$('selCls').onchange=async e=>{V.cls=e.target.value;localStorage.setItem('mk-t-cls',V.cls);V.student=null;V.detail=null;V.newPins=null;V.privDraft=null;await refresh()};
   if($('selPer'))$('selPer').onchange=async e=>{V.period=+e.target.value;V.detail=null;await refresh();if(V.tab==='student'&&V.student)openStudent(V.student)};
   $('btnRef').onclick=async()=>{await loadClasses();await refresh();if(V.tab==='student'&&V.student)openStudent(V.student)};
@@ -423,16 +426,17 @@ function feedbackHTML(){
   const list=V.fb.filter(f=>(!fk||f.kind===fk)&&(fs==='all'||(fs==='open'?(f.status==='new'||f.status==='planned'):f.status===fs)));
   const cnt=k=>V.fb.filter(f=>f.kind===k).length;
   return `<h2>Visszajelzések</h2>
+   ${V.fbV16?'':`<div class="box"><b>Az olvasottnak jelöléshez és a jutalmazáshoz</b> futtasd le egyszer a <code>supabase/v1.6-konyvtar.sql</code> fájlt a Supabase SQL Editorában, majd frissíts (⟳).</div>`}
    <p class="small muted">A diákok a 🐞 gombbal küldik. Amit <b>Beépítve</b> állapotba teszel, azt a „Lista másolása” gombbal átadhatod a következő frissítéshez – a diák beceneve bekerül a „Mi frissült?” listába.</p>
    <div class="chips" style="margin:8px 0">${[['','Mind ('+V.fb.length+')'],...Object.entries(FB_KIND).map(([k,n])=>[k,n+' ('+cnt(k)+')'])].map(([k,n])=>`<button class="chip ${fk===k?'on':''}" data-fbkind="${k}">${n}</button>`).join(' ')}</div>
    <div class="chips" style="margin:8px 0">${[['open','Nyitott (új + tervben)'],['new','Új'],['planned','Tervben'],['done','Beépítve'],['rejected','Elvetve'],['all','Összes']].map(([k,n])=>`<button class="chip ${fs===k?'on':''}" data-fbst="${k}">${n}</button>`).join(' ')}
-     <button class="btn sm" id="fbCopy" style="margin-left:8px">📋 Lista másolása</button></div>
-   ${list.length?list.map(f=>`<div class="box" style="margin-bottom:10px">
+     <button class="btn sm" id="fbCopy" style="margin-left:8px">📋 Lista másolása</button>${fbUnread()?` <button class="btn sm ghost" id="fbReadAll">✓ Mind olvasott (${fbUnread()})</button>`:''}</div>
+   ${list.length?list.map(f=>`<div class="box" style="margin-bottom:10px${V.fbV16&&!f.read_at?';border-left:4px solid var(--bad)':''}">
      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>${FB_KIND[f.kind]||esc(f.kind)}</b> · <b>${esc(f.nick||'?')}</b> <span class="small muted">${fmtDT(f.created_at)} · v${esc(f.app_version||'?')} · ${esc(f.screen||'')}</span>
        <span class="pill ${FB_ST[f.status][1]}">${FB_ST[f.status][0]}</span></div>
      <p style="margin:8px 0;white-space:pre-wrap">${esc(f.body)}</p>
      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${Object.entries(FB_ST).map(([k,[n]])=>`<button class="chip ${f.status===k?'on':''}" data-fbset="${f.id}:${k}">${n}</button>`).join(' ')}
-       <span class="small muted" style="margin-left:auto">${esc(f.device||'')}</span></div></div>`).join(''):'<p class="muted">Ebben a szűrésben nincs visszajelzés.</p>'}`;
+       <span class="small muted" style="margin-left:auto">${esc(f.device||'')}</span></div>${fbExtraHTML(f)}</div>`).join(''):'<p class="muted">Ebben a szűrésben nincs visszajelzés.</p>'}`;
 }
 document.addEventListener('click',async e=>{
   const k=e.target.closest('[data-fbkind]');if(k){V.fbKind=k.dataset.fbkind;render();return}
@@ -558,6 +562,83 @@ document.addEventListener('click',async e=>{
   else if(a==='reset'){if(!confirm('Visszazárod a mai ládát? A sorsolás is újraindul.'))return;try{CH.st=await rpc('teacher_day_reset',{p_class:V.cls});CH.exclude=[];chestRender()}catch(x){toast('Hiba: '+x.message)}}
 });
 
+
+/* ---------- v1.6 KÖNYVTÁR: fogalomnyitás, pecsétek, a 45 fogalom címe ---------- */
+const libReadyT=()=>typeof LIB_CONCEPTS!=='undefined';
+function libCfg(){const c=curClass()||{};return (c.config&&c.config.concepts)||{}}
+function libTitlesT(){const c=curClass()||{},t=c.config&&Array.isArray(c.config.concept_titles)?c.config.concept_titles:[];
+  return Array.from({length:LIB_EXAM_N},(_,i)=>t[i]||LIB_DEFAULT_TITLES[i+1]||'')}
+function libraryHTML(){
+  if(!libReadyT())return '<h2>Könyvtár</h2><p class="err">A konyvtar.js nem töltődött be. Töltsd fel a GitHubra is!</p>';
+  const c=curClass();if(!c)return '<h2>Könyvtár</h2><p>Először hozz létre egy osztályt.</p>';
+  const cfg=libCfg(),isl=LIB_CONCEPTS,st=V.stats,S=st?st.students:[];
+  const code=x=>x.n?x.n+'.':x.id;
+  const libOf=s=>(s.lib&&typeof s.lib==='object')?s.lib:{};
+  const sealN=x=>S.filter(s=>libOf(s)[x.id]&&libOf(s)[x.id].seal).length;
+  const libErr=(st&&st.errors||[]).filter(e=>e.topic==='lib').sort((a,b)=>b.n-a.n).slice(0,10);
+  return `<h2>Bölcsességek Könyvtára</h2>
+   <p class="small muted">A diák a fogalom lapját és kártyáit tanulja, aztán A Könyvtáros kikérdezi: 6 kérdésből legalább 5 jó kell a pecséthez (+${LIB_SEAL_XP} XP, +${LIB_SEAL_GOLD} arany, fogalmanként egyszer). A fogalom csak akkor jelenik meg nyitottként, ha itt megnyitod.</p>
+   <div class="grid2"><div>
+    <h3>Fogalmak nyitása</h3>
+    <table>${isl.map(x=>{const on=cfg[x.id]==='open';return `<tr><td><b>${code(x)}</b> ${esc(x.title)}</td><td class="small">${sealN(x)} pecsét</td>
+      <td style="white-space:nowrap"><button class="chip ${on?'on':''}" data-concept="${x.id}:open">Nyitva</button> <button class="chip ${on?'':'on'}" data-concept="${x.id}:closed">Zárva</button></td></tr>`}).join('')}</table>
+    <p><button class="btn sm ghost" data-concept="*:open">Mind nyitva</button> <button class="btn sm ghost" data-concept="*:closed">Mind zárva</button></p>
+   </div><div>
+    <h3>Ahol a legtöbben hibáznak</h3>
+    ${libErr.length?`<table>${libErr.map(e=>`<tr><td>${esc(e.err.replace(/^Könyvtár /,''))}</td><td class="small">${e.n}× · ${e.students} diák</td></tr>`).join('')}</table>`:'<p class="muted small">Még nincs adat a kikérdezésekből.</p>'}
+   </div></div>
+   <h3>Pecsétek diákonként</h3>
+   ${S.length?`<div class="tw"><table><thead><tr><th>Diák</th>${isl.map(x=>`<th title="${esc(x.title)}">${code(x)}</th>`).join('')}<th>Összesen</th></tr></thead><tbody>
+    ${S.map(s=>{const L=libOf(s);let n=0;return `<tr><td><b>${esc(s.nick)}</b></td>${isl.map(x=>{const r=L[x.id]||{};if(r.seal)n++;
+      return `<td class="small" title="${r.tries?`${r.tries} próbálkozás, legjobb ${r.best}/6`:''}">${r.seal?`🏅 <span class="muted">${esc(String(r.seal).replace(/^\d{4}\.\s*/,''))}</span>`:r.tries?`${r.best}/6`:'–'}</td>`}).join('')}<td><b>${n}</b> / ${isl.length}</td></tr>`}).join('')}</tbody></table></div>
+    <p class="small muted">🏅 = megvan A Könyvtáros pecsétje (dátummal). A szám a legjobb eredmény, ha még nincs pecsét. A végső, órai pecsét a következő frissítésben jön.</p>`:'<p class="muted">Még nincs diák.</p>'}
+   <details class="box" style="margin-top:14px"><summary><b>A vizsga 45 fogalmának címe</b> (a diákok polcán ez látszik)</summary>
+    <p class="small muted">Soronként egy cím, a vizsgalista sorrendjében. A 45. a JOKER. Az üres sor helyén „N. fogalom” áll.</p>
+    <textarea id="libTitles" style="min-height:260px">${esc(libTitlesT().join('\n'))}</textarea>
+    <p><button class="btn" id="btnLibTitles">Címek mentése</button></p></details>`;
+}
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-concept],#btnLibTitles');if(!t)return;
+  try{
+    if(t.id==='btnLibTitles'){const lines=$('libTitles').value.split('\n').map(x=>x.trim()).slice(0,LIB_EXAM_N);
+      await saveConfig({concept_titles:lines});render();toast('Címek mentve – a diákoknál a következő szinkronnál frissül');return}
+    const [id,v]=t.dataset.concept.split(':');const cur={...libCfg()};
+    if(id==='*')LIB_CONCEPTS.forEach(x=>cur[x.id]=v);else cur[id]=v;
+    await saveConfig({concepts:cur});render();toast('Mentve – a diákoknál a következő szinkronnál frissül');
+  }catch(x){toast('Hiba: '+x.message)}
+});
+
+/* ---------- v1.6 VISSZAJELZÉSEK: olvasott, értesítés + jutalom ---------- */
+const FB_REWARD={bug:{gold:30,xp:20},idea:{gold:50,xp:30},like:{gold:0,xp:0}};
+const fbUnread=()=>V.fbV16?(V.fb||[]).filter(f=>!f.read_at).length:0;
+function fbExtraHTML(f){
+  if(!V.fbV16)return '';
+  const read=f.read_at?`<span class="small muted">✓ olvasva</span>`:`<button class="btn sm" data-fbread="${f.id}">✓ Olvasottnak jelölöm</button>`;
+  let rw='';
+  if(f.status==='done'&&f.kind!=='like'){
+    if(f.notified_at)rw=`<div class="small" style="margin-top:6px">📬 Értesítve ${fmtDT(f.notified_at)}${f.reward_gold||f.reward_xp?` · +${f.reward_gold} arany, +${f.reward_xp} XP`:''}${f.note?` · „${esc(f.note)}”`:''} · ${f.student_seen_at?`<span class="pill g">a diák megkapta</span>`:'<span class="pill y">a diák még nem lépett be azóta</span>'}</div>`;
+    else{const d=FB_REWARD[f.kind]||{gold:0,xp:0};
+      rw=`<div class="fbrw" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)">
+        <b class="small">${f.kind==='bug'?'Kijavítva':'Megvalósult'} – értesítés a diáknak:</b>
+        <label class="small">arany <input type="number" min="0" id="fbg-${f.id}" value="${d.gold}" style="width:64px"></label>
+        <label class="small">XP <input type="number" min="0" id="fbx-${f.id}" value="${d.xp}" style="width:64px"></label>
+        <input type="text" id="fbn-${f.id}" placeholder="Üzenet (nem kötelező), pl. Köszi, a v1.6-ban benne van!" style="flex:1;min-width:180px">
+        <button class="btn sm" data-fbnotify="${f.id}">📬 Értesítés + jutalom küldése</button></div>`}
+  }
+  return `<div style="margin-top:6px">${read}</div>${rw}`;
+}
+document.addEventListener('click',async e=>{
+  const r=e.target.closest('[data-fbread],[data-fbnotify],#fbReadAll');if(!r)return;
+  try{
+    if(r.id==='fbReadAll'){const ids=(V.fb||[]).filter(f=>!f.read_at).map(f=>f.id);if(!ids.length)return;const now=new Date().toISOString();
+      await api('feedback?id=in.('+ids.join(',')+')',{method:'PATCH',body:{read_at:now},prefer:'return=minimal'});V.fb.forEach(f=>{if(!f.read_at)f.read_at=now});render();return}
+    if(r.dataset.fbread){const id=r.dataset.fbread,now=new Date().toISOString();await api('feedback?id=eq.'+id,{method:'PATCH',body:{read_at:now},prefer:'return=minimal'});
+      const f=V.fb.find(x=>String(x.id)===id);if(f)f.read_at=now;render();return}
+    if(r.dataset.fbnotify){const id=r.dataset.fbnotify,g=Math.max(0,parseInt($('fbg-'+id).value)||0),x=Math.max(0,parseInt($('fbx-'+id).value)||0),note=$('fbn-'+id).value.trim().slice(0,300),now=new Date().toISOString();
+      r.disabled=true;await api('feedback?id=eq.'+id,{method:'PATCH',body:{reward_gold:g,reward_xp:x,note:note||null,notified_at:now,read_at:now},prefer:'return=minimal'});
+      const f=V.fb.find(y=>String(y.id)===id);if(f)Object.assign(f,{reward_gold:g,reward_xp:x,note,notified_at:now,read_at:f.read_at||now});render();toast('Elküldve – a diák a következő belépéskor megkapja');return}
+  }catch(x){toast('Hiba: '+x.message);r.disabled=false}
+});
 </script>
 </body>
 </html>

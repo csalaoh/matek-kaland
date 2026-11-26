@@ -276,7 +276,7 @@ begin
   return jsonb_build_object(
     'students', coalesce((select jsonb_agg(jsonb_build_object(
         'id', st.id, 'nick', st.nick, 'active', st.active, 'in_stats', st.in_stats, 'last_seen', st.last_seen, 'locked', st.locked_until > now(),
-        'clvl', st.state->'clvl', 'xp', st.state->'xp', 'gold', st.state->'gold', 'cls', st.state->'cls', 'prog', st.state->'prog', 'pets', st.state->'pets', 'pet_on', st.state->'petOn',
+        'clvl', st.state->'clvl', 'xp', st.state->'xp', 'gold', st.state->'gold', 'cls', st.state->'cls', 'prog', st.state->'prog', 'pets', st.state->'pets', 'pet_on', st.state->'petOn', 'lib', st.state->'lib',
         'topic', st.state->'topic', 'level', st.state->'level', 'max', st.state->'max',
         'n', (select count(*) from public.events e where e.student_id = st.id and e.ts >= p_since),
         'ok', (select count(*) from public.events e where e.student_id = st.id and e.ts >= p_since and e.status = 'correct'),
@@ -430,3 +430,39 @@ end $$;
 
 revoke execute on function public.student_feedback(uuid, text, text, text, text, text) from public;
 grant execute on function public.student_feedback(uuid, text, text, text, text, text) to anon, authenticated;
+
+
+-- ---------- v1.6 (2026-11-26): KÖNYVTÁR + VISSZAJELZÉSEK KEZELÉSE ----------
+-- 1) Visszajelzések: olvasott, jutalom, értesítés
+alter table public.feedback add column if not exists read_at timestamptz;          -- a tanár elolvasta
+alter table public.feedback add column if not exists reward_gold int not null default 0;
+alter table public.feedback add column if not exists reward_xp int not null default 0;
+alter table public.feedback add column if not exists note text;                    -- a tanár üzenete a diáknak
+alter table public.feedback add column if not exists notified_at timestamptz;      -- a tanár elküldte az értesítést (+ jutalmat)
+alter table public.feedback add column if not exists student_seen_at timestamptz;  -- a diák megkapta
+grant update (status, read_at, reward_gold, reward_xp, note, notified_at) on public.feedback to authenticated;
+
+-- a diák ezzel kérdezi le, van-e új értesítése (megvalósult ötlet, kijavított hiba)
+create or replace function public.student_fb_news(p_token uuid) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare sid uuid := public.mk_student(p_token);
+begin
+  return coalesce((select jsonb_agg(jsonb_build_object('id', f.id, 'kind', f.kind, 'body', left(f.body, 160),
+            'gold', f.reward_gold, 'xp', f.reward_xp, 'note', f.note) order by f.notified_at)
+          from public.feedback f
+          where f.student_id = sid and f.notified_at is not null and f.student_seen_at is null), '[]'::jsonb);
+end $$;
+
+-- a diák nyugtázza, hogy megkapta (a jutalmat a saját mentésében is nyilvántartja, így kétszer nem kaphatja meg)
+create or replace function public.student_fb_ack(p_token uuid, p_ids bigint[]) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare sid uuid := public.mk_student(p_token);
+begin
+  update public.feedback set student_seen_at = now()
+   where student_id = sid and id = any(p_ids) and notified_at is not null and student_seen_at is null;
+  return jsonb_build_object('ok', true);
+end $$;
+
+revoke execute on function public.student_fb_news(uuid), public.student_fb_ack(uuid, bigint[]) from public;
+grant execute on function public.student_fb_news(uuid), public.student_fb_ack(uuid, bigint[]) to anon, authenticated;
+

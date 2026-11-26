@@ -176,7 +176,7 @@ body.mode-falu main{grid-template-columns:minmax(0,1fr);max-width:max(900px,calc
 body.mode-falu aside{display:none}
 body.mode-falu main>section.card{padding:0;overflow:hidden;background:#3c5a2c}
 .fwrap{position:relative;overflow:auto;-webkit-overflow-scrolling:touch;border-radius:16px}
-.falu{position:relative;isolation:isolate;width:100%;aspect-ratio:2000/1116;user-select:none;-webkit-user-select:none}
+.falu{position:relative;isolation:isolate;width:100%;aspect-ratio:1376/768;user-select:none;-webkit-user-select:none}
 .falu>img.fmap{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
 .fbld{position:absolute;border:0;background:transparent;border-radius:30%;cursor:pointer;padding:0}
 .fbld:hover,.fbld:focus-visible{background:radial-gradient(closest-side,rgba(255,240,180,.35),transparent);outline:none}
@@ -412,6 +412,43 @@ button.step{font-family:inherit;cursor:pointer;background:transparent}
 .petren{display:inline-flex;gap:6px;align-items:center}
 .petnew{border:2px solid var(--accent)}
 @media (max-width:560px){.petbody{padding:0 10px 12px}.petart{width:52px;height:60px}}
+/* v1.6 Könyvtár */
+@media (max-width:400px){.tabs button{padding:8px 1px;font-size:.64rem;letter-spacing:-.01em}}
+.libscene{position:relative}
+.libsay{background:rgba(255,255,255,.55);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;line-height:1.45}
+.libh{margin:14px 0 6px;font:700 1rem Georgia,serif}
+.libgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.libtile{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:10px 12px;border-radius:12px;border:2px solid #c8962e;background:#fbf3df;color:var(--ink);font:inherit;cursor:pointer}
+.libtile:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.libtile .lcode{font:800 .8rem Nunito,sans-serif;color:#fff;background:#7a3e1d;border-radius:99px;padding:1px 8px}
+.libtile .lt{font-weight:800;line-height:1.25}.libtile .lst{font-size:.78rem;color:var(--muted)}
+.libtile.locked{opacity:.55;border-style:dashed;cursor:default}.libtile.sealed{border-color:#2f7d32;background:#eef7e8}
+.libexam{margin-top:14px}.libexam summary{cursor:pointer;font:700 1rem Georgia,serif}
+.libnums{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px;margin-top:6px}
+.libnum{display:flex;gap:6px;align-items:center;text-align:left;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:#fbf3df;color:var(--ink);font:inherit;font-size:.78rem;cursor:pointer;min-width:0}
+.libnum b{flex:0 0 auto;width:1.9em;height:1.9em;display:grid;place-items:center;border-radius:50%;background:#c8962e;color:#fff;font-size:.8rem}
+.libnum span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.libnum.locked{opacity:.5;cursor:default}.libnum.locked b{background:#9c8b70}.libnum.sealed b{background:#2f7d32}
+.libtop{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.libseal{font-weight:800;color:#2f7d32;font-size:.85rem}
+.liblap{line-height:1.5}.liblap ul,.liblap ol{margin:4px 0 10px;padding-left:22px}
+.libdef{background:#fff4f2;border-left:5px solid #c0392b;border-radius:8px;padding:10px 12px;margin:0 0 10px;font-weight:700;color:#7a1f15}
+.libdef.own{background:#fbf3df;border-left-color:#c8962e;color:var(--ink)}
+.libdef .ldl{display:block;font:700 .72rem Nunito,sans-serif;letter-spacing:.04em;text-transform:uppercase;opacity:.75;margin-bottom:3px}
+.libflash{display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;width:100%;min-height:170px;padding:18px;border-radius:16px;border:2px solid #c8962e;background:linear-gradient(#fffaf0,#f3e3bf);color:var(--ink);font:inherit;cursor:pointer;text-align:center;box-shadow:0 6px 16px rgba(0,0,0,.15)}
+.libflash .lfq{font:700 1.15rem Georgia,serif}.libflash .lfa{font-size:1.05rem;color:#2f5d1f;font-weight:800;border-top:1px dashed #c8962e;padding-top:10px}
+.librate{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+.libprog{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px}.libprog .dot.cur{box-shadow:0 0 0 3px rgba(200,150,46,.45)}
+.libq{font-size:1.08rem;line-height:1.45;margin:6px 0 10px}
+.libopts{display:flex;flex-direction:column;gap:6px}
+.libopt{text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.7);color:var(--ink);font:inherit;cursor:pointer;line-height:1.35}
+.libopt:hover:not(:disabled){border-color:var(--accent)}.libopt.on{border-color:var(--accent);background:#fff3d6}
+.libopt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,white)}.libopt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 13%,white)}
+.libopt:disabled{cursor:default;color:var(--ink)}
+.libin{width:100%;box-sizing:border-box;font:1.1rem Nunito,sans-serif;padding:8px 10px;border-radius:10px;border:1px solid var(--line);margin-top:4px}
+.flib{position:absolute;width:5.2%;aspect-ratio:325/560;transform:translate(-50%,-100%);pointer-events:none;filter:drop-shadow(0 6px 5px rgba(0,0,0,.4))}
+.flib img{width:100%;height:100%}
+.hlpcard .box{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:rgba(255,255,255,.5)}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#1c2a22">
@@ -441,11 +478,12 @@ button.step{font-family:inherit;cursor:pointer;background:transparent}
 <nav class="tabs" id="tabs">
   <button data-m="falu">Falu</button>
   <button data-m="map">Térkép</button>
-  <button data-m="practice">Gyakorlás</button>
+  <button data-m="practice"><span class="tl">Gyakorlás</span><span class="ts">Gyakorlás</span></button>
   <button data-m="arena">Aréna</button>
   <button data-m="trial">Próba</button>
   <button data-m="shop">Bolt</button>
-  <button data-m="guild"><span class="tl">Kiváltságok</span><span class="ts">Torony</span></button>
+  <button data-m="guild"><span class="tl">Kiváltságok</span><span class="ts">Céh</span></button>
+  <button data-m="lib"><span class="tl">Könyvtár</span><span class="ts">Könyvtár</span></button>
 </nav>
 
 <main>
@@ -484,6 +522,7 @@ button.step{font-family:inherit;cursor:pointer;background:transparent}
 </main>
 
 <script src="esemenyek.js"></script>
+<script src="konyvtar.js"></script>
 <script>
 /* ================= ENGINE (téma-független) ================= */
 function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=a%b;a=b;b=t}return a||1}
@@ -960,7 +999,7 @@ const THEMES={
     trialTitle:'Próba – a völgy őrzői',trialIntro:'A próbán mindenki ugyanazzal indul: 100 életerő, felszerelés nélkül. Csak a tudásod számít.',
     arena:[{n:'Foltos martalóc',c:'#a8834a'},{n:'Kőelementál',c:'#7d7a6e'},{n:'Csontlovag',c:'#3f5a7a'}],
     trials:[{n:'Ork hadúr',c:'#2f5d3a'},{n:'Obszidiánsárkány',c:'#3a1f1a'}],
-    shopTitle:'A Vándor Alkimista boltja',privTitle:'A Varázslótorony – kiváltságok',guildIn:'a Varázslótoronyban',
+    shopTitle:'A Vándor Alkimista boltja',privTitle:'A Varázslócéh – kiváltságok',guildIn:'a Varázslócéhben',
     immune:'A pikkelyein lepattannak a gyenge varázslatok – erősebb támadás kell!',
     armor:'Megkeményedett a bőre: a gyenge varázslat már nem hat rá. Erősebb támadás kell!',
     items:{weapon:['Kristálypálca','+10% sebzés az arénában'],hat:['Csillagos süveg','Csak a szépség kedvéért'],pet:['Sárkányfióka','Harc közben szurkol neked'],potion:['Gyógyital','+30 életerő az arénában (a próbán nem használható)']},
@@ -1262,7 +1301,7 @@ function couponCode(){const a='ABCDEFGHJKLMNPRSTUVXYZ23456789';return Array.from
 const THEMES_ON=['fantasy'];
 const S={theme:'fantasy',mode:'falu',topic:'betus',dir:'fel',prog:{},level:1,max:1,streak:0,miss:0,
   gold:0,xp:0,clvl:1,owned:{weapon:false,hat:false,pet:false},potions:0,
-  ptask:null,battle:null,trialTopic:'betus',tries:{},grades:[],log:[],anim:null,coupons:[],privs:PRIVILEGES.map(p=>({...p})),ap:AP_DAY_BASE,apDate:null,cls:null,gender:'f',hp:null,hpDay:null,eq:{weapon:true,hat:true,pet:true},beaten:[],fLast:null,iLast:null,gateFails:{},gateNote:null,pets:[],petOn:null,petAcc:{own:[],on:[]}};
+  ptask:null,battle:null,trialTopic:'betus',tries:{},grades:[],log:[],anim:null,coupons:[],privs:PRIVILEGES.map(p=>({...p})),ap:AP_DAY_BASE,apDate:null,cls:null,gender:'f',hp:null,hpDay:null,eq:{weapon:true,hat:true,pet:true},beaten:[],fLast:null,iLast:null,gateFails:{},gateNote:null,pets:[],petOn:null,petAcc:{own:[],on:[]},lib:{},fbGot:[]};
 const $=id=>document.getElementById(id);
 const T=()=>THEMES[S.theme];
 const decay=l=>DECAY[Math.max(0,S.max-l)];
@@ -1312,11 +1351,11 @@ const saveKey=()=>ACC?'matek7-kaland-u-'+ACC.id:'matek7-kaland-v1';
 const today=()=>new Date().toISOString().slice(0,10);
 const tKey=(tp,k)=>(tp==='betus'?'':tp+'_')+k;
 const triesLeft=(tp,k)=>{const kk=tKey(tp,k);if(S.tries[kk]==null)S.tries[kk]=DAILY_TRIES;return S.tries[kk]};
-function snapshot(){S.prog[S.topic]={level:S.level,max:S.max,streak:S.streak,miss:S.miss};return {_at:Date.now(),theme:S.theme,topic:S.topic,dir:S.dir,prog:S.prog,trialTopic:S.trialTopic,level:S.level,max:S.max,streak:S.streak,miss:S.miss,gold:S.gold,xp:S.xp,clvl:S.clvl,owned:S.owned,potions:S.potions,tries:S.tries,triesDay:today(),grades:S.grades,coupons:S.coupons,ap:S.ap,apDate:S.apDate,evApDay:S.evApDay,evGifts:S.evGifts,wandDay:S.wandDay,hp:S.hp,hpDay:S.hpDay,cls:S.cls,gender:S.gender,eq:S.eq,beaten:S.beaten,fLast:S.fLast,iLast:S.iLast,gateFails:S.gateFails,gateNote:S.gateNote,pets:S.pets,petOn:S.petOn,petAcc:S.petAcc}}
+function snapshot(){S.prog[S.topic]={level:S.level,max:S.max,streak:S.streak,miss:S.miss};return {_at:Date.now(),theme:S.theme,topic:S.topic,dir:S.dir,prog:S.prog,trialTopic:S.trialTopic,level:S.level,max:S.max,streak:S.streak,miss:S.miss,gold:S.gold,xp:S.xp,clvl:S.clvl,owned:S.owned,potions:S.potions,tries:S.tries,triesDay:today(),grades:S.grades,coupons:S.coupons,ap:S.ap,apDate:S.apDate,evApDay:S.evApDay,evGifts:S.evGifts,wandDay:S.wandDay,hp:S.hp,hpDay:S.hpDay,cls:S.cls,gender:S.gender,eq:S.eq,beaten:S.beaten,fLast:S.fLast,iLast:S.iLast,gateFails:S.gateFails,gateNote:S.gateNote,pets:S.pets,petOn:S.petOn,petAcc:S.petAcc,lib:S.lib,fbGot:S.fbGot}}
 function save(){try{localStorage.setItem(saveKey(),JSON.stringify(snapshot()))}catch(e){}if(ACC)NET.dirty=true}
 function load(){try{applyState(JSON.parse(localStorage.getItem(saveKey())||'null'))}catch(e){}}
 function applyState(d){if(!d)return;
-  for(const k of ['theme','topic','dir','prog','trialTopic','level','max','streak','miss','gold','xp','clvl','owned','potions','grades','coupons','ap','apDate','evApDay','evGifts','wandDay','hp','hpDay','cls','gender','eq','beaten','fLast','iLast','gateFails','gateNote','pets','petOn','petAcc'])if(d[k]!==undefined)S[k]=d[k];
+  for(const k of ['theme','topic','dir','prog','trialTopic','level','max','streak','miss','gold','xp','clvl','owned','potions','grades','coupons','ap','apDate','evApDay','evGifts','wandDay','hp','hpDay','cls','gender','eq','beaten','fLast','iLast','gateFails','gateNote','pets','petOn','petAcc','lib','fbGot'])if(d[k]!==undefined)S[k]=d[k];
   petMigrate();
   if(d.triesDay===today()&&d.tries)S.tries=d.tries;
   if(!THEMES_ON.includes(S.theme))S.theme=THEMES_ON[0];}
@@ -1361,6 +1400,7 @@ function renderChar(){
 const SHOPFOOT=()=>{const th=T();return ACC?'':`<p class="rules" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn ghost" data-act="demo-gold" style="padding:4px 10px;font-size:.8rem">Tesztgomb: +200 ${th.cur}</button><button class="btn ghost" data-act="demo-xp" style="padding:4px 10px;font-size:.8rem">Tesztgomb: +200 XP</button><button class="btn ghost" data-act="demo-day" style="padding:4px 10px;font-size:.8rem">Tesztgomb: +1 tanítási nap (AP)</button></p>`};
 function renderMode(){
   const th=T(),v=$('modeView'),f=$('modeFoot');
+  if(S.mode==='lib'){libRender();return}
   if(S.mode==='falu'){v.innerHTML=faluHTML();if(f)f.innerHTML='';requestAnimationFrame(faluAfter);return}
   if(S.mode==='map'&&islandOK()){v.innerHTML=islandHTML();if(f)f.innerHTML='';requestAnimationFrame(islandAfter);return}
   if(S.mode==='map'){v.innerHTML=`${evCardHTML()}<div class="lvl story-l">${th.mapTitle}</div><p class="introbox">${th.mapIntro}</p><div class="mapwrap">${mapSVG()}</div><p class="maphint">← Húzd oldalra a térképet →</p>`;f.innerHTML=`<p class="rules" id="mapMsg">Kattints a nyitott helyszínre az induláshoz!</p><p class="rules" style="display:flex;gap:6px;flex-wrap:wrap">${ACC?'':'<button class="btn ghost" data-act="ev-next" style="padding:4px 10px;font-size:.8rem">Tesztgomb: másik napi esemény</button>'}</p>`;return}
@@ -2585,21 +2625,22 @@ function heroSVG(theme,o){
   return `<svg viewBox="0 0 200 260" class="av hero-${o.cls}">${o.pet?(f?F_DEFS:S_DEFS):''}${svg}</svg>`;
 }
 
-BG_IMG.fantasy_falu='Képek/img-5b29cc0e90.webp';
+BG_IMG.fantasy_falu='Képek/falu2.webp';   // v1.6: új falu a Könyvtárral (a régi: Képek/img-5b29cc0e90.webp)
 BG_IMG.fantasy_sziget2='Képek/img-e078c8c07b.webp';
 
 /* ================= FALU: kezdőképernyő, ahol a hős épületről épületre sétál ================= */
 function EQ(){const e=S.eq||{};return{weapon:!!S.owned.weapon&&e.weapon!==false,hat:!!S.owned.hat&&e.hat!==false,pet:!!petActive()}}
 const faluOK=()=>S.theme==='fantasy'&&typeof BG_IMG!=='undefined'&&!!BG_IMG.fantasy_falu;
 const FW=2576,FH=1438,FP=(x,y)=>[x/FW*100,y/FH*100];
-const FPLAZA=FP(1210,1000);
-const FALU=[
- {k:'gyak',m:'practice',ic:'📖',name:'Mágusiskola',fn:'Gyakorlás',key:'1',rect:[200,20,810,620],lbl:FP(500,110),door:FP(700,615),path:[FP(1000,760),FP(860,650)]},
- {k:'arena',m:'arena',ic:'⚔️',name:'Kolosszeum',fn:'Aréna',key:'2',rect:[1060,30,1600,470],lbl:FP(1330,40),door:FP(1270,470),path:[FP(1240,640)]},
- {k:'proba',m:'trial',ic:'🗝️',name:'Sötét torony',fn:'Próba',key:'3',rect:[1700,0,2060,610],lbl:FP(1880,50),door:FP(1820,610),path:[FP(1450,700),FP(1640,640)]},
- {k:'terkep',m:'map',ic:'🧭',name:'Városkapu',fn:'Térkép',key:'4',rect:[2180,330,2576,830],lbl:FP(2360,360),door:FP(2330,760),path:[FP(1500,780),FP(1900,770)]},
- {k:'bolt',m:'shop',ic:'🧪',name:'Alkimista bolt',fn:'Bolt',key:'5',rect:[280,720,960,1300],lbl:FP(560,760),door:FP(820,1215),path:[FP(1000,960),FP(930,1150)]},
- {k:'cehaz',m:'guild',ic:'📜',name:'Varázslótorony',fn:'Kiváltságok',key:'6',rect:[1550,690,2160,1330],lbl:FP(1880,720),door:FP(1650,1270),path:[FP(1290,1060),FP(1430,1250)]},
+const FPLAZA=FP(1226,927);
+const FALU=[   // v1.6: új falutérkép (Képek/falu2.webp), koordináták a 2576×1438-as rácson
+ {k:'gyak',m:'practice',ic:'📖',name:'Mágusiskola',fn:'Gyakorlás',key:'1',rect:[197,0,824,627],lbl:FP(515,34),door:FP(696,618),path:[FP(880,674)]},
+ {k:'arena',m:'arena',ic:'⚔️',name:'Kolosszeum',fn:'Aréna',key:'2',rect:[1067,28,1629,468],lbl:FP(1348,37),door:FP(1292,472),path:[FP(1273,562)]},
+ {k:'proba',m:'trial',ic:'🗝️',name:'Sötét torony',fn:'Próba',key:'3',rect:[1732,0,2069,608],lbl:FP(1900,37),door:FP(1812,571),path:[FP(1498,646),FP(1685,608)]},
+ {k:'terkep',m:'map',ic:'🧭',name:'Városkapu',fn:'Térkép',key:'4',rect:[2209,328,2576,852],lbl:FP(2368,356),door:FP(2368,739),path:[FP(1573,749),FP(2153,753)]},
+ {k:'bolt',m:'shop',ic:'🧪',name:'Alkimista bolt',fn:'Bolt',key:'5',rect:[318,721,899,1292],lbl:FP(562,749),door:FP(796,1217),path:[FP(964,880),FP(880,1123)]},
+ {k:'cehaz',m:'guild',ic:'📜',name:'Varázslócéh',fn:'Kiváltságok',key:'6',rect:[1573,683,2181,1310],lbl:FP(1872,711),door:FP(1694,1310),path:[FP(1479,899),FP(1535,1236)]},
+ {k:'konyvtar',m:'lib',ic:'📚',name:'Bölcsességek Könyvtára',fn:'Könyvtár',key:'7',rect:[1039,917,1385,1438],lbl:FP(1142,1095),door:FP(1310,1400),path:[FP(1432,899),FP(1442,1310)]},
 ];
 let fPos=null,fBusy=false,fClsAsked=false;
 function faluBadge(k){
@@ -2611,7 +2652,7 @@ function faluHTML(){
   return `<div class="fev">${evCardHTML()}</div><div class="fwrap" id="fwrap"><div class="falu" id="falu"><img class="fmap" src="${BG_IMG.fantasy_falu}" alt="A falu" draggable="false">
    ${FALU.map(b=>{const [x0,y0,x1,y1]=b.rect,bd=faluBadge(b.k);return `<button class="fbld" data-fb="${b.k}" aria-label="${b.fn}: ${b.name}" style="left:${x0/FW*100}%;top:${y0/FH*100}%;width:${(x1-x0)/FW*100}%;height:${(y1-y0)/FH*100}%"></button>
    <div class="flbl ${bd?'badge':''}" data-bd="${bd}" id="fl-${b.k}" style="left:${b.lbl[0]}%;top:${b.lbl[1]}%"><i>${b.ic}</i><span>${b.fn}<small>${b.name}</small></span></div>`}).join('')}
-   ${wandHTML()}<div class="fwalker" id="fhero" title="A hősöd – kattints rá!"><span class="fme">${CL()?clsName():T().hero} · ${S.clvl}. szint${petPending()?' · 🐾 új társ!':''}</span><div class="finner" id="fheroIn">${avatarSVG(S.theme,{...EQ(),cls:S.cls})}</div></div>
+   <div class="flib" style="left:${FP(1479,1389)[0]}%;top:${FP(1479,1389)[1]}%"><img src="Karakterek/konyvtaros.webp" alt=""></div>${wandHTML()}<div class="fwalker" id="fhero" title="A hősöd – kattints rá!"><span class="fme">${CL()?clsName():T().hero} · ${S.clvl}. szint${petPending()?' · 🐾 új társ!':''}</span><div class="finner" id="fheroIn">${avatarSVG(S.theme,{...EQ(),cls:S.cls})}</div></div>
   </div></div>
   <div class="fquick"><button data-fq="hos"><b>🧝</b>Hős<kbd>H</kbd></button>${FALU.map(b=>`<button data-fq="${b.k}"><b>${b.ic}</b>${b.fn}<kbd>${b.key}</kbd></button>`).join('')}</div>`;
 }
@@ -2682,7 +2723,7 @@ function heroPanel(){
      <div class="hcard"><h3>Felszerelés</h3><div class="hslots">${slot('weapon','Fegyver')}${slot('hat','Fejfedő')}${petSlotHTML()}</div>
       <div class="hnote" style="margin:6px 0 0">Kattints egy tárgyra: felveszed vagy leveszed. A fegyver csak felvéve sebez többet. A Társra kattintva a társaidat kezeled. A próbán egyik sem számít.</div></div>
      <div class="hcard"><h3>Táska</h3><div class="hbag"><div class="hcell" title="${th.items.potion[0]}">${itemIcon(S.theme,'potion')}<span class="n">×${S.potions}</span></div>${'<div class="hcell"></div>'.repeat(3)}</div></div>
-     <div class="hcard"><h3>Kuponjaim</h3>${open.length?open.map(x=>`<div class="hcoupon">${privIcon(S.theme)}<div><b>${x.name}</b><span>${x.date} · a tanár váltja be</span></div><code>${x.code}</code></div>`).join(''):'<div class="hnote" style="margin:0">Még nincs beváltatlan kuponod. A Varázslótoronyban veheted meg AP-ért.</div>'}</div>
+     <div class="hcard"><h3>Kuponjaim</h3>${open.length?open.map(x=>`<div class="hcoupon">${privIcon(S.theme)}<div><b>${x.name}</b><span>${x.date} · a tanár váltja be</span></div><code>${x.code}</code></div>`).join(''):'<div class="hnote" style="margin:0">Még nincs beváltatlan kuponod. A Varázslócéhben veheted meg AP-ért.</div>'}</div>
      <div class="hcard"><h3>Trófeák</h3><div class="htro">${tro.length?tro.join(''):'<span class="hnote" style="margin:0">Győzz le egy ellenfelet az Arénában!</span>'}</div></div>
     </div>
    </div></div>`;
@@ -2754,7 +2795,7 @@ function islandHTML(){
   const chips=ISLANDS.map(i=>`<button class="ichip ${i.id===CUR_ISLAND?'on':''} ${i.id===CUR_ISLAND?'':'lk'}" data-isl="${i.id}" title="${i.ch} ${i.title}"><b>${i.ch}</b> ${i.name}${i.id===CUR_ISLAND?'':' 🔒'}</button>`).join('');
   const spots=Object.entries(ISPOT).map(([k,s])=>{
     let title,sub,st,cls='';
-    if(k==='home'){title='Alkimisták völgye';sub='a falu: bolt, aréna, varázslótorony';st='home'}
+    if(k==='home'){title='Alkimisták völgye';sub='a falu: bolt, aréna, varázslócéh, könyvtár';st='home'}
     else if(k==='castle'){title=`👑 ${isl.boss}`;sub='a sziget bossa · jegyes próba';st='boss'}
     else{const l=iLessonAt(k);if(!l)return '';title=`${l.n}. ${l.t}`;sub=l.st==='open'?'▶ nyitva':'🔒 hamarosan';st=l.st}
     return `<button class="ispot st-${st}" data-ispot="${k}" style="left:${s.p[0]}%;top:${s.p[1]}%" aria-label="${title}"></button>
@@ -2812,6 +2853,180 @@ document.addEventListener('click',e=>{
 
 
 /* ================= BELÉPÉS, SZINKRON, ESEMÉNYNAPLÓ ================= */
+/* ================= BÖLCSESSÉGEK KÖNYVTÁRA (v1.6) =================
+   Tartalom és kérdésbank: konyvtar.js. Itt csak a felület van.
+   A fogalmakat a tanár nyitja meg (osztálybeállítás: config.concepts), a pecsét a diák mentésébe kerül (S.lib). */
+let LIBCFG={concepts:{},titles:[]};
+const LIBV={view:'shelf',id:null,tab:'lap',qs:null,i:0,sel:[],res:[],fb:null,deck:null,flip:false,known:0};
+const libReady=()=>typeof LIB_CONCEPTS!=='undefined';
+const libIsOpen=id=>!ACC||LIBCFG.concepts[id]==='open';          // vendég/bemutató módban minden kész lap nyitva
+const libSt=id=>(S.lib||{})[id]||{};
+const libTitle=n=>(LIBCFG.titles&&LIBCFG.titles[n-1])||LIB_DEFAULT_TITLES[n]||`${n}. fogalom`;
+const libCode=c=>c.n?c.n+'.':c.id;
+const libStrip=h=>String(h||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
+function libIsland(){return libReady()?LIB_CONCEPTS.filter(c=>c.island===CUR_ISLAND):[]}
+function libSeals(){return libIsland().filter(c=>libSt(c.id).seal).length}
+function libScene(){
+  return `<div class="scene libscene"><svg class="scenesvg" viewBox="0 165 1600 600"><image href="Képek/konyvtar.webp" x="0" y="0" width="1600" height="893" preserveAspectRatio="xMidYMid slice"/>
+    <image href="Karakterek/konyvtaros.webp" x="1170" y="255" width="290" height="500"/></svg></div>`;
+}
+function libSay(){
+  const open=libIsland().filter(c=>libIsOpen(c.id)),n=libSeals(),all=libIsland().length;
+  if(!open.length)return 'A polcok még üresek, de hamarosan megnyitom őket. A májusi szóbelire itt készülsz majd fel.';
+  if(n===all)return `Minden pecsétet megszereztél az Alkimisták szigetén. Szép munka! Most már jelentkezhetsz órán, hogy el is mondd a fogalmakat.`;
+  if(n)return `Már ${n} pecséted van. Válassz egy fogalmat, tanuld meg a lapját, és ha készen állsz, kikérdezlek!`;
+  return 'Üdv a Könyvtárban! Válassz egy nyitott fogalmat. Előbb tanuld meg a lapját és a kártyáit, aztán gyere, kikérdezlek. Ha 6 kérdésből legalább 5-re jól válaszolsz, megkapod a pecsétemet.';
+}
+function libShelfHTML(){
+  const isl=libIsland(),others=[];
+  for(let n=1;n<=LIB_EXAM_N;n++)others.push(n);
+  const tile=c=>{const op=libIsOpen(c.id),st=libSt(c.id);
+    return `<button type="button" class="libtile ${op?'':'locked'} ${st.seal?'sealed':''}" data-lib="${op?'open:'+c.id:'locked'}">
+      <span class="lcode">${libCode(c)}</span><span class="lt">${esc(c.title)}</span>
+      <span class="lst">${!op?'🔒 hamarosan az órán':st.seal?`🏅 pecsét · ${esc(st.seal)}`:st.tries?`${st.tries}. próbálkozás után · legjobb ${st.best}/${LIB_Q_N}`:'nyitva'}</span></button>`};
+  return `${libScene()}<div class="lvl story-l" style="margin-top:10px">Bölcsességek Könyvtára <span class="apchip">🏅 ${libSeals()} / ${isl.length}</span></div>
+   <div class="libsay"><b>A Könyvtáros:</b> ${libSay()}</div>
+   <h4 class="libh">Az Alkimisták szigetének fogalmai</h4><div class="libgrid">${isl.map(tile).join('')}</div>
+   <details class="libexam"><summary>A szóbeli vizsga 45 fogalma</summary>
+    <p class="tiny">A vizsgán ebből hármat húzol. A 45. a JOKER: azt te választod. A fogalmak akkor nyílnak meg, amikor órán sorra kerülnek.</p>
+    <div class="libnums">${others.map(n=>{const c=LIB_CONCEPTS.find(x=>x.n===n),op=c&&libIsOpen(c.id),st=c?libSt(c.id):{};
+      return `<button type="button" class="libnum ${op?'':'locked'} ${st.seal?'sealed':''}" data-lib="${op?'open:'+c.id:'locked'}" title="${esc(libTitle(n))}"><b>${n===45?'★':n}</b><span>${esc(libTitle(n))}</span></button>`}).join('')}</div></details>`;
+}
+function libCardHTML(){
+  const c=LIB_BY_ID[LIBV.id];if(!c)return libShelfHTML();const st=libSt(c.id);
+  const tabs=[['lap','📜 Lap'],['cards','🃏 Kártyák'],['quiz','🦉 Kikérdezés']];
+  let body='';
+  if(LIBV.tab==='lap')body=`<div class="liblap">
+     ${c.defs.map(d=>`<div class="libdef ${d.own?'own':''}"><span class="ldl">${d.own?'Meghatározás':'📕 Tankönyvi meghatározás'}</span>${esc(d.t)}</div>`).join('')}
+     <p><b>Magyarázat.</b> ${c.expl}</p>
+     <p><b>Példa:</b></p><ul>${c.ex.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+     <p><b>Ellenpélda, tipikus hiba:</b></p><ul>${c.counter.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+     <p><b>A kidolgozás kulcspontjai</b> (ezeket mondd el a szóbelin):</p><ol>${c.keys.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></div>`;
+  else if(LIBV.tab==='cards')body=libFlashHTML(c);
+  else body=libQuizHTML(c);
+  return `<div class="libtop"><button class="btn ghost" data-lib="shelf">← A polcokhoz</button>${st.seal?`<span class="libseal">🏅 A Könyvtáros pecsétje · ${esc(st.seal)}</span>`:''}</div>
+   <div class="lvl story-l">${libCode(c)} ${esc(c.title)}</div>
+   <div class="topics">${tabs.map(([k,n])=>`<button type="button" class="tchip ${LIBV.tab===k?'on':''}" data-lib="tab:${k}">${n}</button>`).join('')}</div>${body}`;
+}
+/* ---- kártyák: amit nem tudtál, hamarabb jön elő újra ---- */
+const libCardKey=id=>'mk-cards-'+(ACC?ACC.id:'g')+'-'+id;
+function libDeck(c){
+  const cards=[['Mondd el a meghatározást! ('+c.title+')',c.defs.map(d=>d.t).join(' ')],...c.cards];
+  let sc={};try{sc=JSON.parse(localStorage.getItem(libCardKey(c.id))||'{}')}catch(e){}
+  return cards.map((x,i)=>({i,q:x[0],a:x[1],s:sc[i]||0})).sort((a,b)=>a.s-b.s);
+}
+function libFlashHTML(c){
+  if(!LIBV.deck){LIBV.deck=libDeck(c);LIBV.flip=false;LIBV.known=0}
+  const d=LIBV.deck;
+  if(!d.length)return `<div class="fb show ok"><b class="big">Kész!</b> Minden kártyát tudtál. Most jöhet a <b>Kikérdezés</b>.
+    <p style="margin:8px 0 0;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-lib="tab:quiz">Kikérdezés</button><button class="btn ghost" data-lib="cards-again">Még egyszer</button></p></div>`;
+  const k=d[0];
+  return `<p class="tiny">Előbb fejben vagy hangosan válaszolj, aztán fordítsd meg a kártyát! Ami nem ment, hamarosan újra előjön. Még ${d.length} kártya.</p>
+   <button type="button" class="libflash ${LIBV.flip?'flip':''}" data-lib="flip"><span class="lfq">${esc(k.q)}</span>${LIBV.flip?`<span class="lfa">${esc(k.a)}</span>`:'<span class="tiny">Koppints a megfordításhoz!</span>'}</button>
+   ${LIBV.flip?`<div class="librate"><button class="btn" data-lib="rate:2">✔ Tudtam</button><button class="btn ghost" data-lib="rate:1">≈ Részben</button><button class="btn ghost" data-lib="rate:0">✘ Nem</button></div>`:''}`;
+}
+function libRate(v){
+  const d=LIBV.deck,k=d.shift();
+  let sc={};try{sc=JSON.parse(localStorage.getItem(libCardKey(LIBV.id))||'{}')}catch(e){}
+  sc[k.i]=v;try{localStorage.setItem(libCardKey(LIBV.id),JSON.stringify(sc))}catch(e){}
+  if(v===0)d.splice(Math.min(2,d.length),0,k);else if(v===1)d.splice(Math.min(4,d.length),0,k);
+  LIBV.flip=false;
+}
+/* ---- a Könyvtáros kikérdezése ---- */
+function libQuizHTML(c){
+  const st=libSt(c.id);
+  if(!LIBV.qs)return `<div class="libsay"><b>A Könyvtáros:</b> ${st.seal?'A pecsétemet már megkaptad. Gyakorolni azért bármikor jöhetsz – jutalom ilyenkor nem jár, de a tudás marad.':`Hat kérdést teszek fel. Ha legalább ${LIB_PASS} jó, megkapod a pecsétemet, és vele <b>${LIB_SEAL_XP} XP</b>-t meg <b>${LIB_SEAL_GOLD} ${T().cur}</b>-t. Ha nem sikerül, bármikor újrakezdheted – a kérdések minden alkalommal mások.`}</div>
+    <p><button class="btn" data-lib="start">${st.tries?'Újra kérem!':'Kezdjük!'}</button></p>`;
+  if(LIBV.i>=LIBV.qs.length){
+    const ok=LIBV.res.filter(Boolean).length,pass=ok>=LIB_PASS;
+    return `<div class="fb show ${pass?'ok':'bad'}"><b class="big">${ok} / ${LIBV.qs.length} jó válasz.</b>
+      ${pass?(LIBV.newSeal?`<p>🏅 <b>Megkaptad A Könyvtáros pecsétjét!</b> +${LIB_SEAL_XP} XP, +${LIB_SEAL_GOLD} ${T().cur}. A végső pecsétet órán kapod meg, ha el is mondod a fogalmat.</p>`:'<p>Most is átmentél volna. Szép!</p>')
+          :`<p>A pecséthez legalább ${LIB_PASS} jó kell. Nézd át a lapot és a kártyákat, aztán próbáld újra – a kérdések mások lesznek.</p>`}
+      <p style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0"><button class="btn" data-lib="start">Új kikérdezés</button><button class="btn ghost" data-lib="tab:lap">A lap</button><button class="btn ghost" data-lib="shelf">A polcokhoz</button></p></div>`;
+  }
+  const q=LIBV.qs[LIBV.i],done=LIBV.fb&&!LIBV.fb.invalid;
+  let ans='';
+  if(q.type==='mc')ans=`<div class="libopts">${q.opts.map((o,i)=>`<button type="button" class="libopt ${done?(i===q.ok?'right':(LIBV.sel[0]===i?'wrong':'')):''}" data-lib="pick:${i}" ${done?'disabled':''}>${o}</button>`).join('')}</div>`;
+  else if(q.type==='multi')ans=`<div class="libopts">${q.opts.map((o,i)=>{const on=LIBV.sel.includes(i);return `<button type="button" class="libopt multi ${on?'on':''} ${done?(q.ok.includes(i)?'right':(on?'wrong':'')):''}" data-lib="tog:${i}" ${done?'disabled':''}>${on?'☑':'☐'} ${o}</button>`}).join('')}</div>
+     ${done?'':`<p><button class="btn" data-lib="multi-ok">Kész</button></p>`}`;
+  else ans=`${Array.from({length:q.fields||1},(_,k)=>`${q.labels?`<label class="flabel">${q.labels[k]}</label>`:''}<input class="libin" id="libin${k}" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${esc(q.ph||'')}" ${done?'disabled':''} value="${esc((LIBV.raw||[])[k]||'')}">`).join('')}
+     <p class="tiny" style="margin:4px 0 0">Hatvány: x² vagy x^2. Szorzás: 3 · 4 vagy 3*4.</p>
+     ${done?'':`<p><button class="btn" data-lib="inp-ok">Ellenőrzés</button></p>`}`;
+  const fb=LIBV.fb;
+  return `<div class="libprog">${LIBV.qs.map((_,i)=>`<span class="dot ${i<LIBV.res.length?(LIBV.res[i]?'g':'r'):''} ${i===LIBV.i?'cur':''}"></span>`).join('')}<span class="tiny">${LIBV.i+1}. kérdés / ${LIBV.qs.length}${q.hunt?' · 🔎 hibavadászat':q.def?' · 📕 meghatározás':''}</span></div>
+   <div class="libq">${q.q}</div>${ans}
+   ${fb?`<div class="fb show ${fb.invalid?'':fb.ok?'ok':'bad'}">${fb.invalid?esc(fb.msg):`<b>${fb.ok?'Helyes!':'Nem ez.'}</b> ${fb.msg?esc(fb.msg)+' ':''}${fb.ok?'':`<br>Helyes válasz: <b>${q.sol}</b>`}<br><span class="tiny">${q.why||''}</span>`}</div>`:''}
+   ${done?`<p><button class="btn" data-lib="next">${LIBV.i+1<LIBV.qs.length?'Következő →':'Eredmény'}</button></p>`:''}`;
+}
+function libStart(){
+  LIBV.qs=libQuiz(LIBV.id);LIBV.i=0;LIBV.res=[];LIBV.sel=[];LIBV.fb=null;LIBV.raw=null;LIBV.newSeal=false;
+  if(!LIBV.qs.length){banner('Ehhez a fogalomhoz még nincs kérdés.');LIBV.qs=null}
+}
+function libAnswer(a,b,shown){
+  const q=LIBV.qs[LIBV.i],r=libCheck(q,a,b);
+  if(r.invalid){LIBV.fb={invalid:true,msg:r.msg||'Ezt nem tudom értelmezni.'};return}
+  LIBV.fb={ok:!!r.ok,msg:r.msg||''};LIBV.res.push(!!r.ok);
+  if(ACC){NET.out.push({ts:new Date().toISOString(),topic:'lib',mode:'lib',level:null,kind:LIBV.id,status:r.ok?'correct':'wrong',
+    err:r.ok?'':('Könyvtár '+LIBV.id+': '+(q.lbl||'kérdés')).slice(0,80),hint:0,half:false,task:libStrip(q.q).slice(0,200),answer:String(shown).slice(0,200)});netSave();NET.dirty=true}
+}
+function libFinish(){
+  const ok=LIBV.res.filter(Boolean).length,id=LIBV.id;S.lib=S.lib||{};
+  const st=S.lib[id]=Object.assign({},S.lib[id]);st.tries=(st.tries||0)+1;st.best=Math.max(st.best||0,ok);st.last=isoDay();
+  if(ok>=LIB_PASS&&!st.seal){st.seal=new Date().toLocaleDateString('hu-HU');st.sealAt=new Date().toISOString();LIBV.newSeal=true;S.gold+=LIB_SEAL_GOLD;addXP(LIB_SEAL_XP);
+    banner(`🏅 A Könyvtáros pecsétje: ${LIB_BY_ID[id].title}! +${LIB_SEAL_XP} XP, +${LIB_SEAL_GOLD} ${T().cur}`)}
+  save();
+}
+function libRender(){const v=$('modeView');if(!v||S.mode!=='lib')return;
+  v.innerHTML=!libReady()?'<p>A Könyvtár nem töltődött be. Frissítsd az oldalt!</p>':LIBV.view==='card'?libCardHTML():libShelfHTML();
+  const f=$('modeFoot');if(f)f.innerHTML='';
+  const inp=$('libin0');if(inp&&!inp.disabled&&window.matchMedia('(pointer:fine)').matches)inp.focus();
+}
+function libInpSubmit(){
+  const q=LIBV.qs&&LIBV.qs[LIBV.i];if(!q||q.type!=='inp'||(LIBV.fb&&!LIBV.fb.invalid))return;
+  const a=($('libin0')||{}).value||'',b=($('libin1')||{}).value||'';LIBV.raw=[a,b];
+  if(!a.trim()||((q.fields||1)>1&&!b.trim())){LIBV.fb={invalid:true,msg:(q.fields||1)>1?'Mindkét mezőt töltsd ki!':'Írd be a válaszod!'};libRender();return}
+  libAnswer(a,b,(q.fields||1)>1?a+' → '+b:a);libRender();
+}
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-lib]');if(!el)return;
+  const [a,arg]=el.dataset.lib.split(/:(.*)/s);
+  if(a==='locked'){banner('Ezt a fogalmat a tanár nyitja meg, amikor órán sorra kerül.');return}
+  if(a==='shelf'){LIBV.view='shelf';LIBV.id=null;LIBV.qs=null;LIBV.deck=null}
+  else if(a==='open'){LIBV.view='card';LIBV.id=arg;LIBV.tab='lap';LIBV.qs=null;LIBV.deck=null}
+  else if(a==='tab'){LIBV.tab=arg;if(arg!=='quiz'||(LIBV.qs&&LIBV.i>=LIBV.qs.length))LIBV.qs=null;if(arg!=='cards')LIBV.deck=null}
+  else if(a==='flip')LIBV.flip=!LIBV.flip;
+  else if(a==='rate')libRate(+arg);
+  else if(a==='cards-again')LIBV.deck=null;
+  else if(a==='start')libStart();
+  else if(a==='pick'){if(LIBV.fb&&!LIBV.fb.invalid)return;LIBV.sel=[+arg];const q=LIBV.qs[LIBV.i];libAnswer(+arg,null,libStrip(q.opts[+arg]))}
+  else if(a==='tog'){const i=+arg,s=LIBV.sel;LIBV.sel=s.includes(i)?s.filter(x=>x!==i):s.concat(i);LIBV.fb=null}
+  else if(a==='multi-ok'){if(!LIBV.sel.length){LIBV.fb={invalid:true,msg:'Jelölj meg legalább egyet!'}}else{const q=LIBV.qs[LIBV.i];libAnswer(LIBV.sel,null,LIBV.sel.map(i=>libStrip(q.opts[i])).join(', '))}}
+  else if(a==='inp-ok'){libInpSubmit();return}
+  else if(a==='next'){LIBV.i++;LIBV.sel=[];LIBV.fb=null;LIBV.raw=null;if(LIBV.i>=LIBV.qs.length)libFinish()}
+  libRender();if(a==='open'||a==='shelf'||a==='tab')window.scrollTo({top:0,behavior:'smooth'});
+});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.classList&&e.target.classList.contains('libin')){e.preventDefault();
+  if(e.target.id==='libin0'&&$('libin1')&&!$('libin1').value.trim()){$('libin1').focus();return}libInpSubmit()}});
+
+/* ================= ÉRTESÍTÉS: megvalósult ötlet, kijavított hiba (v1.6) ================= */
+let fbNewsAt=0;
+async function fbNews(){
+  if(!ACC||!SB_ON()||Date.now()-fbNewsAt<120000)return;fbNewsAt=Date.now();
+  let list;try{list=await rpc('student_fb_news',{p_token:ACC.token})}catch(e){return}
+  if(!Array.isArray(list)||!list.length)return;
+  S.fbGot=S.fbGot||[];const fresh=list.filter(x=>!S.fbGot.includes(x.id)),ids=list.map(x=>x.id);
+  let g=0,xp=0;fresh.forEach(x=>{g+=x.gold||0;xp+=x.xp||0;S.fbGot.push(x.id)});S.fbGot=S.fbGot.slice(-200);
+  if(g)S.gold+=g;if(xp)addXP(xp);if(fresh.length)save();
+  try{await rpc('student_fb_ack',{p_token:ACC.token,p_ids:ids})}catch(e){}
+  if(!fresh.length)return;
+  const show=()=>{if(document.getElementById('hlpov')||document.getElementById('loginov')){setTimeout(show,4000);return}
+    hlpOpen(`<h2>📬 Hír a Mestertől</h2>${fresh.map(x=>`<div class="box" style="margin:8px 0"><b>${x.kind==='bug'?'🐞 A bejelentett hibát kijavítottam!':x.kind==='idea'?'💡 Megvalósult az ötleted!':'❤️ Köszönöm!'}</b>
+      <p class="tiny" style="margin:4px 0">„${hlpEsc(x.body)}”</p>${x.note?`<p style="margin:4px 0">${hlpEsc(x.note)}</p>`:''}
+      ${x.gold||x.xp?`<p style="margin:4px 0"><b>Jutalom:</b> ${x.gold?`+${x.gold} ${T().cur}`:''}${x.gold&&x.xp?', ':''}${x.xp?`+${x.xp} XP`:''}</p>`:''}</div>`).join('')}
+      <p><button class="btn" data-hlp="close">Köszönöm!</button></p>`);render()};
+  show();
+}
+
 const NET={dirty:false,busy:false,status:'',out:[],trials:[],timer:null};
 const outKey=()=>'mk-out-'+(ACC?ACC.id:'');
 function netLoad(){try{const d=JSON.parse(localStorage.getItem(outKey())||'null');if(d){NET.out=d.out||[];NET.trials=d.trials||[]}}catch(e){}}
@@ -2835,6 +3050,7 @@ function logEvent(t,r,raw,raw2){
 }
 function applyConfig(cfg){
   if(!cfg)return;
+  LIBCFG={concepts:cfg.concepts||{},titles:Array.isArray(cfg.concept_titles)?cfg.concept_titles:[]};   // v1.6 Könyvtár
   if(cfg.lessons)ISLANDS.forEach(i=>Array.isArray(i.lessons)&&i.lessons.forEach(l=>{if(typeof l==='object'&&l.play&&cfg.lessons[l.play])l.st=cfg.lessons[l.play]}));
   if(Array.isArray(cfg.privs)&&cfg.privs.length){S.privs=cfg.privs.map(p=>({...p}));
     for(const d of PRIVILEGES)if(/^k\d$/.test(d.id)&&!S.privs.some(p=>p.id===d.id))S.privs.push({...d})}   // v1.3: az új alapkiváltságok a mentett listához is
@@ -2856,13 +3072,13 @@ async function sync(opt={}){
     const d=await rpc('student_sync',{p_token:ACC.token,p_state:opt.pull?null:snapshot(),p_events:evs,p_coupons:cps},{keepalive:!!opt.keepalive});
     NET.out=NET.out.slice(evs.length);netSave();NET.dirty=NET.out.length>0;
     if(opt.pull&&d.state&&(d.state._at||0)>(opt.localAt||0)){applyState(d.state);S.ptask=gen(S.level)}
-    applyServer(d);NET.status='ok';NET.last=new Date();
+    applyServer(d);NET.status='ok';NET.last=new Date();setTimeout(fbNews,600);
     if(opt.pull)NET.dirty=true;
   }catch(e){
     NET.status=e.server?'err':'offline';
     if(/bad_session|inactive/.test(e.message)){NET.status='';localStorage.removeItem('mk-session');ACC=null;showLogin('A belépésed lejárt vagy a tanár letiltotta. Lépj be újra!')}
   }finally{NET.busy=false}
-  if(!opt.keepalive){const k=document.activeElement&&document.activeElement.id;renderNotice();renderChar();if(S.mode==='trial'||S.mode==='shop'||S.mode==='guild'||S.mode==='map'||S.mode==='practice'){if(!(cur()&&!cur().done&&(k==='ans'||k==='ans2')))renderMode()}}
+  if(!opt.keepalive){const k=document.activeElement&&document.activeElement.id;renderNotice();renderChar();if(S.mode==='trial'||S.mode==='shop'||S.mode==='guild'||S.mode==='map'||S.mode==='practice'||(S.mode==='lib'&&LIBV.view==='shelf')){if(!(cur()&&!cur().done&&(k==='ans'||k==='ans2')))renderMode()}}
 }
 async function startTrialOnline(i,tp,key){
   if(!navigator.onLine){banner('A próbához internetkapcsolat kell – a jegyet a szerver rögzíti.');return}
@@ -2955,10 +3171,17 @@ boot();
 </script>
 <script>
 /* ================= VERZIÓ, SÚGÓ, VISSZAJELZÉS (v1.0) ================= */
-const APP_VERSION='1.5';
+const APP_VERSION='1.6';
 /* Új kiadásnál: APP_VERSION + a sw.js VERSION-je + egy új bejegyzés a lista ELEJÉRE.
    by: a diák beceneve, ha az ő ötlete volt (a Súgóban és az Újdonságok ablakban megjelenik). */
 const CHANGELOG=[
+  {v:'1.6',date:'2026. november 26.',title:'Megnyílt a Könyvtár',items:[
+    {t:'🗺️ Megújult a falu! Új térkép, és a tér déli oldalán felépült egy új épület: a Könyvtár.'},
+    {t:'📚 Megnyílt a Bölcsességek Könyvtára! Az ajtaja előtt a Könyvtáros vár rád (vagy a Könyvtár menüpont). Itt készülhetsz a májusi szóbelire: minden fogalomnak van lapja a tankönyvi meghatározással, példákkal és tipikus hibákkal, plusz tanulókártyák.'},
+    {t:'🦉 Ha megtanultad, kérd meg a Könyvtárost, hogy kérdezzen ki! 6 kérdésből legalább 5 jó kell a pecsétjéhez, ami XP-t és aranyat is ér. A végső pecsétet órán kapod meg, ha el is mondod a fogalmat.'},
+    {t:'🔓 A fogalmakat a tanár nyitja meg, amikor órán sorra kerülnek. Az Alkimisták szigetén nyolc fogalom vár.'},
+    {t:'🏛️ A Varázslótorony neve mostantól Varázslócéh – a falu képén is ház, nem torony.'},
+    {t:'📬 Ha a bejelentett hibádat kijavítom, vagy megvalósul az ötleted, értesítést kapsz, és jutalom is jár érte. Akkor is, ha már korábban jelentetted be.'}]},
   {v:'1.5',date:'2026. november 26.',title:'Társak',items:[
     {t:'🐾 Megjöttek a társak! A 2. szinten választhatod ki az elsőt (sárkányfióka, bagoly, főnix vagy rókakölyök), és te nevezed el. Új társ az 5., 10. és 15. szinten, utána minden 5. szinten jár.'},
     {t:'✨ Mindegyik mást tud az Arénában: a sárkány erősebben üt, a bagoly gyakrabban talál kritikusat, a főnix gyógyít, a róka több aranyat hoz. A Próbán nem számít – ott továbbra is mindenki egyforma.'},
@@ -3063,7 +3286,7 @@ function helpPanel(open){
      <li>Ha 7 napig nem gyakorolsz, elálmosodik és nem segít, de az első gyakorlásodra felébred. Nem tűnik el.</li>
      <li>A társaidat a hősöd lapján kezeled: ott választasz, nevezed el, és ott döntöd el, melyik kísérjen.</li></ul>`)}
    ${sec('priv','🎟️ Kiváltságok és kuponok',`<ul>
-     <li>A Varázslótoronyban találod őket (a faluban vagy a Kiváltságok menüpontban). A szinted <b>nyitja</b> a kiváltságot, az AP-d <b>fizeti</b>.</li>
+     <li>A Varázslócéhben találod őket (a faluban vagy a Kiváltságok menüpontban). A szinted <b>nyitja</b> a kiváltságot, az AP-d <b>fizeti</b>.</li>
      <li>Vásárlás után kupont kapsz – mutasd meg a tanárnak, ő váltja be.</li>
      <li>Van, amit csak hetente vagy havonta egyszer kérhetsz. Dolgozatos kuponból egyszerre csak egy lehet nálad.</li>
      <li>Néhány kiváltság csak egy karakterosztályé.</li></ul>`)}
@@ -3076,6 +3299,12 @@ function helpPanel(open){
      <li>Az események lehetnek közönségesek, <b style="color:#3b6fd1">ritkák</b> és <b style="color:#c9971a">legendásak</b>. A legendásak nagyon ritkák, és általában a Mesterről szólnak…</li>
      <li><b>Ünnepnapokon</b> (pl. Mikulás) a ládában két esemény van.</li></ul>
      ${ev.length?`<p style="margin:4px 0"><b>Ma: ${ev.map(e=>hlpEsc(e.n)).join(' + ')}</b> – ${ev.map(e=>hlpEsc(evDesc(e))).join(' ')}</p>`:'<p style="margin:4px 0"><b>Ma:</b> a láda még lepecsételt.</p>'}`)}
+   ${sec('lib','📚 Bölcsességek Könyvtára',`<ul>
+     <li>A májusi szóbelire készít fel. A vizsgán a 45 fogalomból hármat húzol (a 45. a JOKER: azt te választod).</li>
+     <li>Egy fogalomnak három része van: a <b>lap</b> (tankönyvi meghatározás, magyarázat, példa, tipikus hiba), a <b>kártyák</b> (fejben válaszolsz, aztán megfordítod) és <b>A Könyvtáros kikérdezése</b>.</li>
+     <li>A kikérdezés 6 kérdés. Ha legalább ${typeof LIB_PASS!=='undefined'?LIB_PASS:5} jó, megkapod A Könyvtáros pecsétjét és vele ${typeof LIB_SEAL_XP!=='undefined'?LIB_SEAL_XP:50} XP-t meg aranyat – fogalmanként egyszer. Akárhányszor újrapróbálhatod, a kérdések mindig mások.</li>
+     <li>A végső pecsétet órán kapod meg a tanártól, ha jelentkezel, és el is mondod a fogalmat.</li>
+     <li>A fogalmakat a tanár nyitja meg, amikor órán sorra kerülnek.</li></ul>`)}
    ${sec('news','🆕 Mi frissült legutóbb?',changelogHTML())}
    ${sec('fb','🐞 Hiba vagy ötlet bejelentése',`<p style="margin:4px 0">Valami nem működik? Van egy jó ötleted? Tetszik valami? Írd meg!</p><p><button class="btn" data-hlp="fb">🐞 Bejelentés küldése</button></p>`)}`);
   if(open){const d=document.querySelector(`[data-hs="${open}"]`);if(d)d.scrollIntoView({block:'start'})}
