@@ -3619,11 +3619,12 @@ async function doLogout(){
 }
 let started=false;
 function start(){
+  /* a helyi mentés időbélyegét a load()/render() ELŐTT kell kiolvasni – a render() menti az állapotot (új _at), és akkor a szerveren lévő újabb mentés (másik eszköz, tanári javítás) sosem töltődne be, sőt a régi helyi állapot felülírná */
+  let localAt=0;try{localAt=(JSON.parse(localStorage.getItem(saveKey())||'{}')._at)||0}catch(e){}
   started=true;load();gearMigrate();
   if(ACC){try{applyConfig(JSON.parse(localStorage.getItem('mk-config-'+ACC.id)||'null'))}catch(e){}netLoad()}
   dayLoad();regenAP();applyDayBonus();regenHP();S.ptask=gen(S.level);render();focusAns();
   if(ACC){
-    let localAt=0;try{localAt=(JSON.parse(localStorage.getItem(saveKey())||'{}')._at)||0}catch(e){}
     sync({pull:true,localAt}).then(()=>{regenHP();render();pollsFetch()});setInterval(pollsFetch,180000);
     NET.timer=setInterval(()=>{if(NET.dirty)sync()},20000);
     document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&NET.dirty)sync({keepalive:true})});
