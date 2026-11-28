@@ -374,7 +374,7 @@ body.scifi b.hpc{color:#ff6b6b}body.scifi b.apc{color:#6ea8ff}
 .bfig::after{content:'';position:absolute;bottom:-4px;left:50%;width:62%;height:18px;transform:translateX(-50%);background:radial-gradient(ellipse at center,rgba(0,0,0,.5),transparent 70%);z-index:-1}
 .bfig .dmgpop{position:absolute;top:0;left:0;right:0;text-align:center;font-size:1.6rem;color:#fff;text-shadow:0 0 6px #b3362b,0 2px 3px #000;z-index:3;height:auto}
 /* v1.7 társ a csatában */
-.bfig.p{--hh:230px}
+.bfig.p{--hh:230px;z-index:5}   /* v1.7.1: a hős oldala (és a társ buboréka) a szörny fölött – Lius_#PUFFAN jelezte */
 .bpet{position:absolute;left:56%;bottom:24%;height:calc(var(--hh) * var(--ph));z-index:4;animation:pbob 2.4s ease-in-out infinite;filter:drop-shadow(0 0 1.5px rgba(255,244,220,.9)) drop-shadow(0 10px 8px rgba(0,0,0,.5));pointer-events:none}
 .bpet>img,.bpet>svg{height:100%;width:auto;display:block}
 .bpet .pacc{position:absolute;height:auto}
@@ -385,7 +385,7 @@ body.scifi b.hpc{color:#ff6b6b}body.scifi b.apc{color:#6ea8ff}
 @keyframes pstar{50%{opacity:.25}}
 @keyframes pbob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-9%) rotate(3deg)}}
 @keyframes plunge{0%{transform:none}35%{transform:translateX(75%) scale(1.15) rotate(6deg)}100%{transform:none}}
-.pbub{position:absolute;bottom:100%;left:30%;margin-bottom:6px;background:#fffdf6;color:#2a2016;border-radius:12px;padding:4px 10px;font-size:.78rem;font-weight:800;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.4);animation:pbub .35s cubic-bezier(.2,1.5,.4,1);font-family:Nunito,sans-serif}
+.pbub{position:absolute;bottom:100%;left:30%;margin-bottom:6px;background:#fffdf6;color:#2a2016;border-radius:12px;padding:4px 10px;font-size:.78rem;font-weight:800;white-space:normal;width:max-content;max-width:210px;line-height:1.25;box-shadow:0 2px 8px rgba(0,0,0,.4);animation:pbub .35s cubic-bezier(.2,1.5,.4,1);font-family:Nunito,sans-serif}
 .pbub::after{content:'';position:absolute;left:18px;top:100%;border:7px solid transparent;border-top-color:#fffdf6;border-bottom:0}
 @keyframes pbub{0%{transform:scale(.3);opacity:0}100%{transform:none;opacity:1}}
 .pcap{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:6;background:rgba(20,14,8,.78);color:#ffe9a6;border:1px solid #e9c46a;border-radius:999px;padding:4px 12px;font-weight:800;font-size:.85rem;white-space:nowrap;animation:pbub .4s}
@@ -402,6 +402,10 @@ body.scifi b.hpc{color:#ff6b6b}body.scifi b.apc{color:#6ea8ff}
 @keyframes pburst{0%{transform:scale(.3);opacity:1}70%{opacity:1}100%{transform:scale(1.5);opacity:0}}
 @media (max-width:600px){.bpet.ground{bottom:1%}}
 @media (prefers-reduced-motion:reduce){.bpet,.bpet.lunge,.bpet.ground,.bpet.ground.lunge{animation:none}}
+.ptip{display:flex;gap:10px;align-items:center;background:linear-gradient(#fff8e6,#f6e8c6);color:#2a2016;border-top:2px solid #e9c46a;padding:8px 12px;font-size:.9rem;line-height:1.35;animation:pbub .35s}
+.ptip img,.ptip svg{width:44px;height:44px;object-fit:contain;flex:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3))}
+.ptip b{color:#6b3fa0}
+@media (max-width:600px){.ptip{font-size:.82rem;padding:6px 10px}.ptip img,.ptip svg{width:36px;height:36px}}
 .bvs{position:relative;z-index:2;align-self:center;text-align:center;font-family:var(--head);font-size:1.7rem;font-weight:800;color:#fff;text-shadow:0 0 10px rgba(0,0,0,.8),0 2px 4px #000}
 .bhud{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:linear-gradient(#3a2716,#2a1c10);padding:10px;border-radius:0 0 14px 14px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .bhud .plate{background:rgba(255,248,235,.94);border-radius:10px;padding:8px 12px}
@@ -1468,11 +1472,11 @@ const triesWhen=k=>trialDef(k).per==='week'?'ezen a héten':'ma';
 const topicCode=n=>TOPICS[n]?n:(Object.keys(TOPICS).find(k=>TOPICS[k]===n)||n);
 const gradeBest=tp=>Math.max(0,...(S.grades||[]).filter(g=>(g.tp||topicCode(g.topic))===tp).map(g=>+g.grade||0));
 const trialTopics=()=>{const open=islandTopics();return TRIAL_TOPICS?open.filter(t=>TRIAL_TOPICS.includes(t)):open};
-function snapshot(){S.prog[S.topic]={level:S.level,max:S.max,streak:S.streak,miss:S.miss};return {_at:Date.now(),theme:S.theme,topic:S.topic,dir:S.dir,prog:S.prog,trialTopic:S.trialTopic,level:S.level,max:S.max,streak:S.streak,miss:S.miss,gold:S.gold,xp:S.xp,clvl:S.clvl,owned:S.owned,potions:S.potions,tries:S.tries,triesDay:today(),triesWeek:weekKey(),grades:S.grades,coupons:S.coupons,ap:S.ap,apDate:S.apDate,evApDay:S.evApDay,evGifts:S.evGifts,wandDay:S.wandDay,hp:S.hp,hpDay:S.hpDay,cls:S.cls,gender:S.gender,eq:S.eq,beaten:S.beaten,fLast:S.fLast,iLast:S.iLast,gateFails:S.gateFails,gateNote:S.gateNote,pets:S.pets,petOn:S.petOn,petAcc:S.petAcc,lib:S.lib,fbGot:S.fbGot,gear:S.gear}}
+function snapshot(){S.prog[S.topic]={level:S.level,max:S.max,streak:S.streak,miss:S.miss};return {_at:Date.now(),theme:S.theme,topic:S.topic,dir:S.dir,prog:S.prog,trialTopic:S.trialTopic,level:S.level,max:S.max,streak:S.streak,miss:S.miss,gold:S.gold,xp:S.xp,clvl:S.clvl,owned:S.owned,potions:S.potions,tries:S.tries,triesDay:today(),triesWeek:weekKey(),grades:S.grades,coupons:S.coupons,ap:S.ap,apDate:S.apDate,evApDay:S.evApDay,evGifts:S.evGifts,wandDay:S.wandDay,hp:S.hp,hpDay:S.hpDay,cls:S.cls,gender:S.gender,eq:S.eq,beaten:S.beaten,fLast:S.fLast,iLast:S.iLast,gateFails:S.gateFails,gateNote:S.gateNote,pets:S.pets,petOn:S.petOn,petAcc:S.petAcc,lib:S.lib,fbGot:S.fbGot,gear:S.gear,msgGot:S.msgGot,petRename:S.petRename}}
 function save(){try{localStorage.setItem(saveKey(),JSON.stringify(snapshot()))}catch(e){}if(ACC)NET.dirty=true}
 function load(){try{applyState(JSON.parse(localStorage.getItem(saveKey())||'null'))}catch(e){}}
 function applyState(d){if(!d)return;
-  for(const k of ['theme','topic','dir','prog','trialTopic','level','max','streak','miss','gold','xp','clvl','owned','potions','grades','coupons','ap','apDate','evApDay','evGifts','wandDay','hp','hpDay','cls','gender','eq','beaten','fLast','iLast','gateFails','gateNote','pets','petOn','petAcc','lib','fbGot','gear'])if(d[k]!==undefined)S[k]=d[k];
+  for(const k of ['theme','topic','dir','prog','trialTopic','level','max','streak','miss','gold','xp','clvl','owned','potions','grades','coupons','ap','apDate','evApDay','evGifts','wandDay','hp','hpDay','cls','gender','eq','beaten','fLast','iLast','gateFails','gateNote','pets','petOn','petAcc','lib','fbGot','gear','msgGot','petRename'])if(d[k]!==undefined)S[k]=d[k];
   petMigrate();gearMigrate();
   if(d.tries){const t={};for(const [k,v] of Object.entries(d.tries))if(k.endsWith('t5')?d.triesWeek===weekKey():d.triesDay===today())t[k]=v;S.tries=t}
   if(!THEMES_ON.includes(S.theme))S.theme=THEMES_ON[0];}
@@ -1596,7 +1600,7 @@ function renderMode(){
      <div class="bfig p ${pAnim?'shake':''}"><div class="dmgpop p">${pAnim?S.anim.txt:''}</div>${avatarSVG(S.theme,isTrial?{cls:S.cls}:{...EQ(),pet:false,cls:S.cls})}${petBattleHTML(b)}</div>
      <div class="bvs">VS</div>${isTrial?'':petCapHTML()}
      <div class="bfig e ${eAnim?'shake flash':''} ${S.petAnim&&S.petAnim.k==='lunge'?'pflash':''}"><div class="dmgpop e">${eAnim?S.anim.txt:''}</div>${monsterHTML(b)}</div>
-   </div>
+   </div>${isTrial?'':petTipHTML()}
    <div class="bhud">
      <div class="plate"><div class="name">${ACC?esc(ACC.nick):(CL()?clsName():T().hero)}</div>${hpBar(b.php,b.pmax)}</div>
      <div class="plate"><div class="name">${b.name}</div>${hpBar(b.ehp,b.emax,isTrial||isGate?0:armorLine(b))}</div>
@@ -2542,8 +2546,9 @@ function petShopHTML(){const th=T();
 
 /* ---- v1.7: a társ a csatában – a hős előtt lebeg, képességnél előrelendül, és beszól (Lenke ötlete) ----
    Képek: Képek/pet-<fajta>-<1|2|3>-harc.webp (repül/ugrik, jobbra néz). Ha nincs, a nyugalmi kép, végül a rajz. */
-const PET_IMG_HARC=(sp,st)=>`Képek/pet-${sp}-${st+1}-harc.webp`;
-Object.keys(PET_TYPES).forEach(sp=>[0,1,2].forEach(st=>{const src=PET_IMG_HARC(sp,st),im=new Image();im.onload=()=>PET_OK.add(src);im.src=src}));
+const PET_IMG_HARC=(sp,st,a)=>`Képek/pet-${sp}-${st+1}-harc${a?'-'+a:''}.webp`;
+/* v1.7.1: a kiegészítők harcban is rajta vannak (Képek/pet-<faj>-<1|2|3>-harc-suveg / -nyakorv / -mindketto.webp) – Lius_#PUFFAN jelezte */
+Object.keys(PET_TYPES).forEach(sp=>[0,1,2].forEach(st=>['','suveg','nyakorv','mindketto'].forEach(a=>{const src=PET_IMG_HARC(sp,st,a),im=new Image();im.onload=()=>PET_OK.add(src);im.src=src})));
 const PET_BATTLE_H=[.4,.64,.8];   // a hős magasságához képest: kölyök : felnőtt : legendás = 1 : 1,6 : 2
 const PET_SAY={
   sarkany:{ok:['Grrr, ez az!','Tűzbe vele!','Hajrá, hajrá!','Füstölög a szörny!'],bad:['Semmi baj, újra!','Csak egy kis füst, nem baj!','Prüszk… semmi gond!'],
@@ -2554,18 +2559,29 @@ const PET_SAY={
            fx:(n,v)=>`✨ ${n} gyógyít: +${v} életerő`,start:['Szárnyra fel!','Itt vagyok melletted!']},
   roka:   {ok:['Ügyes, ügyes!','Ravasz megoldás!','Ezt elcsentük tőle!'],bad:['Pszt… legközelebb csellel!','Semmi baj, újra!','Hupsz! Na még egyszer.'],
            fx:(n,v)=>`🦊 ${n} aranyat szimatolt ki: +${pc(v)}%!`,start:['Szimatolom a kincset!','Csak csendben, ravaszul!']}};
+/* v1.7.1: közös mondatbank – {szorny} = az ellenfél neve, {jatekos} = a beceneved (Lius_#PUFFAN ötlete) */
+const PET_CHEER={
+  ok:['Ezt neked, {szorny}!','Hajrá, {jatekos}!','{szorny}, ez fájt, mi?','Még egy ilyen, és {szorny} hazamegy sírni!','{jatekos}, ma lángolsz! 🔥','Bumm! Telitalálat!',
+      'Ez igen, {jatekos}!','{szorny}, ideje lenne menekülni!','Látod, {szorny}? Velünk nem lehet kikezdeni!','Pontos, mint egy svájci óra!','{jatekos}, te vagy a legjobb!',
+      'Na, {szorny}, ezt meg sem láttad!','Egy lépéssel közelebb a győzelemhez!','Csak így tovább, {jatekos}!','{szorny} már remeg!','Ez a beszéd!'],
+  crit:['KRITIKUS! {szorny} meg se látta!','Hű, {jatekos}, ez akkorát szólt, hogy a faluban is hallották!','Dupla sebzés! {szorny} csillagokat lát!'],
+  start:['{szorny}, most megnézheted magad!','Gyerünk, {jatekos}, mutassuk meg neki!','Ne félj, {jatekos}, itt vagyok!'],
+  win:['Győztünk! 🎉','{szorny} legyőzve! Hurrá, {jatekos}!','Ez az, {jatekos}! Pacsi! ✋','{szorny} elszelelt! Mi vagyunk a legjobbak!']};
+const petFill=x=>String(x).replace(/\{szorny\}/g,(S.battle&&S.battle.name)||'szörny').replace(/\{jatekos\}/g,ACC?ACC.nick:(CL()?clsName():T().hero));
+let _petLast='';
+function petPick(...lists){const all=[].concat(...lists);let x,i=0;do{x=pick(all)}while(x===_petLast&&all.length>1&&++i<8);_petLast=x;return petFill(x)}
 function petReact(kind,o={}){petReact0(kind,o);petAccReact(kind,o)}
 function petReact0(kind,o={}){
   const p=petActive();if(!p)return;const t=PET_SAY[p.sp]||PET_SAY.sarkany,n=p.name;
   if(petSleepy(p)){S.petAnim={say:'Zzz…'};return}
-  if(kind==='start'){S.petAnim={say:pick(t.start)};return}
-  if(kind==='bad'||kind==='part'){S.petAnim={say:pick(kind==='part'&&Math.random()<.5?t.ok:t.bad)};return}
-  const fx=PET_TYPES[p.sp].fx,v=petFx(fx);
-  if(fx==='dmg'&&v)S.petAnim={k:'lunge',say:pick(t.ok),cap:t.fx(n,v)};
+  if(kind==='start'){S.petAnim={say:petPick(t.start,PET_CHEER.start)};return}
+  if(kind==='bad'||kind==='part'){S.petAnim={say:petPick(kind==='part'&&Math.random()<.5?t.ok:t.bad)};return}
+  const fx=PET_TYPES[p.sp].fx,v=petFx(fx),okSay=()=>o.crit?petPick(PET_CHEER.crit):petPick(t.ok,PET_CHEER.ok);
+  if(fx==='dmg'&&v)S.petAnim={k:'lunge',say:okSay(),cap:t.fx(n,v)};
   else if(fx==='crit'&&o.crit&&v)S.petAnim={k:'lunge',say:'Huhú! Ott a rés!',cap:t.fx(n,v)};
-  else if(fx==='heal'&&o.petH)S.petAnim={k:'lunge',say:pick(t.ok),cap:t.fx(n,o.petH)};
+  else if(fx==='heal'&&o.petH)S.petAnim={k:'lunge',say:okSay(),cap:t.fx(n,o.petH)};
   else if(kind==='win'&&fx==='gold'&&v)S.petAnim={k:'lunge',say:'Győzelem! És nézd, mennyi arany!',cap:t.fx(n,v)};
-  else S.petAnim={say:kind==='win'?'Győztünk! 🎉':pick(t.ok)};
+  else S.petAnim={say:kind==='win'?petPick(PET_CHEER.win):okSay()};
 }
 /* v1.7: a kiegészítők kis szerepei – harci előnyt nem adnak */
 const SUVEG_SAY={
@@ -2573,7 +2589,7 @@ const SUVEG_SAY={
   bad:['Nézd meg még egyszer az előjeleket…','Mínusz a zárójel előtt? Minden előjel megfordul benne!','Csak az egynemű tagokat vonhatod össze!','Előbb a szorzás, aztán az összeadás!','A betűs részt nem adjuk össze, csak az együtthatókat!']};
 function petAccReact(kind,o){
   const on=S.petAcc.on,a=S.petAnim||(S.petAnim={});const p=petActive();if(!p||petSleepy(p))return;
-  if(on.includes('suveg')&&(kind==='ok'||kind==='bad'||kind==='part')&&!a.cap&&Math.random()<.45)a.say=pick(kind==='ok'?SUVEG_SAY.ok:SUVEG_SAY.bad);
+  if(on.includes('suveg')&&(kind==='ok'||kind==='bad'||kind==='part')&&!a.cap&&Math.random()<.45)a.tip=pick(kind==='ok'?SUVEG_SAY.ok:SUVEG_SAY.bad);   // v1.7.1: a hosszabb tanács a csatatér alatti sávba kerül
   if(on.includes('nyakorv')&&(kind==='ok'||kind==='win')){a.bell=true;petBellSound(kind==='win'?5:(o.streak||1))}
   if(on.includes('csillag')&&(o.crit||kind==='win'))a.burst=true;
 }
@@ -2590,10 +2606,14 @@ function petBellSound(streak){
 }
 function petBattleHTML(b){
   const p=petActive();if(!p||b.kind==='trial')return '';const st=petStage(p),hs=PET_IMG_HARC(p.sp,st),ns=PET_IMG(p.sp,st),a=S.petAnim||{};
-  // harcban nincs rajta süveg/nyakörv (azt csak az ülő képen viseli); a Csillagpor csillog, a nyakörv csengője megszólal
-  const body=PET_OK.has(hs)?`<img src="${hs}" alt="${esc(p.name)}">`:PET_OK.has(ns)?`<img src="${ns}" alt="${esc(p.name)}">`:`<svg viewBox="-4 -13 48 55">${petArt(p,[])}</svg>`;
+  // v1.7.1: harcban is rajta van a süveg/nyakörv (ha kész a harci kép: mindkettő → süveg → nyakörv → sima); a Csillagpor csillog, a nyakörv csengője megszólal
+  const hsA=petWearList(S.petAcc.on).map(w=>PET_IMG_HARC(p.sp,st,w)).find(x=>PET_OK.has(x));
+  const body=hsA?`<img src="${hsA}" alt="${esc(p.name)}">`:PET_OK.has(hs)?`<img src="${hs}" alt="${esc(p.name)}">`:PET_OK.has(ns)?`<img src="${ns}" alt="${esc(p.name)}">`:`<svg viewBox="-4 -13 48 55">${petArt(p,[])}</svg>`;
   return `<div class="bpet ${PET_GROUND[p.sp]?'ground':''} ${petSleepy(p)?'sleepy':''} ${a.k==='lunge'?'lunge':''} ${st===2?'leg':''}" style="--ph:${PET_BATTLE_H[st]}" title="${esc(p.name)}">${body}${S.petAcc.on.includes('csillag')?'<i class="pstar"></i>':''}${a.burst?'<i class="pburst"></i>':''}${a.bell?'<i class="pbell">🔔</i>':''}${a.say?`<div class="pbub">${esc(a.say)}</div>`:''}</div>`;
 }
+/* v1.7.1: a társ hosszabb tanácsa a csatatér alatt – így nem lóg be a szörny mögé */
+function petTipHTML(){const a=S.petAnim,p=petActive();if(!a||!a.tip||!p)return '';const st=petStage(p),wl=petWearList(S.petAcc.on),img=[...wl.map(w=>PET_IMG_ACC(p.sp,st,w)),PET_IMG(p.sp,st)].find(x=>PET_OK.has(x));
+  return `<div class="ptip">${img?`<img src="${img}" alt="">`:`<svg viewBox="-4 -13 48 55">${petArt(p,S.petAcc.on)}</svg>`}<span>🎩 <b>${esc(p.name)} súgja:</b> ${esc(a.tip)}</span></div>`}
 const petCapHTML=()=>S.petAnim&&S.petAnim.cap?`<div class="pcap">${esc(S.petAnim.cap)}</div>`:'';
 /* kiegészítő-képek a pet-képen (Képek/acc-suveg.webp, acc-nyakorv.webp). Helyük fajtánként, fokozatonként és változatonként (''/harc):
    [x%, y%, szélesség%] a kép dobozában. Amíg nincs megadva, a képre nem kerül kiegészítő (a rajzon a régi helyén van). */
@@ -3508,12 +3528,58 @@ async function fbNews(){
   if(g)S.gold+=g;if(xp)addXP(xp);if(fresh.length)save();
   try{await rpc('student_fb_ack',{p_token:ACC.token,p_ids:ids})}catch(e){}
   if(!fresh.length)return;
-  const show=()=>{if(document.getElementById('hlpov')||document.getElementById('loginov')){setTimeout(show,4000);return}
+  const show=()=>{if(document.getElementById('hlpov')||document.getElementById('renov')||document.getElementById('loginov')){setTimeout(show,4000);return}
     hlpOpen(`<h2>📬 Hír a Mestertől</h2>${fresh.map(x=>`<div class="box" style="margin:8px 0"><b>${x.kind==='bug'?'🐞 A bejelentett hibát kijavítottam!':x.kind==='idea'?'💡 Megvalósult az ötleted!':'❤️ Köszönöm!'}</b>
       <p class="tiny" style="margin:4px 0">„${hlpEsc(x.body)}”</p>${x.note?`<p style="margin:4px 0">${hlpEsc(x.note)}</p>`:''}
       ${x.gold||x.xp?`<p style="margin:4px 0"><b>Jutalom:</b> ${x.gold?`+${x.gold} ${T().cur}`:''}${x.gold&&x.xp?', ':''}${x.xp?`+${x.xp} XP`:''}</p>`:''}</div>`).join('')}
       <p><button class="btn" data-hlp="close">Köszönöm!</button></p>`);render()};
   show();
+}
+
+/* ================= v1.7.1: LEVÉL A MESTERTŐL + ÚJ NEVET KÉR A TÁRS =================
+   A tanár a tanári felületen egy diáknak levelet írhat, vagy kérheti, hogy a diák adjon új nevet a társának
+   (supabase/v1.7.1-mester-levele.sql). A régi név azonnal eltűnik; amíg nincs új név, a diák nem tud továbblépni. */
+let msgNewsAt=0;
+async function msgNews(){
+  if(!ACC||!SB_ON()||Date.now()-msgNewsAt<120000)return;msgNewsAt=Date.now();
+  let list;try{list=await rpc('student_msgs',{p_token:ACC.token})}catch(e){return}   // ha még nem futott le az SQL, csendben kihagyjuk
+  if(!Array.isArray(list)||!list.length)return;
+  S.msgGot=S.msgGot||[];S.petRename=S.petRename||[];
+  const fresh=list.filter(x=>!S.msgGot.includes(x.id));
+  fresh.forEach(x=>{S.msgGot.push(x.id);
+    if(x.kind==='pet_rename'){const p=(S.pets||[]).find(q=>q.id===x.pet_id);
+      if(p&&!S.petRename.some(r=>r.pid===p.id)){p.badName=p.name;p.name='Névtelen '+(PET_TYPES[p.sp]||PET_TYPES.sarkany).n.toLowerCase();S.petRename.push({pid:p.id,mid:x.id,note:x.body||''})}}});
+  S.msgGot=S.msgGot.slice(-200);save();
+  try{await rpc('student_msg_ack',{p_token:ACC.token,p_ids:list.map(x=>x.id)})}catch(e){}
+  const letters=fresh.filter(x=>x.kind==='msg');
+  const show=()=>{if(document.getElementById('hlpov')||document.getElementById('loginov')||document.getElementById('renov')){setTimeout(show,4000);return}
+    hlpOpen(`<h2>📜 Levél a Mestertől</h2>${letters.map(x=>`<div class="box" style="margin:8px 0;white-space:pre-wrap">${hlpEsc(x.body)}</div>`).join('')}
+      <p><button class="btn" data-hlp="close">Rendben</button></p>`)};
+  render();petRenameCheck();if(letters.length)show();
+}
+/* amíg van függő átnevezés, ez az ablak nem zárható be */
+function petRenameCheck(){
+  const q=(S.petRename||[]).filter(r=>(S.pets||[]).some(p=>p.id===r.pid));S.petRename=q;
+  if(!q.length||document.getElementById('renov'))return;
+  if(document.getElementById('loginov')){setTimeout(petRenameCheck,3000);return}
+  const r=q[0],p=S.pets.find(x=>x.id===r.pid),t=PET_TYPES[p.sp]||PET_TYPES.sarkany;
+  const o=document.createElement('div');o.id='renov';o.className='hlpov';o.style.zIndex=70;
+  o.innerHTML=`<div class="hlpcard" style="max-width:520px;text-align:center"><h2>🐾 A társad új nevet kér</h2>
+    <div style="width:150px;height:150px;margin:8px auto">${PET_OK.has(PET_IMG(p.sp,petStage(p)))?`<img src="${PET_IMG(p.sp,petStage(p))}" alt="" style="width:100%;height:100%;object-fit:contain">`:petArtBox(p,[]).replace('class="petart"','class="petart" style="width:100%;height:100%"')}</div>
+    <p>A társad szomorúan néz rád: a nevet, amit kapott, nem szereti, és szégyelli bemutatkozni vele a többi társ előtt.
+    Adj neki olyan nevet, amit büszkén viselhet!</p>
+    ${r.note?`<div class="box" style="margin:8px 0;text-align:left"><b>A Mester üzeni:</b> ${hlpEsc(r.note)}</div>`:''}
+    <p style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><input id="renIn" maxlength="16" autocomplete="off" placeholder="Az új neve" style="font:inherit;padding:8px 12px;border-radius:10px;border:1px solid rgba(120,90,50,.4)">
+     <button class="btn" id="renOk">Ez lesz a neve</button></p><p class="tiny" id="renErr" style="color:#b3362b;min-height:1em"></p></div>`;
+  document.body.appendChild(o);const inp=o.querySelector('#renIn');setTimeout(()=>inp.focus(),50);
+  const ok=async()=>{const v=String(inp.value||'').replace(/[<>"]/g,'').trim().slice(0,16),e=o.querySelector('#renErr');
+    if(v.length<2){e.textContent='Legalább 2 betűs név kell.';return}
+    if(p.badName&&v.toLowerCase().replace(/\s+/g,'')===String(p.badName).toLowerCase().replace(/\s+/g,'')){e.textContent='Ezt a nevet nem szereti – válassz egy másikat!';return}
+    p.name=v;delete p.badName;S.petRename=S.petRename.filter(x=>x!==r);save();o.remove();render();
+    banner(`${v} boldogan ugrál – nagyon tetszik neki az új neve!`);
+    try{await rpc('student_pet_renamed',{p_token:ACC.token,p_id:r.mid,p_name:v})}catch(x){}
+    setTimeout(petRenameCheck,400)};
+  o.querySelector('#renOk').onclick=ok;inp.addEventListener('keydown',ev=>{if(ev.key==='Enter')ok()});
 }
 
 const NET={dirty:false,busy:false,status:'',out:[],trials:[],timer:null};
@@ -3564,7 +3630,7 @@ async function sync(opt={}){
     const d=await rpc('student_sync',{p_token:ACC.token,p_state:opt.pull?null:snapshot(),p_events:evs,p_coupons:cps},{keepalive:!!opt.keepalive});
     NET.out=NET.out.slice(evs.length);netSave();NET.dirty=NET.out.length>0;
     if(opt.pull&&d.state&&(d.state._at||0)>(opt.localAt||0)){applyState(d.state);S.ptask=gen(S.level)}
-    applyServer(d);NET.status='ok';NET.last=new Date();setTimeout(fbNews,600);
+    applyServer(d);NET.status='ok';NET.last=new Date();setTimeout(fbNews,600);setTimeout(msgNews,900);setTimeout(petRenameCheck,1200);
     if(opt.pull)NET.dirty=true;
   }catch(e){
     NET.status=e.server?'err':'offline';
@@ -3666,10 +3732,15 @@ boot();
 </script>
 <script>
 /* ================= VERZIÓ, SÚGÓ, VISSZAJELZÉS (v1.0) ================= */
-const APP_VERSION='1.7';
+const APP_VERSION='1.7.1';
 /* Új kiadásnál: APP_VERSION + a sw.js VERSION-je + egy új bejegyzés a lista ELEJÉRE.
    by: a diák beceneve, ha az ő ötlete volt (a Súgóban és az Újdonságok ablakban megjelenik). */
 const CHANGELOG=[
+  {v:'1.7.1',date:'2026. november 28.',title:'Javítások a társaknál',items:[
+    {t:'📜 Új: Levél a Mestertől. A tanár személyesen is írhat neked a játékban – a levél a következő belépéskor vár rád.'},
+    {t:'🐞 Javítva: a társad buboréka már nem csúszik be a szörny mögé. A süveges társ hosszabb tanácsai mostantól a csatatér alatti sávban jelennek meg, végig olvashatóan.',by:'Lius_#PUFFAN'},
+    {t:'💬 A társad sokkal többféle dolgot mond a csatában, és néven szólít: „Ezt neked, Gnoll!”, „Hajrá, (a te neved)!” – és még sok minden mást.',by:'Lius_#PUFFAN'},
+    {t:'🎩 Javítva: a társad süvege és nyakörve az Arénában is rajta van, amikor melletted repül vagy ugrál.',by:'Lius_#PUFFAN'}]},
   {v:'1.7',date:'2026. november 28.',title:'Felszerelés és beszélő társak',items:[
     {t:'⚔️ Megjött a felszerelés! Öt helyed van: fegyver, másik kéz, fej, nyak és gyűrű. Minden osztálynak saját fegyverei vannak: a Harcosnak kard és pajzs, a Mágusnak pálca és varázskönyv, a Gyógyítónak bot és gyógyfüves tarsoly.',by:'ll2shmoove'},
     {t:'💎 Négy ritkaság van: közönséges, ritka, epikus és legendás. Legendás tárgy csak legyőzött szörnyből esik ki. És van néhány egyedi tárgy is, amiből az egész osztályban csak egy létezik!'},

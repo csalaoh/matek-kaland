@@ -302,6 +302,7 @@ async function openStudent(id){
     const [ev,tr]=await Promise.all([api(`events?student_id=eq.${id}&ts=gte.${encodeURIComponent(since())}&order=ts.desc&limit=1000`),
       api(`trials?student_id=eq.${id}&order=started_at.desc&limit=60`)]);
     V.detail={ev,tr};
+    try{V.detail.msgs=await api(`messages?student_id=eq.${id}&order=created_at.desc&limit=30`)}catch(e){V.detail.msgs=null}   // v1.7.1 (ha még nem futott az SQL: null)
   }catch(e){V.detail={err:e.message}}
   if(V.tab==='student')render();
   if(V.openTrial)setTimeout(()=>{const r=document.getElementById('tr-'+V.openTrial);if(r)r.scrollIntoView({behavior:'smooth',block:'center'})},60);
@@ -326,7 +327,7 @@ function studentHTML(){
    <div class="kpis" style="margin-top:14px"><div class="kpi"><b>${n}</b><span>feladat az időszakban</span></div><div class="kpi"><b>${pct(ok,n)}%</b><span>helyes</span></div>
     <div class="kpi"><b>${s.days}</b><span>aktív nap</span></div><div class="kpi"><b>${s.clvl||1}. szint</b><span>${s.xp??0} XP · ${s.gold??0} arany${s.cls?' · '+CLS_NAME[s.cls]:''}</span></div>
     <div class="kpi"><b class="stars" style="font-size:1.1rem">${stars(topicMax(s,'betus'))} / ${stars(topicMax(s,'zk'))}</b><span>Összevonás / Zárójel – legjobb fokozat</span></div></div>
-   <h3>Társai</h3><p style="display:flex;gap:6px;flex-wrap:wrap;margin:0">${petsHTML(s)}</p>
+   <h3>Társai</h3><p style="display:flex;gap:6px;flex-wrap:wrap;margin:0">${petsHTML(s)}</p>${msgHTML(s,d)}
    <div class="grid2"><div><h3>Napi aktivitás (utolsó ${days} nap)</h3><div class="days">${arr.map(a=>`<div title="${a.k}: ${a.ok} jó, ${a.bad} hibás"><i style="height:${a.ok/mx*84}px"></i><i class="w" style="height:${a.bad/mx*84}px"></i></div>`).join('')}</div>
      <div class="dlbl"><span>${arr[0].dt.toLocaleDateString('hu-HU',{month:'short',day:'numeric'})}</span><span>ma</span></div><p class="small muted">Zöld: jó válasz, piros: rossz vagy részben jó.</p></div>
     <div><h3>Hibái</h3>${el.length?el.map(([k,v])=>`<div class="errrow" style="grid-template-columns:1fr 1fr 40px"><b class="small">${esc(k)}</b><div class="bar"><i style="width:${v/el[0][1]*100}%"></i></div><span class="small">${v}×</span></div>`).join(''):'<p class="muted small">Nincs hibája az időszakban.</p>'}</div></div>
@@ -339,6 +340,36 @@ function studentHTML(){
     ${ev.slice(0,300).map(e=>`<tr><td class="small">${fmtDT(e.ts)}</td><td class="small">${modeN[e.mode]||esc(e.mode)} · ${e.topic==='zk'?(e.kind==='ki'?'Kiemelés':'Bontás'):'Összevonás'} ${'★'.repeat(e.level||0)}</td>
      <td class="small">${esc(e.task)}</td><td class="small"><code>${esc(e.answer)}</code></td><td class="small">${res(e)}</td><td class="small">${e.hint?'💡'.repeat(e.hint):''}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted small">Nincs feladat az időszakban.</p>'}`;
 }
+
+/* ---------- v1.7.1: Levél a Mestertől + Új nevet kér a társ ---------- */
+function msgHTML(s,d){
+  if(d.msgs===null)return `<p class="small muted" style="margin-top:10px">A levelekhez futtasd le a <code>supabase/v1.7.1-mester-levele.sql</code>-t.</p>`;
+  const msgs=d.msgs||[],pend=pid=>msgs.some(m=>m.kind==='pet_rename'&&m.pet_id===pid&&!m.done_at);
+  const pets=petList(s).filter(p=>!pend(p.id));
+  const st=m=>m.kind==='pet_rename'?(m.done_at?`<span class="pill g">új neve: ${esc(m.new_name)}</span>`:m.seen_at?'<span class="pill y">megkapta, még nem adott új nevet</span>':'<span class="pill y">még nem lépett be azóta</span>')
+                                   :(m.seen_at?`<span class="pill g">elolvasta ${fmtDT(m.seen_at)}</span>`:'<span class="pill y">még nem lépett be azóta</span>');
+  return `<div class="grid2" style="margin-top:10px"><div><h3>📜 Levél a Mestertől</h3>
+     <textarea id="msgBody" rows="3" maxlength="600" style="width:100%;box-sizing:border-box" placeholder="A diák a következő belépéskor kapja meg, a játékon belül."></textarea>
+     <p style="margin:6px 0"><button class="btn sm" data-msgsend="${s.id}">📜 Levél küldése</button></p></div>
+    <div><h3>🐾 Új nevet kér a társ</h3>${pets.length?`<p class="small muted" style="margin:0 0 6px">A régi név a diák következő belépésekor eltűnik, és addig nem tud továbblépni, amíg új nevet nem ad. A régi nevet nem adhatja vissza.</p>
+     <select id="renPet">${pets.map(p=>`<option value="${esc(p.id)}">${esc(p.name)} (${PET_N[p.sp]||esc(p.sp)})</option>`).join('')}</select>
+     <input id="renNote" maxlength="300" placeholder="Üzenet (nem kötelező)" style="width:100%;box-sizing:border-box;margin-top:6px">
+     <p style="margin:6px 0"><button class="btn sm" data-msgren="${s.id}">🐾 Új nevet kér</button></p>`:'<p class="small muted">Nincs olyan társa, amire kérhetnél.</p>'}</div></div>
+   ${msgs.length?`<details style="margin-top:6px"><summary class="small">Elküldött levelek (${msgs.length})</summary><table><tbody>${msgs.map(m=>`<tr><td class="small">${fmtDT(m.created_at)}</td>
+     <td class="small">${m.kind==='pet_rename'?`🐾 Új nevet kért: <b>${esc(m.pet_name)}</b>${m.body?` – „${esc(m.body)}”`:''}`:`📜 ${esc(m.body)}`}</td><td>${st(m)}</td></tr>`).join('')}</tbody></table></details>`:''}`;
+}
+document.addEventListener('click',async e=>{
+  const r=e.target.closest('[data-msgsend],[data-msgren]');if(!r)return;
+  const sid=r.dataset.msgsend||r.dataset.msgren,s=V.stats.all.find(x=>x.id===sid);if(!s)return;
+  let row;
+  if(r.dataset.msgsend){const b=$('msgBody').value.trim().slice(0,600);if(b.length<2){toast('Írj valamit a levélbe!');return}row={student_id:sid,class_id:V.cls,kind:'msg',body:b}}
+  else{const pid=$('renPet').value,p=petList(s).find(x=>x.id===pid);if(!p)return;
+    if(!confirm(`Biztosan új nevet kérsz ${s.nick} társának („${p.name}”)?`))return;
+    row={student_id:sid,class_id:V.cls,kind:'pet_rename',pet_id:pid,pet_name:p.name,body:$('renNote').value.trim().slice(0,300)||null}}
+  r.disabled=true;
+  try{await api('messages',{method:'POST',body:row,prefer:'return=minimal'});toast('Elküldve – a diák a következő belépéskor megkapja');openStudent(sid)}
+  catch(x){toast('Hiba: '+x.message);r.disabled=false}
+});
 
 /* ---------- Kezelés ---------- */
 function lessonState(c,k){const l=LESSONS.find(x=>x.key===k);return (c.config&&c.config.lessons&&c.config.lessons[k])||l.def}
